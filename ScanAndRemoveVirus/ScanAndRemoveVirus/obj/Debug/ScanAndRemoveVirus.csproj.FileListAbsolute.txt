@@ -2,6 +2,7 @@ C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\ScanAndRemoveVirus.exe
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\ScanAndRemoveVirus.pdb
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.csproj.AssemblyReference.cache
+C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.Control.UcTongQuan.resources
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.form.FrmBaoVe.resources
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.FrmMain.resources
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.Properties.Resources.resources
@@ -9,3 +10,4 @@ C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.csproj.CoreCompileInputs.cache
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.exe
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.pdb
+C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.Control.UcBaoVe.resources

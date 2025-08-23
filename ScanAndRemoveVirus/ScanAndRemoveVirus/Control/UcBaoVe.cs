@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace ScanAndRemoveVirus.Control
 {
-    public partial class hihi : UserControl
+    public partial class UcBaoVe : UserControl
     {
-        public hihi()
+        public UcBaoVe()
         {
             InitializeComponent();
         }
