@@ -16,5 +16,10 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
         }
+
+        private void chkAutoStart_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

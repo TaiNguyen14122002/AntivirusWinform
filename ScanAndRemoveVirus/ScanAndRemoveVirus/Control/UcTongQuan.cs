@@ -16,5 +16,10 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
         }
+
+        private void lblQuarantineCount_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

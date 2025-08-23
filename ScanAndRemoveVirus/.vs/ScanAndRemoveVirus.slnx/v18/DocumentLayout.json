@@ -7,16 +7,16 @@
       "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\scanandremovevirus\\control\\uctongquan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uctongquan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\ucbaove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\scanandremovevirus\\control\\ucbaove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\ucbaove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\uctongquan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uctongquan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\scanandremovevirus\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -40,7 +40,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "UcTongQuan.cs [Design]",
               "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcTongQuan.cs",
               "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Control\\UcTongQuan.cs",
@@ -52,13 +52,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "FrmMain.cs",
               "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\FrmMain.cs",
               "RelativeDocumentMoniker": "ScanAndRemoveVirus\\FrmMain.cs",
               "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\FrmMain.cs",
               "RelativeToolTip": "ScanAndRemoveVirus\\FrmMain.cs",
-              "ViewState": "AgIAADgAAAAAAAAAAAAAAEgAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAADAMjMzM7MtwBoAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-23T01:39:17.024Z",
               "EditorCaption": ""
