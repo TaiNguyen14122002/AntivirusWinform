@@ -84,7 +84,7 @@
             this.lblQuarantineUnit = new System.Windows.Forms.Label();
             this.grpRecantActivity = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel18 = new System.Windows.Forms.TableLayoutPanel();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dgvRecentActivity = new System.Windows.Forms.DataGridView();
             this.colTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colEvent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDetail = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -117,7 +117,7 @@
             this.tableLayoutPanel17.SuspendLayout();
             this.grpRecantActivity.SuspendLayout();
             this.tableLayoutPanel18.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvRecentActivity)).BeginInit();
             this.SuspendLayout();
             // 
             // pnlContent
@@ -184,8 +184,8 @@
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 1;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 289F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 289F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 281F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 281F));
             this.tableLayoutPanel4.Size = new System.Drawing.Size(653, 281);
             this.tableLayoutPanel4.TabIndex = 0;
             // 
@@ -201,7 +201,7 @@
             this.tableLayoutPanel5.Name = "tableLayoutPanel5";
             this.tableLayoutPanel5.RowCount = 1;
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 282F));
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 275F));
             this.tableLayoutPanel5.Size = new System.Drawing.Size(647, 275);
             this.tableLayoutPanel5.TabIndex = 0;
             // 
@@ -376,7 +376,7 @@
             this.tableLayoutPanel10.Name = "tableLayoutPanel10";
             this.tableLayoutPanel10.RowCount = 1;
             this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 58F));
             this.tableLayoutPanel10.Size = new System.Drawing.Size(370, 58);
             this.tableLayoutPanel10.TabIndex = 3;
             // 
@@ -640,7 +640,7 @@
             this.tableLayoutPanel13.Name = "tableLayoutPanel13";
             this.tableLayoutPanel13.RowCount = 1;
             this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 137F));
+            this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 129F));
             this.tableLayoutPanel13.Size = new System.Drawing.Size(1102, 129);
             this.tableLayoutPanel13.TabIndex = 0;
             // 
@@ -649,7 +649,7 @@
             this.grpThreats.Controls.Add(this.tableLayoutPanel14);
             this.grpThreats.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpThreats.Location = new System.Drawing.Point(5, 5);
-            this.grpThreats.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.grpThreats.Margin = new System.Windows.Forms.Padding(5);
             this.grpThreats.Name = "grpThreats";
             this.grpThreats.Size = new System.Drawing.Size(265, 119);
             this.grpThreats.TabIndex = 0;
@@ -700,7 +700,7 @@
             this.grpScannedFiles.Controls.Add(this.tableLayoutPanel15);
             this.grpScannedFiles.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpScannedFiles.Location = new System.Drawing.Point(280, 5);
-            this.grpScannedFiles.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.grpScannedFiles.Margin = new System.Windows.Forms.Padding(5);
             this.grpScannedFiles.Name = "grpScannedFiles";
             this.grpScannedFiles.Size = new System.Drawing.Size(265, 119);
             this.grpScannedFiles.TabIndex = 1;
@@ -751,7 +751,7 @@
             this.grpLastScan.Controls.Add(this.tableLayoutPanel16);
             this.grpLastScan.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpLastScan.Location = new System.Drawing.Point(555, 5);
-            this.grpLastScan.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.grpLastScan.Margin = new System.Windows.Forms.Padding(5);
             this.grpLastScan.Name = "grpLastScan";
             this.grpLastScan.Size = new System.Drawing.Size(265, 119);
             this.grpLastScan.TabIndex = 2;
@@ -802,7 +802,7 @@
             this.grpQuarantine.Controls.Add(this.tableLayoutPanel17);
             this.grpQuarantine.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpQuarantine.Location = new System.Drawing.Point(830, 5);
-            this.grpQuarantine.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.grpQuarantine.Margin = new System.Windows.Forms.Padding(5);
             this.grpQuarantine.Name = "grpQuarantine";
             this.grpQuarantine.Size = new System.Drawing.Size(267, 119);
             this.grpQuarantine.TabIndex = 3;
@@ -855,7 +855,7 @@
             this.grpRecantActivity.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpRecantActivity.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpRecantActivity.Location = new System.Drawing.Point(5, 477);
-            this.grpRecantActivity.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.grpRecantActivity.Margin = new System.Windows.Forms.Padding(5);
             this.grpRecantActivity.Name = "grpRecantActivity";
             this.grpRecantActivity.Size = new System.Drawing.Size(1104, 307);
             this.grpRecantActivity.TabIndex = 2;
@@ -867,40 +867,40 @@
             this.tableLayoutPanel18.ColumnCount = 1;
             this.tableLayoutPanel18.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel18.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel18.Controls.Add(this.dataGridView1, 0, 0);
+            this.tableLayoutPanel18.Controls.Add(this.dgvRecentActivity, 0, 0);
             this.tableLayoutPanel18.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel18.Location = new System.Drawing.Point(3, 19);
-            this.tableLayoutPanel18.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.tableLayoutPanel18.Margin = new System.Windows.Forms.Padding(10);
             this.tableLayoutPanel18.Name = "tableLayoutPanel18";
             this.tableLayoutPanel18.RowCount = 1;
             this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 283F));
+            this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 285F));
             this.tableLayoutPanel18.Size = new System.Drawing.Size(1098, 285);
             this.tableLayoutPanel18.TabIndex = 0;
             // 
-            // dataGridView1
+            // dgvRecentActivity
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dataGridView1.BackgroundColor = System.Drawing.Color.White;
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgvRecentActivity.AllowUserToAddRows = false;
+            this.dgvRecentActivity.AllowUserToDeleteRows = false;
+            this.dgvRecentActivity.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvRecentActivity.BackgroundColor = System.Drawing.Color.White;
+            this.dgvRecentActivity.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvRecentActivity.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvRecentActivity.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colTime,
             this.colEvent,
             this.colDetail});
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(10, 10);
-            this.dataGridView1.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.RowHeadersWidth = 82;
-            this.dataGridView1.RowTemplate.Height = 33;
-            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(1078, 265);
-            this.dataGridView1.TabIndex = 0;
+            this.dgvRecentActivity.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvRecentActivity.Location = new System.Drawing.Point(10, 10);
+            this.dgvRecentActivity.Margin = new System.Windows.Forms.Padding(10);
+            this.dgvRecentActivity.Name = "dgvRecentActivity";
+            this.dgvRecentActivity.ReadOnly = true;
+            this.dgvRecentActivity.RowHeadersVisible = false;
+            this.dgvRecentActivity.RowHeadersWidth = 82;
+            this.dgvRecentActivity.RowTemplate.Height = 33;
+            this.dgvRecentActivity.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvRecentActivity.Size = new System.Drawing.Size(1078, 265);
+            this.dgvRecentActivity.TabIndex = 0;
             // 
             // colTime
             // 
@@ -929,7 +929,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.pnlContent);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "UcTongQuan";
             this.Size = new System.Drawing.Size(1174, 829);
             this.pnlContent.ResumeLayout(false);
@@ -970,7 +970,7 @@
             this.tableLayoutPanel17.PerformLayout();
             this.grpRecantActivity.ResumeLayout(false);
             this.tableLayoutPanel18.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvRecentActivity)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1033,7 +1033,7 @@
         private System.Windows.Forms.Label lblQuarantineUnit;
         private System.Windows.Forms.GroupBox grpRecantActivity;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel18;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView dgvRecentActivity;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn colEvent;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDetail;

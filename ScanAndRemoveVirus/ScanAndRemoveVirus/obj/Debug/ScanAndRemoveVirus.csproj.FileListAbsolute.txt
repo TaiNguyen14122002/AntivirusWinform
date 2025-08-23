@@ -11,3 +11,4 @@ C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.exe
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.pdb
 C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.Control.UcBaoVe.resources
+C:\Users\tainguyen\source\repos\ScanAndRemoveVirus\ScanAndRemoveVirus\obj\Debug\ScanAndRemoveVirus.Control.UcLichSu.resources
