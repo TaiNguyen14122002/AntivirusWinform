@@ -136,6 +136,7 @@
             this.btnCachLy.TabIndex = 2;
             this.btnCachLy.Text = "Cách ly";
             this.btnCachLy.UseVisualStyleBackColor = false;
+            this.btnCachLy.Click += new System.EventHandler(this.btnCachLy_Click);
             // 
             // btnLichSu
             // 

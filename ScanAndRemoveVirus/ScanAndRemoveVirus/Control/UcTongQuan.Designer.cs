@@ -166,7 +166,7 @@
             // 
             this.grpScan.Controls.Add(this.tableLayoutPanel4);
             this.grpScan.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpScan.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpScan.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpScan.Location = new System.Drawing.Point(446, 3);
             this.grpScan.Name = "grpScan";
             this.grpScan.Size = new System.Drawing.Size(659, 303);
@@ -180,13 +180,13 @@
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel4.Controls.Add(this.tableLayoutPanel5, 0, 0);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 23);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 1;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 281F));
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 281F));
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(653, 281);
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(653, 277);
             this.tableLayoutPanel4.TabIndex = 0;
             // 
             // tableLayoutPanel5
@@ -202,7 +202,7 @@
             this.tableLayoutPanel5.RowCount = 1;
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 275F));
-            this.tableLayoutPanel5.Size = new System.Drawing.Size(647, 275);
+            this.tableLayoutPanel5.Size = new System.Drawing.Size(647, 271);
             this.tableLayoutPanel5.TabIndex = 0;
             // 
             // grpScanType
@@ -213,7 +213,7 @@
             this.grpScanType.Location = new System.Drawing.Point(3, 0);
             this.grpScanType.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.grpScanType.Name = "grpScanType";
-            this.grpScanType.Size = new System.Drawing.Size(382, 272);
+            this.grpScanType.Size = new System.Drawing.Size(382, 268);
             this.grpScanType.TabIndex = 0;
             this.grpScanType.TabStop = false;
             this.grpScanType.Text = "Chọn kiểu quét";
@@ -235,7 +235,7 @@
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(376, 250);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(376, 246);
             this.tableLayoutPanel6.TabIndex = 0;
             // 
             // tableLayoutPanel7
@@ -252,7 +252,7 @@
             this.tableLayoutPanel7.RowCount = 2;
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel7.Size = new System.Drawing.Size(376, 59);
+            this.tableLayoutPanel7.Size = new System.Drawing.Size(376, 58);
             this.tableLayoutPanel7.TabIndex = 0;
             // 
             // rdoQuickScan
@@ -263,7 +263,7 @@
             this.rdoQuickScan.Location = new System.Drawing.Point(20, 0);
             this.rdoQuickScan.Margin = new System.Windows.Forms.Padding(0);
             this.rdoQuickScan.Name = "rdoQuickScan";
-            this.rdoQuickScan.Size = new System.Drawing.Size(101, 35);
+            this.rdoQuickScan.Size = new System.Drawing.Size(101, 34);
             this.rdoQuickScan.TabIndex = 0;
             this.rdoQuickScan.TabStop = true;
             this.rdoQuickScan.Text = "Quét nhanh";
@@ -274,7 +274,7 @@
             this.lblQuickDesc.AutoSize = true;
             this.lblQuickDesc.Dock = System.Windows.Forms.DockStyle.Left;
             this.lblQuickDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblQuickDesc.Location = new System.Drawing.Point(23, 35);
+            this.lblQuickDesc.Location = new System.Drawing.Point(23, 34);
             this.lblQuickDesc.Name = "lblQuickDesc";
             this.lblQuickDesc.Size = new System.Drawing.Size(255, 24);
             this.lblQuickDesc.TabIndex = 1;
@@ -288,13 +288,13 @@
             this.tableLayoutPanel8.Controls.Add(this.rdoFullScan, 1, 0);
             this.tableLayoutPanel8.Controls.Add(this.lblFullDesc, 1, 1);
             this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel8.Location = new System.Drawing.Point(0, 65);
+            this.tableLayoutPanel8.Location = new System.Drawing.Point(0, 64);
             this.tableLayoutPanel8.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.tableLayoutPanel8.Name = "tableLayoutPanel8";
             this.tableLayoutPanel8.RowCount = 2;
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(376, 59);
+            this.tableLayoutPanel8.Size = new System.Drawing.Size(376, 58);
             this.tableLayoutPanel8.TabIndex = 1;
             // 
             // rdoFullScan
@@ -305,7 +305,7 @@
             this.rdoFullScan.Location = new System.Drawing.Point(20, 0);
             this.rdoFullScan.Margin = new System.Windows.Forms.Padding(0);
             this.rdoFullScan.Name = "rdoFullScan";
-            this.rdoFullScan.Size = new System.Drawing.Size(109, 35);
+            this.rdoFullScan.Size = new System.Drawing.Size(109, 34);
             this.rdoFullScan.TabIndex = 0;
             this.rdoFullScan.TabStop = true;
             this.rdoFullScan.Text = "Quét toàn bộ";
@@ -316,7 +316,7 @@
             this.lblFullDesc.AutoSize = true;
             this.lblFullDesc.Dock = System.Windows.Forms.DockStyle.Left;
             this.lblFullDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFullDesc.Location = new System.Drawing.Point(23, 35);
+            this.lblFullDesc.Location = new System.Drawing.Point(23, 34);
             this.lblFullDesc.Name = "lblFullDesc";
             this.lblFullDesc.Size = new System.Drawing.Size(127, 24);
             this.lblFullDesc.TabIndex = 1;
@@ -330,13 +330,13 @@
             this.tableLayoutPanel9.Controls.Add(this.rdoCustomScan, 1, 0);
             this.tableLayoutPanel9.Controls.Add(this.lblCustomDesc, 1, 1);
             this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel9.Location = new System.Drawing.Point(0, 127);
+            this.tableLayoutPanel9.Location = new System.Drawing.Point(0, 125);
             this.tableLayoutPanel9.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.tableLayoutPanel9.Name = "tableLayoutPanel9";
             this.tableLayoutPanel9.RowCount = 2;
             this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel9.Size = new System.Drawing.Size(376, 59);
+            this.tableLayoutPanel9.Size = new System.Drawing.Size(376, 58);
             this.tableLayoutPanel9.TabIndex = 2;
             // 
             // rdoCustomScan
@@ -347,7 +347,7 @@
             this.rdoCustomScan.Location = new System.Drawing.Point(20, 0);
             this.rdoCustomScan.Margin = new System.Windows.Forms.Padding(0);
             this.rdoCustomScan.Name = "rdoCustomScan";
-            this.rdoCustomScan.Size = new System.Drawing.Size(115, 35);
+            this.rdoCustomScan.Size = new System.Drawing.Size(115, 34);
             this.rdoCustomScan.TabIndex = 0;
             this.rdoCustomScan.TabStop = true;
             this.rdoCustomScan.Text = "Quét tùy chọn";
@@ -358,7 +358,7 @@
             this.lblCustomDesc.AutoSize = true;
             this.lblCustomDesc.Dock = System.Windows.Forms.DockStyle.Left;
             this.lblCustomDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblCustomDesc.Location = new System.Drawing.Point(23, 35);
+            this.lblCustomDesc.Location = new System.Drawing.Point(23, 34);
             this.lblCustomDesc.Name = "lblCustomDesc";
             this.lblCustomDesc.Size = new System.Drawing.Size(193, 24);
             this.lblCustomDesc.TabIndex = 1;
@@ -372,12 +372,12 @@
             this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel10.Controls.Add(this.btnScanNow, 1, 0);
             this.tableLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel10.Location = new System.Drawing.Point(3, 189);
+            this.tableLayoutPanel10.Location = new System.Drawing.Point(3, 186);
             this.tableLayoutPanel10.Name = "tableLayoutPanel10";
             this.tableLayoutPanel10.RowCount = 1;
             this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 58F));
-            this.tableLayoutPanel10.Size = new System.Drawing.Size(370, 58);
+            this.tableLayoutPanel10.Size = new System.Drawing.Size(370, 57);
             this.tableLayoutPanel10.TabIndex = 3;
             // 
             // btnScanNow
@@ -387,7 +387,7 @@
             this.btnScanNow.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnScanNow.Location = new System.Drawing.Point(95, 3);
             this.btnScanNow.Name = "btnScanNow";
-            this.btnScanNow.Size = new System.Drawing.Size(179, 52);
+            this.btnScanNow.Size = new System.Drawing.Size(179, 51);
             this.btnScanNow.TabIndex = 0;
             this.btnScanNow.Text = "Quét ngay";
             this.btnScanNow.UseVisualStyleBackColor = false;
@@ -395,11 +395,11 @@
             // grpCustomInfo
             // 
             this.grpCustomInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpCustomInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpCustomInfo.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpCustomInfo.Location = new System.Drawing.Point(391, 0);
             this.grpCustomInfo.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.grpCustomInfo.Name = "grpCustomInfo";
-            this.grpCustomInfo.Size = new System.Drawing.Size(253, 272);
+            this.grpCustomInfo.Size = new System.Drawing.Size(253, 268);
             this.grpCustomInfo.TabIndex = 1;
             this.grpCustomInfo.TabStop = false;
             this.grpCustomInfo.Text = "Tùy chọn quét";
@@ -616,7 +616,7 @@
             // 
             this.grpStatistics.Controls.Add(this.tableLayoutPanel13);
             this.grpStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpStatistics.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpStatistics.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpStatistics.Location = new System.Drawing.Point(3, 318);
             this.grpStatistics.Name = "grpStatistics";
             this.grpStatistics.Size = new System.Drawing.Size(1108, 151);
@@ -636,22 +636,23 @@
             this.tableLayoutPanel13.Controls.Add(this.grpLastScan, 2, 0);
             this.tableLayoutPanel13.Controls.Add(this.grpQuarantine, 3, 0);
             this.tableLayoutPanel13.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel13.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel13.Location = new System.Drawing.Point(3, 21);
             this.tableLayoutPanel13.Name = "tableLayoutPanel13";
             this.tableLayoutPanel13.RowCount = 1;
             this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel13.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 129F));
-            this.tableLayoutPanel13.Size = new System.Drawing.Size(1102, 129);
+            this.tableLayoutPanel13.Size = new System.Drawing.Size(1102, 127);
             this.tableLayoutPanel13.TabIndex = 0;
             // 
             // grpThreats
             // 
             this.grpThreats.Controls.Add(this.tableLayoutPanel14);
             this.grpThreats.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpThreats.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpThreats.Location = new System.Drawing.Point(5, 5);
             this.grpThreats.Margin = new System.Windows.Forms.Padding(5);
             this.grpThreats.Name = "grpThreats";
-            this.grpThreats.Size = new System.Drawing.Size(265, 119);
+            this.grpThreats.Size = new System.Drawing.Size(265, 117);
             this.grpThreats.TabIndex = 0;
             this.grpThreats.TabStop = false;
             this.grpThreats.Text = "Mối đe dọa";
@@ -664,12 +665,12 @@
             this.tableLayoutPanel14.Controls.Add(this.lblThreatCount, 0, 0);
             this.tableLayoutPanel14.Controls.Add(this.lblThreatText, 0, 1);
             this.tableLayoutPanel14.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel14.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel14.Location = new System.Drawing.Point(3, 20);
             this.tableLayoutPanel14.Name = "tableLayoutPanel14";
             this.tableLayoutPanel14.RowCount = 2;
             this.tableLayoutPanel14.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel14.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel14.Size = new System.Drawing.Size(259, 97);
+            this.tableLayoutPanel14.Size = new System.Drawing.Size(259, 94);
             this.tableLayoutPanel14.TabIndex = 0;
             // 
             // lblThreatCount
@@ -679,7 +680,7 @@
             this.lblThreatCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblThreatCount.Location = new System.Drawing.Point(3, 0);
             this.lblThreatCount.Name = "lblThreatCount";
-            this.lblThreatCount.Size = new System.Drawing.Size(253, 48);
+            this.lblThreatCount.Size = new System.Drawing.Size(253, 47);
             this.lblThreatCount.TabIndex = 0;
             this.lblThreatCount.Text = "0";
             this.lblThreatCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -688,9 +689,9 @@
             // 
             this.lblThreatText.AutoSize = true;
             this.lblThreatText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblThreatText.Location = new System.Drawing.Point(3, 48);
+            this.lblThreatText.Location = new System.Drawing.Point(3, 47);
             this.lblThreatText.Name = "lblThreatText";
-            this.lblThreatText.Size = new System.Drawing.Size(253, 49);
+            this.lblThreatText.Size = new System.Drawing.Size(253, 47);
             this.lblThreatText.TabIndex = 1;
             this.lblThreatText.Text = "Không phát hiện mối đe dọa";
             this.lblThreatText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -699,10 +700,11 @@
             // 
             this.grpScannedFiles.Controls.Add(this.tableLayoutPanel15);
             this.grpScannedFiles.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpScannedFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpScannedFiles.Location = new System.Drawing.Point(280, 5);
             this.grpScannedFiles.Margin = new System.Windows.Forms.Padding(5);
             this.grpScannedFiles.Name = "grpScannedFiles";
-            this.grpScannedFiles.Size = new System.Drawing.Size(265, 119);
+            this.grpScannedFiles.Size = new System.Drawing.Size(265, 117);
             this.grpScannedFiles.TabIndex = 1;
             this.grpScannedFiles.TabStop = false;
             this.grpScannedFiles.Text = "Tệp đã quét";
@@ -715,12 +717,12 @@
             this.tableLayoutPanel15.Controls.Add(this.lblScannedCount, 0, 0);
             this.tableLayoutPanel15.Controls.Add(this.lblScannedUnit, 0, 1);
             this.tableLayoutPanel15.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel15.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel15.Location = new System.Drawing.Point(3, 20);
             this.tableLayoutPanel15.Name = "tableLayoutPanel15";
             this.tableLayoutPanel15.RowCount = 2;
             this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel15.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel15.Size = new System.Drawing.Size(259, 97);
+            this.tableLayoutPanel15.Size = new System.Drawing.Size(259, 94);
             this.tableLayoutPanel15.TabIndex = 1;
             // 
             // lblScannedCount
@@ -730,7 +732,7 @@
             this.lblScannedCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblScannedCount.Location = new System.Drawing.Point(3, 0);
             this.lblScannedCount.Name = "lblScannedCount";
-            this.lblScannedCount.Size = new System.Drawing.Size(253, 48);
+            this.lblScannedCount.Size = new System.Drawing.Size(253, 47);
             this.lblScannedCount.TabIndex = 0;
             this.lblScannedCount.Text = "125.430";
             this.lblScannedCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -739,9 +741,9 @@
             // 
             this.lblScannedUnit.AutoSize = true;
             this.lblScannedUnit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblScannedUnit.Location = new System.Drawing.Point(3, 48);
+            this.lblScannedUnit.Location = new System.Drawing.Point(3, 47);
             this.lblScannedUnit.Name = "lblScannedUnit";
-            this.lblScannedUnit.Size = new System.Drawing.Size(253, 49);
+            this.lblScannedUnit.Size = new System.Drawing.Size(253, 47);
             this.lblScannedUnit.TabIndex = 1;
             this.lblScannedUnit.Text = "Tệp";
             this.lblScannedUnit.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -750,10 +752,11 @@
             // 
             this.grpLastScan.Controls.Add(this.tableLayoutPanel16);
             this.grpLastScan.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpLastScan.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpLastScan.Location = new System.Drawing.Point(555, 5);
             this.grpLastScan.Margin = new System.Windows.Forms.Padding(5);
             this.grpLastScan.Name = "grpLastScan";
-            this.grpLastScan.Size = new System.Drawing.Size(265, 119);
+            this.grpLastScan.Size = new System.Drawing.Size(265, 117);
             this.grpLastScan.TabIndex = 2;
             this.grpLastScan.TabStop = false;
             this.grpLastScan.Text = "Lần quét gần nhất";
@@ -766,12 +769,12 @@
             this.tableLayoutPanel16.Controls.Add(this.lblLastScanDate, 0, 0);
             this.tableLayoutPanel16.Controls.Add(this.lblLastScanType, 0, 1);
             this.tableLayoutPanel16.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel16.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel16.Location = new System.Drawing.Point(3, 20);
             this.tableLayoutPanel16.Name = "tableLayoutPanel16";
             this.tableLayoutPanel16.RowCount = 2;
             this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel16.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel16.Size = new System.Drawing.Size(259, 97);
+            this.tableLayoutPanel16.Size = new System.Drawing.Size(259, 94);
             this.tableLayoutPanel16.TabIndex = 1;
             // 
             // lblLastScanDate
@@ -781,7 +784,7 @@
             this.lblLastScanDate.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLastScanDate.Location = new System.Drawing.Point(3, 0);
             this.lblLastScanDate.Name = "lblLastScanDate";
-            this.lblLastScanDate.Size = new System.Drawing.Size(253, 48);
+            this.lblLastScanDate.Size = new System.Drawing.Size(253, 47);
             this.lblLastScanDate.TabIndex = 0;
             this.lblLastScanDate.Text = "20/08/2025  07:45";
             this.lblLastScanDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -790,9 +793,9 @@
             // 
             this.lblLastScanType.AutoSize = true;
             this.lblLastScanType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblLastScanType.Location = new System.Drawing.Point(3, 48);
+            this.lblLastScanType.Location = new System.Drawing.Point(3, 47);
             this.lblLastScanType.Name = "lblLastScanType";
-            this.lblLastScanType.Size = new System.Drawing.Size(253, 49);
+            this.lblLastScanType.Size = new System.Drawing.Size(253, 47);
             this.lblLastScanType.TabIndex = 1;
             this.lblLastScanType.Text = "Quét nhanh";
             this.lblLastScanType.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -801,10 +804,11 @@
             // 
             this.grpQuarantine.Controls.Add(this.tableLayoutPanel17);
             this.grpQuarantine.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpQuarantine.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpQuarantine.Location = new System.Drawing.Point(830, 5);
             this.grpQuarantine.Margin = new System.Windows.Forms.Padding(5);
             this.grpQuarantine.Name = "grpQuarantine";
-            this.grpQuarantine.Size = new System.Drawing.Size(267, 119);
+            this.grpQuarantine.Size = new System.Drawing.Size(267, 117);
             this.grpQuarantine.TabIndex = 3;
             this.grpQuarantine.TabStop = false;
             this.grpQuarantine.Text = "Cách ly";
@@ -817,12 +821,12 @@
             this.tableLayoutPanel17.Controls.Add(this.lblQuarantineCount, 0, 0);
             this.tableLayoutPanel17.Controls.Add(this.lblQuarantineUnit, 0, 1);
             this.tableLayoutPanel17.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel17.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel17.Location = new System.Drawing.Point(3, 20);
             this.tableLayoutPanel17.Name = "tableLayoutPanel17";
             this.tableLayoutPanel17.RowCount = 2;
             this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel17.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel17.Size = new System.Drawing.Size(261, 97);
+            this.tableLayoutPanel17.Size = new System.Drawing.Size(261, 94);
             this.tableLayoutPanel17.TabIndex = 1;
             // 
             // lblQuarantineCount
@@ -832,7 +836,7 @@
             this.lblQuarantineCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblQuarantineCount.Location = new System.Drawing.Point(3, 0);
             this.lblQuarantineCount.Name = "lblQuarantineCount";
-            this.lblQuarantineCount.Size = new System.Drawing.Size(255, 48);
+            this.lblQuarantineCount.Size = new System.Drawing.Size(255, 47);
             this.lblQuarantineCount.TabIndex = 0;
             this.lblQuarantineCount.Text = "0";
             this.lblQuarantineCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -842,9 +846,9 @@
             // 
             this.lblQuarantineUnit.AutoSize = true;
             this.lblQuarantineUnit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblQuarantineUnit.Location = new System.Drawing.Point(3, 48);
+            this.lblQuarantineUnit.Location = new System.Drawing.Point(3, 47);
             this.lblQuarantineUnit.Name = "lblQuarantineUnit";
-            this.lblQuarantineUnit.Size = new System.Drawing.Size(255, 49);
+            this.lblQuarantineUnit.Size = new System.Drawing.Size(255, 47);
             this.lblQuarantineUnit.TabIndex = 1;
             this.lblQuarantineUnit.Text = "Tệp";
             this.lblQuarantineUnit.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -853,7 +857,7 @@
             // 
             this.grpRecantActivity.Controls.Add(this.tableLayoutPanel18);
             this.grpRecantActivity.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpRecantActivity.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpRecantActivity.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpRecantActivity.Location = new System.Drawing.Point(5, 477);
             this.grpRecantActivity.Margin = new System.Windows.Forms.Padding(5);
             this.grpRecantActivity.Name = "grpRecantActivity";
@@ -869,13 +873,13 @@
             this.tableLayoutPanel18.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel18.Controls.Add(this.dgvRecentActivity, 0, 0);
             this.tableLayoutPanel18.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel18.Location = new System.Drawing.Point(3, 19);
+            this.tableLayoutPanel18.Location = new System.Drawing.Point(3, 21);
             this.tableLayoutPanel18.Margin = new System.Windows.Forms.Padding(10);
             this.tableLayoutPanel18.Name = "tableLayoutPanel18";
             this.tableLayoutPanel18.RowCount = 1;
             this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 285F));
-            this.tableLayoutPanel18.Size = new System.Drawing.Size(1098, 285);
+            this.tableLayoutPanel18.Size = new System.Drawing.Size(1098, 283);
             this.tableLayoutPanel18.TabIndex = 0;
             // 
             // dgvRecentActivity
@@ -899,7 +903,7 @@
             this.dgvRecentActivity.RowHeadersWidth = 82;
             this.dgvRecentActivity.RowTemplate.Height = 33;
             this.dgvRecentActivity.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvRecentActivity.Size = new System.Drawing.Size(1078, 265);
+            this.dgvRecentActivity.Size = new System.Drawing.Size(1078, 263);
             this.dgvRecentActivity.TabIndex = 0;
             // 
             // colTime

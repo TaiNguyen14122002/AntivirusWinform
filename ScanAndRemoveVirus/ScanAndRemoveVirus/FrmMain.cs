@@ -18,6 +18,7 @@ namespace ScanAndRemoveVirus
         private readonly UcTongQuan ucTongQuan = new UcTongQuan();
         private readonly UcBaoVe ucBaoVe = new UcBaoVe();
         private readonly UcLichSu ucLichSu = new UcLichSu();
+        private readonly UcCachLy ucCachLy = new UcCachLy();
 
         private void LoadContent(UserControl control)
         {
@@ -33,7 +34,8 @@ namespace ScanAndRemoveVirus
             {
                 btnTongQuan,
                 btnBaoVe,
-                btnLichSu
+                btnLichSu,
+                btnCachLy
             };
             foreach(Button btn in buttons)
             {
@@ -59,6 +61,7 @@ namespace ScanAndRemoveVirus
             btnTongQuan.Click += btnTongQuan_Click;
             btnBaoVe.Click += btnBaoVe_Click;
             btnLichSu.Click += btnLichSu_Click;
+            btnCachLy.Click += btnCachLy_Click;
 
         }
         
@@ -85,6 +88,12 @@ namespace ScanAndRemoveVirus
         {
             LoadContent(ucLichSu);
             ActiveSidebar(btnLichSu);
+        }
+
+        private void btnCachLy_Click(object sender, EventArgs e)
+        {
+            LoadContent(ucCachLy);
+            ActiveSidebar(btnCachLy);
         }
     }
 

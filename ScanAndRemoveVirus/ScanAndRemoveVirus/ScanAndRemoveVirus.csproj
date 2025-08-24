@@ -55,6 +55,12 @@
     <Compile Include="Control\UcBaoVe.Designer.cs">
       <DependentUpon>UcBaoVe.cs</DependentUpon>
     </Compile>
+    <Compile Include="Control\UcCachLy.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcCachLy.Designer.cs">
+      <DependentUpon>UcCachLy.cs</DependentUpon>
+    </Compile>
     <Compile Include="Control\UcLichSu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -95,6 +101,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Control\UcBaoVe.resx">
       <DependentUpon>UcBaoVe.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Control\UcCachLy.resx">
+      <DependentUpon>UcCachLy.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Control\UcLichSu.resx">
       <DependentUpon>UcLichSu.cs</DependentUpon>

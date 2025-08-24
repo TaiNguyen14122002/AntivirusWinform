@@ -34,8 +34,6 @@
             this.lblHistorySubtitle = new System.Windows.Forms.Label();
             this.tabHistory = new System.Windows.Forms.TabControl();
             this.tabScanHistory = new System.Windows.Forms.TabPage();
-            this.tabThreatHistory = new System.Windows.Forms.TabPage();
-            this.tabUpdateHistory = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.dgvHistory = new System.Windows.Forms.DataGridView();
@@ -45,6 +43,14 @@
             this.colResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colThreatCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
+            this.btnViewDetail = new System.Windows.Forms.Button();
+            this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
+            this.btnRefreshHistory = new System.Windows.Forms.Button();
+            this.btnExportReport = new System.Windows.Forms.Button();
+            this.tabThreatHistory = new System.Windows.Forms.TabPage();
+            this.tabUpdateHistory = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tabHistory.SuspendLayout();
@@ -52,6 +58,9 @@
             this.panel1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvHistory)).BeginInit();
+            this.tableLayoutPanel4.SuspendLayout();
+            this.tableLayoutPanel5.SuspendLayout();
+            this.tableLayoutPanel6.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -136,30 +145,12 @@
             this.tabScanHistory.Text = "Lịch sử quét";
             this.tabScanHistory.UseVisualStyleBackColor = true;
             // 
-            // tabThreatHistory
-            // 
-            this.tabThreatHistory.Location = new System.Drawing.Point(4, 26);
-            this.tabThreatHistory.Name = "tabThreatHistory";
-            this.tabThreatHistory.Padding = new System.Windows.Forms.Padding(3);
-            this.tabThreatHistory.Size = new System.Drawing.Size(1160, 686);
-            this.tabThreatHistory.TabIndex = 1;
-            this.tabThreatHistory.Text = "Lịch sử phát hiện";
-            this.tabThreatHistory.UseVisualStyleBackColor = true;
-            // 
-            // tabUpdateHistory
-            // 
-            this.tabUpdateHistory.Location = new System.Drawing.Point(4, 26);
-            this.tabUpdateHistory.Name = "tabUpdateHistory";
-            this.tabUpdateHistory.Size = new System.Drawing.Size(1160, 686);
-            this.tabUpdateHistory.TabIndex = 2;
-            this.tabUpdateHistory.Text = "Lịch sử cập nhập";
-            this.tabUpdateHistory.UseVisualStyleBackColor = true;
-            // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.White;
             this.panel1.Controls.Add(this.tableLayoutPanel3);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Margin = new System.Windows.Forms.Padding(5);
             this.panel1.Name = "panel1";
@@ -171,14 +162,14 @@
             // 
             this.tableLayoutPanel3.ColumnCount = 1;
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel3.Controls.Add(this.dgvHistory, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.tableLayoutPanel4, 0, 1);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(10, 10);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 2;
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 85F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
             this.tableLayoutPanel3.Size = new System.Drawing.Size(1134, 660);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
@@ -198,29 +189,35 @@
             this.colThreatCount,
             this.colDuration});
             this.dgvHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvHistory.Location = new System.Drawing.Point(3, 3);
+            this.dgvHistory.Location = new System.Drawing.Point(10, 10);
+            this.dgvHistory.Margin = new System.Windows.Forms.Padding(10);
             this.dgvHistory.Name = "dgvHistory";
             this.dgvHistory.ReadOnly = true;
             this.dgvHistory.RowHeadersVisible = false;
+            this.dgvHistory.RowHeadersWidth = 82;
+            this.dgvHistory.RowTemplate.Height = 33;
             this.dgvHistory.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvHistory.Size = new System.Drawing.Size(1128, 522);
-            this.dgvHistory.TabIndex = 1;
+            this.dgvHistory.Size = new System.Drawing.Size(1114, 541);
+            this.dgvHistory.TabIndex = 3;
             // 
             // colTime
             // 
             this.colTime.HeaderText = "Thời gian";
+            this.colTime.MinimumWidth = 10;
             this.colTime.Name = "colTime";
             this.colTime.ReadOnly = true;
             // 
             // colScanType
             // 
-            this.colScanType.HeaderText = "loại quét";
+            this.colScanType.HeaderText = "Loại quét";
+            this.colScanType.MinimumWidth = 10;
             this.colScanType.Name = "colScanType";
             this.colScanType.ReadOnly = true;
             // 
             // colScanLocation
             // 
             this.colScanLocation.HeaderText = "Vị trí quét";
+            this.colScanLocation.MinimumWidth = 10;
             this.colScanLocation.Name = "colScanLocation";
             this.colScanLocation.ReadOnly = true;
             // 
@@ -242,6 +239,112 @@
             this.colDuration.Name = "colDuration";
             this.colDuration.ReadOnly = true;
             // 
+            // tableLayoutPanel4
+            // 
+            this.tableLayoutPanel4.ColumnCount = 2;
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.Controls.Add(this.tableLayoutPanel5, 0, 1);
+            this.tableLayoutPanel4.Controls.Add(this.tableLayoutPanel6, 1, 1);
+            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 564);
+            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
+            this.tableLayoutPanel4.RowCount = 2;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(1128, 93);
+            this.tableLayoutPanel4.TabIndex = 2;
+            // 
+            // tableLayoutPanel5
+            // 
+            this.tableLayoutPanel5.ColumnCount = 4;
+            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel5.Controls.Add(this.btnViewDetail, 0, 0);
+            this.tableLayoutPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel5.Location = new System.Drawing.Point(3, 23);
+            this.tableLayoutPanel5.Name = "tableLayoutPanel5";
+            this.tableLayoutPanel5.RowCount = 1;
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 67F));
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 67F));
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 67F));
+            this.tableLayoutPanel5.Size = new System.Drawing.Size(558, 67);
+            this.tableLayoutPanel5.TabIndex = 0;
+            // 
+            // btnViewDetail
+            // 
+            this.btnViewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnViewDetail.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnViewDetail.Location = new System.Drawing.Point(3, 3);
+            this.btnViewDetail.Name = "btnViewDetail";
+            this.btnViewDetail.Size = new System.Drawing.Size(133, 61);
+            this.btnViewDetail.TabIndex = 0;
+            this.btnViewDetail.Text = "Xem chi tiết";
+            this.btnViewDetail.UseVisualStyleBackColor = true;
+            this.btnViewDetail.Click += new System.EventHandler(this.btnViewDetail_Click);
+            // 
+            // tableLayoutPanel6
+            // 
+            this.tableLayoutPanel6.ColumnCount = 4;
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
+            this.tableLayoutPanel6.Controls.Add(this.btnRefreshHistory, 3, 0);
+            this.tableLayoutPanel6.Controls.Add(this.btnExportReport, 1, 0);
+            this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel6.Location = new System.Drawing.Point(567, 23);
+            this.tableLayoutPanel6.Name = "tableLayoutPanel6";
+            this.tableLayoutPanel6.RowCount = 1;
+            this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 67F));
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(558, 67);
+            this.tableLayoutPanel6.TabIndex = 1;
+            // 
+            // btnRefreshHistory
+            // 
+            this.btnRefreshHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnRefreshHistory.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRefreshHistory.Location = new System.Drawing.Point(381, 3);
+            this.btnRefreshHistory.Name = "btnRefreshHistory";
+            this.btnRefreshHistory.Size = new System.Drawing.Size(174, 61);
+            this.btnRefreshHistory.TabIndex = 0;
+            this.btnRefreshHistory.Text = "Làm mới";
+            this.btnRefreshHistory.UseVisualStyleBackColor = true;
+            // 
+            // btnExportReport
+            // 
+            this.btnExportReport.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnExportReport.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExportReport.Location = new System.Drawing.Point(182, 3);
+            this.btnExportReport.Name = "btnExportReport";
+            this.btnExportReport.Size = new System.Drawing.Size(173, 61);
+            this.btnExportReport.TabIndex = 1;
+            this.btnExportReport.Text = "Xuất báo cáo";
+            this.btnExportReport.UseVisualStyleBackColor = true;
+            // 
+            // tabThreatHistory
+            // 
+            this.tabThreatHistory.Location = new System.Drawing.Point(4, 26);
+            this.tabThreatHistory.Name = "tabThreatHistory";
+            this.tabThreatHistory.Padding = new System.Windows.Forms.Padding(3);
+            this.tabThreatHistory.Size = new System.Drawing.Size(1160, 686);
+            this.tabThreatHistory.TabIndex = 1;
+            this.tabThreatHistory.Text = "Lịch sử phát hiện";
+            this.tabThreatHistory.UseVisualStyleBackColor = true;
+            // 
+            // tabUpdateHistory
+            // 
+            this.tabUpdateHistory.Location = new System.Drawing.Point(4, 26);
+            this.tabUpdateHistory.Name = "tabUpdateHistory";
+            this.tabUpdateHistory.Size = new System.Drawing.Size(1160, 686);
+            this.tabUpdateHistory.TabIndex = 2;
+            this.tabUpdateHistory.Text = "Lịch sử cập nhập";
+            this.tabUpdateHistory.UseVisualStyleBackColor = true;
+            // 
             // UcLichSu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -258,6 +361,9 @@
             this.panel1.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvHistory)).EndInit();
+            this.tableLayoutPanel4.ResumeLayout(false);
+            this.tableLayoutPanel5.ResumeLayout(false);
+            this.tableLayoutPanel6.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -274,6 +380,12 @@
         private System.Windows.Forms.TabPage tabUpdateHistory;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel5;
+        private System.Windows.Forms.Button btnViewDetail;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;
+        private System.Windows.Forms.Button btnRefreshHistory;
+        private System.Windows.Forms.Button btnExportReport;
         private System.Windows.Forms.DataGridView dgvHistory;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn colScanType;

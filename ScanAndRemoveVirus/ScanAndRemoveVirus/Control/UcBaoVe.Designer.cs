@@ -90,7 +90,7 @@
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel5, 0, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
@@ -109,7 +109,7 @@
             this.tableLayoutPanel2.Controls.Add(this.lblProtectionSubtitle, 0, 2);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(2, 2);
-            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 4;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
@@ -152,7 +152,7 @@
             this.tableLayoutPanel3.Controls.Add(this.grpProtectionFeatures, 0, 1);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(2, 84);
-            this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 2;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
@@ -164,11 +164,11 @@
             // 
             this.grpProtectionFeatures.Controls.Add(this.tableLayoutPanel4);
             this.grpProtectionFeatures.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpProtectionFeatures.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpProtectionFeatures.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpProtectionFeatures.Location = new System.Drawing.Point(2, 12);
-            this.grpProtectionFeatures.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpProtectionFeatures.Margin = new System.Windows.Forms.Padding(2);
             this.grpProtectionFeatures.Name = "grpProtectionFeatures";
-            this.grpProtectionFeatures.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpProtectionFeatures.Padding = new System.Windows.Forms.Padding(2);
             this.grpProtectionFeatures.Size = new System.Drawing.Size(1166, 355);
             this.grpProtectionFeatures.TabIndex = 0;
             this.grpProtectionFeatures.TabStop = false;
@@ -181,13 +181,13 @@
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 10F));
             this.tableLayoutPanel4.Controls.Add(this.dgvProtecctionFeatures, 0, 0);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(2, 20);
-            this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(2, 22);
+            this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(10);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 1;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 344F));
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(1162, 333);
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 333F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(1162, 331);
             this.tableLayoutPanel4.TabIndex = 0;
             // 
             // dgvProtecctionFeatures
@@ -205,14 +205,14 @@
             this.colAction});
             this.dgvProtecctionFeatures.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvProtecctionFeatures.Location = new System.Drawing.Point(10, 10);
-            this.dgvProtecctionFeatures.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.dgvProtecctionFeatures.Margin = new System.Windows.Forms.Padding(10);
             this.dgvProtecctionFeatures.Name = "dgvProtecctionFeatures";
             this.dgvProtecctionFeatures.ReadOnly = true;
             this.dgvProtecctionFeatures.RowHeadersVisible = false;
             this.dgvProtecctionFeatures.RowHeadersWidth = 82;
             this.dgvProtecctionFeatures.RowTemplate.Height = 33;
             this.dgvProtecctionFeatures.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvProtecctionFeatures.Size = new System.Drawing.Size(1142, 313);
+            this.dgvProtecctionFeatures.Size = new System.Drawing.Size(1142, 311);
             this.dgvProtecctionFeatures.TabIndex = 2;
             // 
             // colFeature
@@ -256,7 +256,7 @@
             this.tableLayoutPanel5.Controls.Add(this.grpOtherSettings, 1, 0);
             this.tableLayoutPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel5.Location = new System.Drawing.Point(2, 457);
-            this.tableLayoutPanel5.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel5.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel5.Name = "tableLayoutPanel5";
             this.tableLayoutPanel5.RowCount = 1;
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -267,11 +267,11 @@
             // 
             this.grpProtectionInfo.Controls.Add(this.tableLayoutPanel6);
             this.grpProtectionInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpProtectionInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpProtectionInfo.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpProtectionInfo.Location = new System.Drawing.Point(2, 2);
-            this.grpProtectionInfo.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpProtectionInfo.Margin = new System.Windows.Forms.Padding(2);
             this.grpProtectionInfo.Name = "grpProtectionInfo";
-            this.grpProtectionInfo.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpProtectionInfo.Padding = new System.Windows.Forms.Padding(2);
             this.grpProtectionInfo.Size = new System.Drawing.Size(698, 366);
             this.grpProtectionInfo.TabIndex = 0;
             this.grpProtectionInfo.TabStop = false;
@@ -283,7 +283,7 @@
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 42F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 58F));
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 27F));
             this.tableLayoutPanel6.Controls.Add(this.lblStatusTitle, 1, 1);
             this.tableLayoutPanel6.Controls.Add(this.lblDatabaseTitle2, 1, 2);
             this.tableLayoutPanel6.Controls.Add(this.lblDatabaseVersionTitle, 1, 3);
@@ -299,8 +299,8 @@
             this.tableLayoutPanel6.Controls.Add(this.lblScannedFilesValue, 2, 6);
             this.tableLayoutPanel6.Controls.Add(this.lblBlockedThreaetsValue, 2, 7);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel6.Location = new System.Drawing.Point(2, 18);
-            this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.tableLayoutPanel6.Location = new System.Drawing.Point(2, 22);
+            this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(5);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 9;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
@@ -312,7 +312,7 @@
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28572F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28572F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(694, 346);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(694, 342);
             this.tableLayoutPanel6.TabIndex = 0;
             // 
             // lblStatusTitle
@@ -322,7 +322,7 @@
             this.lblStatusTitle.Location = new System.Drawing.Point(27, 10);
             this.lblStatusTitle.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblStatusTitle.Name = "lblStatusTitle";
-            this.lblStatusTitle.Size = new System.Drawing.Size(124, 44);
+            this.lblStatusTitle.Size = new System.Drawing.Size(127, 44);
             this.lblStatusTitle.TabIndex = 0;
             this.lblStatusTitle.Text = "Trạng thái bảo vệ:";
             this.lblStatusTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -334,7 +334,7 @@
             this.lblDatabaseTitle2.Location = new System.Drawing.Point(27, 54);
             this.lblDatabaseTitle2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDatabaseTitle2.Name = "lblDatabaseTitle2";
-            this.lblDatabaseTitle2.Size = new System.Drawing.Size(266, 45);
+            this.lblDatabaseTitle2.Size = new System.Drawing.Size(265, 44);
             this.lblDatabaseTitle2.TabIndex = 1;
             this.lblDatabaseTitle2.Text = "Cơ sở dữ liệu virus:";
             this.lblDatabaseTitle2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -343,10 +343,10 @@
             // 
             this.lblDatabaseVersionTitle.AutoSize = true;
             this.lblDatabaseVersionTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblDatabaseVersionTitle.Location = new System.Drawing.Point(27, 99);
+            this.lblDatabaseVersionTitle.Location = new System.Drawing.Point(27, 98);
             this.lblDatabaseVersionTitle.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDatabaseVersionTitle.Name = "lblDatabaseVersionTitle";
-            this.lblDatabaseVersionTitle.Size = new System.Drawing.Size(266, 45);
+            this.lblDatabaseVersionTitle.Size = new System.Drawing.Size(265, 44);
             this.lblDatabaseVersionTitle.TabIndex = 2;
             this.lblDatabaseVersionTitle.Text = "Phiên bản cơ sở dữ liệu:";
             this.lblDatabaseVersionTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -355,10 +355,10 @@
             // 
             this.lblUpdateDateTitle.AutoSize = true;
             this.lblUpdateDateTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblUpdateDateTitle.Location = new System.Drawing.Point(27, 144);
+            this.lblUpdateDateTitle.Location = new System.Drawing.Point(27, 142);
             this.lblUpdateDateTitle.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblUpdateDateTitle.Name = "lblUpdateDateTitle";
-            this.lblUpdateDateTitle.Size = new System.Drawing.Size(266, 45);
+            this.lblUpdateDateTitle.Size = new System.Drawing.Size(265, 44);
             this.lblUpdateDateTitle.TabIndex = 3;
             this.lblUpdateDateTitle.Text = "Ngày cập nhập:";
             this.lblUpdateDateTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -367,10 +367,10 @@
             // 
             this.lblRealtimeScanTitle.AutoSize = true;
             this.lblRealtimeScanTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblRealtimeScanTitle.Location = new System.Drawing.Point(27, 189);
+            this.lblRealtimeScanTitle.Location = new System.Drawing.Point(27, 186);
             this.lblRealtimeScanTitle.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblRealtimeScanTitle.Name = "lblRealtimeScanTitle";
-            this.lblRealtimeScanTitle.Size = new System.Drawing.Size(266, 45);
+            this.lblRealtimeScanTitle.Size = new System.Drawing.Size(265, 44);
             this.lblRealtimeScanTitle.TabIndex = 4;
             this.lblRealtimeScanTitle.Text = "Làn quét thời gian thực cuối:";
             this.lblRealtimeScanTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -379,10 +379,10 @@
             // 
             this.lblScannerFilesTitle.AutoSize = true;
             this.lblScannerFilesTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblScannerFilesTitle.Location = new System.Drawing.Point(27, 234);
+            this.lblScannerFilesTitle.Location = new System.Drawing.Point(27, 230);
             this.lblScannerFilesTitle.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblScannerFilesTitle.Name = "lblScannerFilesTitle";
-            this.lblScannerFilesTitle.Size = new System.Drawing.Size(266, 45);
+            this.lblScannerFilesTitle.Size = new System.Drawing.Size(265, 44);
             this.lblScannerFilesTitle.TabIndex = 5;
             this.lblScannerFilesTitle.Text = "Số tệp đã được quét:";
             this.lblScannerFilesTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -391,10 +391,10 @@
             // 
             this.lblBlockedThreatsTitle.AutoSize = true;
             this.lblBlockedThreatsTitle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblBlockedThreatsTitle.Location = new System.Drawing.Point(27, 279);
+            this.lblBlockedThreatsTitle.Location = new System.Drawing.Point(27, 274);
             this.lblBlockedThreatsTitle.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblBlockedThreatsTitle.Name = "lblBlockedThreatsTitle";
-            this.lblBlockedThreatsTitle.Size = new System.Drawing.Size(266, 45);
+            this.lblBlockedThreatsTitle.Size = new System.Drawing.Size(265, 44);
             this.lblBlockedThreatsTitle.TabIndex = 6;
             this.lblBlockedThreatsTitle.Text = "Số mối đe dọa đã ngăn chặn:";
             this.lblBlockedThreatsTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -404,7 +404,7 @@
             this.lblStatusValue.AutoSize = true;
             this.lblStatusValue.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblStatusValue.ForeColor = System.Drawing.Color.Green;
-            this.lblStatusValue.Location = new System.Drawing.Point(297, 10);
+            this.lblStatusValue.Location = new System.Drawing.Point(296, 10);
             this.lblStatusValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblStatusValue.Name = "lblStatusValue";
             this.lblStatusValue.Size = new System.Drawing.Size(368, 44);
@@ -417,10 +417,10 @@
             this.lblDatabaseValue2.AutoSize = true;
             this.lblDatabaseValue2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblDatabaseValue2.ForeColor = System.Drawing.Color.Green;
-            this.lblDatabaseValue2.Location = new System.Drawing.Point(297, 54);
+            this.lblDatabaseValue2.Location = new System.Drawing.Point(296, 54);
             this.lblDatabaseValue2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDatabaseValue2.Name = "lblDatabaseValue2";
-            this.lblDatabaseValue2.Size = new System.Drawing.Size(368, 45);
+            this.lblDatabaseValue2.Size = new System.Drawing.Size(368, 44);
             this.lblDatabaseValue2.TabIndex = 8;
             this.lblDatabaseValue2.Text = "Đã cập nhập";
             this.lblDatabaseValue2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -429,10 +429,10 @@
             // 
             this.lblDatabaseVersionValue.AutoSize = true;
             this.lblDatabaseVersionValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblDatabaseVersionValue.Location = new System.Drawing.Point(297, 99);
+            this.lblDatabaseVersionValue.Location = new System.Drawing.Point(296, 98);
             this.lblDatabaseVersionValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDatabaseVersionValue.Name = "lblDatabaseVersionValue";
-            this.lblDatabaseVersionValue.Size = new System.Drawing.Size(368, 45);
+            this.lblDatabaseVersionValue.Size = new System.Drawing.Size(368, 44);
             this.lblDatabaseVersionValue.TabIndex = 9;
             this.lblDatabaseVersionValue.Text = "1.0.0.2025";
             this.lblDatabaseVersionValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -441,10 +441,10 @@
             // 
             this.lblUpdateDateValue.AutoSize = true;
             this.lblUpdateDateValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblUpdateDateValue.Location = new System.Drawing.Point(297, 144);
+            this.lblUpdateDateValue.Location = new System.Drawing.Point(296, 142);
             this.lblUpdateDateValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblUpdateDateValue.Name = "lblUpdateDateValue";
-            this.lblUpdateDateValue.Size = new System.Drawing.Size(368, 45);
+            this.lblUpdateDateValue.Size = new System.Drawing.Size(368, 44);
             this.lblUpdateDateValue.TabIndex = 10;
             this.lblUpdateDateValue.Text = "20/08/2025 08:30";
             this.lblUpdateDateValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -453,10 +453,10 @@
             // 
             this.lblRealtimeScanValue.AutoSize = true;
             this.lblRealtimeScanValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblRealtimeScanValue.Location = new System.Drawing.Point(297, 189);
+            this.lblRealtimeScanValue.Location = new System.Drawing.Point(296, 186);
             this.lblRealtimeScanValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblRealtimeScanValue.Name = "lblRealtimeScanValue";
-            this.lblRealtimeScanValue.Size = new System.Drawing.Size(368, 45);
+            this.lblRealtimeScanValue.Size = new System.Drawing.Size(368, 44);
             this.lblRealtimeScanValue.TabIndex = 11;
             this.lblRealtimeScanValue.Text = "20/08/2025 10:15";
             this.lblRealtimeScanValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -465,10 +465,10 @@
             // 
             this.lblScannedFilesValue.AutoSize = true;
             this.lblScannedFilesValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblScannedFilesValue.Location = new System.Drawing.Point(297, 234);
+            this.lblScannedFilesValue.Location = new System.Drawing.Point(296, 230);
             this.lblScannedFilesValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblScannedFilesValue.Name = "lblScannedFilesValue";
-            this.lblScannedFilesValue.Size = new System.Drawing.Size(368, 45);
+            this.lblScannedFilesValue.Size = new System.Drawing.Size(368, 44);
             this.lblScannedFilesValue.TabIndex = 12;
             this.lblScannedFilesValue.Text = "125.430";
             this.lblScannedFilesValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -477,10 +477,10 @@
             // 
             this.lblBlockedThreaetsValue.AutoSize = true;
             this.lblBlockedThreaetsValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblBlockedThreaetsValue.Location = new System.Drawing.Point(297, 279);
+            this.lblBlockedThreaetsValue.Location = new System.Drawing.Point(296, 274);
             this.lblBlockedThreaetsValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblBlockedThreaetsValue.Name = "lblBlockedThreaetsValue";
-            this.lblBlockedThreaetsValue.Size = new System.Drawing.Size(368, 45);
+            this.lblBlockedThreaetsValue.Size = new System.Drawing.Size(368, 44);
             this.lblBlockedThreaetsValue.TabIndex = 13;
             this.lblBlockedThreaetsValue.Text = "0";
             this.lblBlockedThreaetsValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -489,11 +489,11 @@
             // 
             this.grpOtherSettings.Controls.Add(this.tableLayoutPanel7);
             this.grpOtherSettings.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpOtherSettings.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpOtherSettings.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpOtherSettings.Location = new System.Drawing.Point(704, 2);
-            this.grpOtherSettings.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpOtherSettings.Margin = new System.Windows.Forms.Padding(2);
             this.grpOtherSettings.Name = "grpOtherSettings";
-            this.grpOtherSettings.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpOtherSettings.Padding = new System.Windows.Forms.Padding(2);
             this.grpOtherSettings.Size = new System.Drawing.Size(464, 366);
             this.grpOtherSettings.TabIndex = 1;
             this.grpOtherSettings.TabStop = false;
@@ -511,8 +511,8 @@
             this.tableLayoutPanel7.Controls.Add(this.chkShowNotification, 1, 4);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel8, 1, 6);
             this.tableLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel7.Location = new System.Drawing.Point(2, 18);
-            this.tableLayoutPanel7.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel7.Location = new System.Drawing.Point(2, 22);
+            this.tableLayoutPanel7.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel7.Name = "tableLayoutPanel7";
             this.tableLayoutPanel7.RowCount = 8;
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
@@ -523,7 +523,7 @@
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel7.Size = new System.Drawing.Size(460, 346);
+            this.tableLayoutPanel7.Size = new System.Drawing.Size(460, 342);
             this.tableLayoutPanel7.TabIndex = 0;
             // 
             // chkAutoStart
@@ -533,7 +533,7 @@
             this.chkAutoStart.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkAutoStart.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chkAutoStart.Location = new System.Drawing.Point(27, 12);
-            this.chkAutoStart.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chkAutoStart.Margin = new System.Windows.Forms.Padding(2);
             this.chkAutoStart.Name = "chkAutoStart";
             this.chkAutoStart.Size = new System.Drawing.Size(406, 54);
             this.chkAutoStart.TabIndex = 0;
@@ -548,7 +548,7 @@
             this.chkAutoUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkAutoUpdate.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chkAutoUpdate.Location = new System.Drawing.Point(27, 70);
-            this.chkAutoUpdate.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chkAutoUpdate.Margin = new System.Windows.Forms.Padding(2);
             this.chkAutoUpdate.Name = "chkAutoUpdate";
             this.chkAutoUpdate.Size = new System.Drawing.Size(406, 54);
             this.chkAutoUpdate.TabIndex = 1;
@@ -562,7 +562,7 @@
             this.chkSendSamples.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkSendSamples.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chkSendSamples.Location = new System.Drawing.Point(27, 128);
-            this.chkSendSamples.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chkSendSamples.Margin = new System.Windows.Forms.Padding(2);
             this.chkSendSamples.Name = "chkSendSamples";
             this.chkSendSamples.Size = new System.Drawing.Size(406, 54);
             this.chkSendSamples.TabIndex = 2;
@@ -576,7 +576,7 @@
             this.chkShowNotification.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkShowNotification.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chkShowNotification.Location = new System.Drawing.Point(27, 186);
-            this.chkShowNotification.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chkShowNotification.Margin = new System.Windows.Forms.Padding(2);
             this.chkShowNotification.Name = "chkShowNotification";
             this.chkShowNotification.Size = new System.Drawing.Size(406, 54);
             this.chkShowNotification.TabIndex = 3;
@@ -592,7 +592,7 @@
             this.tableLayoutPanel8.Controls.Add(this.btnSaveSettings, 1, 0);
             this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel8.Location = new System.Drawing.Point(27, 265);
-            this.tableLayoutPanel8.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tableLayoutPanel8.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel8.Name = "tableLayoutPanel8";
             this.tableLayoutPanel8.RowCount = 1;
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -604,7 +604,7 @@
             this.btnSaveSettings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSaveSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveSettings.Location = new System.Drawing.Point(127, 2);
-            this.btnSaveSettings.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnSaveSettings.Margin = new System.Windows.Forms.Padding(2);
             this.btnSaveSettings.Name = "btnSaveSettings";
             this.btnSaveSettings.Size = new System.Drawing.Size(152, 50);
             this.btnSaveSettings.TabIndex = 0;
@@ -616,7 +616,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "UcBaoVe";
             this.Size = new System.Drawing.Size(1174, 829);
             this.tableLayoutPanel1.ResumeLayout(false);
