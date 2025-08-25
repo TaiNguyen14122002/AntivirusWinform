@@ -3,24 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\uccachly.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uccachly.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\uclichsu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uclichsu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\uclichsu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uclichsu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\uccachly.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uccachly.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\ucbaove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\ucbaove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\control\\uctongquan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\control\\uctongquan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|c:\\users\\tainguyen\\source\\repos\\scanandremovevirus\\scanandremovevirus\\modal\\threatdetection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C6C13A72-16EF-4383-B99A-F41823594085}|ScanAndRemoveVirus\\ScanAndRemoveVirus.csproj|solutionrelative:scanandremovevirus\\modal\\threatdetection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -29,7 +21,7 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 4,
+          "DockedWidth": 2,
           "SelectedChildIndex": -1,
           "Children": [
             {
@@ -39,44 +31,33 @@
           ]
         },
         {
-          "DockedWidth": 22,
-          "SelectedChildIndex": 4,
+          "DockedWidth": 6,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "UcTongQuan.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcTongQuan.cs",
-              "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Control\\UcTongQuan.cs",
-              "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcTongQuan.cs [Design]",
-              "RelativeToolTip": "ScanAndRemoveVirus\\Control\\UcTongQuan.cs [Design]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-24T09:14:31.154Z",
-              "EditorCaption": " [Design]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "UcBaoVe.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcBaoVe.cs",
-              "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Control\\UcBaoVe.cs",
-              "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcBaoVe.cs [Design]",
-              "RelativeToolTip": "ScanAndRemoveVirus\\Control\\UcBaoVe.cs [Design]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-24T09:13:27.869Z",
-              "EditorCaption": " [Design]"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "UcCachLy.cs",
-              "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcCachLy.cs",
-              "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Control\\UcCachLy.cs",
-              "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcCachLy.cs",
-              "RelativeToolTip": "ScanAndRemoveVirus\\Control\\UcCachLy.cs",
-              "ViewState": "AgIAAAIAAAAoMzMzM7MnwBEAAAAnAAAAAAAAAA==",
+              "Title": "ThreatDetection.cs",
+              "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Modal\\ThreatDetection.cs",
+              "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Modal\\ThreatDetection.cs",
+              "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Modal\\ThreatDetection.cs",
+              "RelativeToolTip": "ScanAndRemoveVirus\\Modal\\ThreatDetection.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-24T09:10:26.531Z",
+              "WhenOpened": "2025-08-25T02:50:57.603Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UcLichSu.cs",
+              "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcLichSu.cs",
+              "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Control\\UcLichSu.cs",
+              "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcLichSu.cs",
+              "RelativeToolTip": "ScanAndRemoveVirus\\Control\\UcLichSu.cs",
+              "ViewState": "AgIAABQCAADAlpmZmRkpwEsCAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-25T02:03:30.043Z",
               "EditorCaption": ""
             },
             {
@@ -88,19 +69,7 @@
               "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcLichSu.cs [Design]",
               "RelativeToolTip": "ScanAndRemoveVirus\\Control\\UcLichSu.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-24T08:20:30.943Z",
-              "EditorCaption": " [Design]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "UcCachLy.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcCachLy.cs",
-              "RelativeDocumentMoniker": "ScanAndRemoveVirus\\Control\\UcCachLy.cs",
-              "ToolTip": "C:\\Users\\tainguyen\\source\\repos\\ScanAndRemoveVirus\\ScanAndRemoveVirus\\Control\\UcCachLy.cs [Design]",
-              "RelativeToolTip": "ScanAndRemoveVirus\\Control\\UcCachLy.cs [Design]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-24T08:18:51.266Z",
+              "WhenOpened": "2025-08-25T01:26:53.453Z",
               "EditorCaption": " [Design]"
             }
           ]
