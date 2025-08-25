@@ -1,5 +1,4 @@
-﻿
-using ScanAndRemoveVirus.Modal;
+﻿using ScanAndRemoveVirus.Modal;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,6 +14,7 @@ namespace ScanAndRemoveVirus.Control
     public partial class UcLichSu : UserControl
     {
         private List<ThreatDetection> threatDetections = new List<ThreatDetection>();
+        private List<UpdateHistoryItem> updateHistory = new List<UpdateHistoryItem>();
         private void InitializeThreatFilter()
         {
             cboTimeFilter.Items.Clear();
@@ -54,6 +54,31 @@ namespace ScanAndRemoveVirus.Control
             cboTimeFilter.SelectedItem = "7 ngày qua";
             cboThreatTypeFilter.SelectedItem = "Tất cả";
             cboStatusFilter.SelectedItem = "Tất cả";
+        }
+        private void InitializeUpdateFilter()
+        {
+            cboUpdateTimeFilter.Items.Clear();
+            cboUpdateStatusFilter.Items.Clear();
+
+            cboUpdateTimeFilter.Items.AddRange(new object[]
+            {
+        "7 ngày qua",
+        "30 ngày qua",
+        "90 ngày qua",
+        "Tất cả"
+            });
+
+            cboUpdateStatusFilter.Items.Add("Tất cả");
+
+            foreach (string status in updateHistory
+                .Select(x => x.Status)
+                .Distinct())
+            {
+                cboUpdateStatusFilter.Items.Add(status);
+            }
+
+            cboUpdateTimeFilter.SelectedItem = "7 ngày qua";
+            cboUpdateStatusFilter.SelectedItem = "Tất cả";
         }
         private void LoadDuLieuLichSuQuet()
         {
@@ -466,6 +491,157 @@ namespace ScanAndRemoveVirus.Control
 
             DisplayThreatHistory(threatDetections);
         }
+        private void LoadSampleUpdateHistory()
+        {
+            updateHistory.Clear();
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 1,
+                UpdateTime = new DateTime(2025, 8, 20, 8, 20, 45),
+                DatabaseVersion = "VDB-2025.08.20.001",
+                Size = "25.6 MB",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thành công",
+                Note = "Cập nhật tự động",
+                UpdateMethod = "Tự động"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 2,
+                UpdateTime = new DateTime(2025, 8, 19, 21, 55, 12),
+                DatabaseVersion = "VDB-2025.08.19.002",
+                Size = "24.3 MB",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thành công",
+                Note = "Cập nhật tự động",
+                UpdateMethod = "Tự động"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 3,
+                UpdateTime = new DateTime(2025, 8, 18, 8, 15, 33),
+                DatabaseVersion = "VDB-2025.08.18.001",
+                Size = "23.8 MB",
+                UpdateSource = "Máy chủ dự phòng",
+                Status = "Thành công",
+                Note = "Cập nhật tự động",
+                UpdateMethod = "Tự động"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 4,
+                UpdateTime = new DateTime(2025, 8, 17, 8, 10, 22),
+                DatabaseVersion = "VDB-2025.08.17.001",
+                Size = "24.1 MB",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thành công",
+                Note = "Cập nhật tự động",
+                UpdateMethod = "Tự động"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 5,
+                UpdateTime = new DateTime(2025, 8, 16, 8, 5, 10),
+                DatabaseVersion = "VDB-2025.08.16.001",
+                Size = "23.5 MB",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thành công",
+                Note = "Cập nhật tự động",
+                UpdateMethod = "Tự động"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 6,
+                UpdateTime = new DateTime(2025, 8, 15, 20, 30, 5),
+                DatabaseVersion = "VDB-2025.08.15.002",
+                Size = "22.9 MB",
+                UpdateSource = "Máy chủ dự phòng",
+                Status = "Thành công",
+                Note = "Cập nhật thủ công",
+                UpdateMethod = "Thủ công"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 7,
+                UpdateTime = new DateTime(2025, 8, 15, 8, 0, 0),
+                DatabaseVersion = "VDB-2025.08.15.001",
+                Size = "22.6 MB",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thành công",
+                Note = "Cập nhật tự động",
+                UpdateMethod = "Tự động"
+            });
+
+            updateHistory.Add(new UpdateHistoryItem
+            {
+                UpdateID = 8,
+                UpdateTime = new DateTime(2025, 8, 14, 19, 45, 32),
+                DatabaseVersion = "VDB-2025.08.14.002",
+                Size = "--",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thất bại",
+                Note = "Không thể kết nối máy chủ",
+                UpdateMethod = "Tự động"
+            });
+
+            DisplayUpdateHistory(updateHistory);
+        }
+        private void DisplayUpdateHistory(List<UpdateHistoryItem> data)
+        {
+            dgvUpdateHistory.Rows.Clear();
+
+            foreach (var item in data)
+            {
+                int row = dgvUpdateHistory.Rows.Add(
+                    item.UpdateTime.ToString("dd/MM/yyyy HH:mm:ss"),
+                    item.DatabaseVersion,
+                    item.Size,
+                    item.UpdateSource,
+                    item.Status,
+                    item.Note
+                );
+
+                if (item.Status == "Thành công")
+                    dgvUpdateHistory.Rows[row]
+                        .Cells["colUpdateStatus"]
+                        .Style.ForeColor = Color.Green;
+                else
+                    dgvUpdateHistory.Rows[row]
+                        .Cells["colUpdateStatus"]
+                        .Style.ForeColor = Color.Red;
+            }
+
+            UpdateUpdateInfo(data);
+        }
+        private void UpdateUpdateInfo(List<UpdateHistoryItem> data)
+        {
+            if (data.Count == 0)
+                return;
+
+            UpdateHistoryItem latest = data
+                .OrderByDescending(x => x.UpdateTime)
+                .First();
+
+            lblCurrentVersionValue.Text = latest.DatabaseVersion;
+
+            lblLastUpdateValue.Text =
+                latest.UpdateTime.ToString("dd/MM/yyyy HH:mm:ss");
+
+            lblLastUpdateValue.ForeColor = Color.Green;
+
+            lblUpdateMethodValue.Text = latest.UpdateMethod;
+
+            lblNextUpdateValue.Text =
+                latest.UpdateTime.AddDays(1)
+                .ToString("dd/MM/yyyy HH:mm:ss");
+        }
         private void DisplayThreatHistory(List<ThreatDetection> data)
         {
             dgvThreatHistory.Rows.Clear();
@@ -509,6 +685,12 @@ namespace ScanAndRemoveVirus.Control
             LoadSampleThreatData();
             InitializeThreatFilter();
             btnApplyFilter.Click += btnApplyFilter_Click;
+            LoadSampleUpdateHistory();
+            InitializeUpdateFilter();
+            btnApplyUpdateFilter.Click += btnApplyUpdateFilter_Click;
+            btnCheckUpdateNow.Click += btnCheckUpdateNow_Click;
+            dgvUpdateHistory.CellContentClick += dgvUpdateHistory_CellContentClick;
+            dgvUpdateHistory.SelectionChanged += dgvUpdateHistory_SelectionChanged;
         }
 
         private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
@@ -585,5 +767,138 @@ namespace ScanAndRemoveVirus.Control
             DisplayThreatHistory(filtered.ToList());
 
         }
+
+        private void lblTotalThreatValue_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void grpUpdateInfo_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnApplyUpdateFilter_Click(object sender, EventArgs e)
+        {
+            IEnumerable<UpdateHistoryItem> filtered = updateHistory;
+            DateTime currentDate = new DateTime(2025, 8, 20, 23, 59, 59);
+            switch (cboUpdateTimeFilter.Text)
+            {
+                case "7 ngày qua": filtered = filtered.Where(x => x.UpdateTime >= currentDate.AddDays(-7)); break;
+                case "30 ngày qua": filtered = filtered.Where(x => x.UpdateTime >= currentDate.AddDays(-30)); break;
+                case "90 ngày qua": filtered = filtered.Where(x => x.UpdateTime >= currentDate.AddDays(-90)); break;
+            }
+            if (cboUpdateStatusFilter.Text != "Tất cả")
+                filtered = filtered.Where(x => x.Status == cboUpdateStatusFilter.Text);
+            DisplayUpdateHistory(filtered.ToList());
+        }
+
+        private void btnCheckUpdateNow_Click(object sender, EventArgs e)
+        {
+            UpdateHistoryItem newest = new UpdateHistoryItem
+            {
+                UpdateID = updateHistory.Max(x => x.UpdateID) + 1,
+                UpdateTime = DateTime.Now,
+                DatabaseVersion = "VDB-" + DateTime.Now.ToString("yyyy.MM.dd") + ".003",
+                Size = "26.1 MB",
+                UpdateSource = "Máy chủ chính",
+                Status = "Thành công",
+                Note = "Kiểm tra cập nhật thủ công",
+                UpdateMethod = "Thủ công"
+            };
+            updateHistory.Insert(0, newest);
+            DisplayUpdateHistory(updateHistory);
+            InitializeUpdateFilter();
+            MessageBox.Show("Cơ sở dữ liệu virus đã được cập nhật thành công!", "Cập nhật", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void dgvUpdateHistory_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            if (dgvUpdateHistory.Columns[e.ColumnIndex].Name != "colUpdateDetail") return;
+            MessageBox.Show("Phiên bản: " + dgvUpdateHistory.Rows[e.RowIndex].Cells["colDatabaseVersion"].Value +
+            "Trạng thái: " + dgvUpdateHistory.Rows[e.RowIndex].Cells["colUpdateStatus"].Value +
+            "Ghi chú: " + dgvUpdateHistory.Rows[e.RowIndex].Cells["colUpdateNote"].Value,
+            "Chi tiết cập nhật", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // Bổ sung: khi chọn một dòng trong dgvUpdateHistory,
+        // GroupBox "Thông tin" sẽ hiển thị đúng dữ liệu của dòng đó.
+        private void dgvUpdateHistory_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvUpdateHistory == null ||
+                dgvUpdateHistory.SelectedRows.Count == 0)
+            {
+                return;
+            }
+
+            DataGridViewRow row = dgvUpdateHistory.SelectedRows[0];
+
+            // Kiểm tra dữ liệu cần thiết trước khi đọc.
+            if (row.Cells["colDatabaseVersion"].Value == null ||
+                row.Cells["colUpdateTime"].Value == null ||
+                row.Cells["colUpdateStatus"].Value == null)
+            {
+                return;
+            }
+
+            string version = Convert.ToString(
+                row.Cells["colDatabaseVersion"].Value);
+
+            string updateTime = Convert.ToString(
+                row.Cells["colUpdateTime"].Value);
+
+            string status = Convert.ToString(
+                row.Cells["colUpdateStatus"].Value);
+
+            // lblUpdateMethodValue hiện có trên giao diện.
+            // Theo dữ liệu mẫu hiện tại, Note chứa "Cập nhật tự động/thủ công".
+            string methodOrNote = string.Empty;
+
+            if (row.Cells["colUpdateNote"].Value != null)
+            {
+                methodOrNote = Convert.ToString(
+                    row.Cells["colUpdateNote"].Value);
+            }
+
+            lblCurrentVersionValue.Text =
+                string.IsNullOrWhiteSpace(version) ? "--" : version;
+
+            lblLastUpdateValue.Text =
+                string.IsNullOrWhiteSpace(updateTime) ? "--" : updateTime;
+
+            lblUpdateMethodValue.Text =
+                string.IsNullOrWhiteSpace(methodOrNote)
+                    ? "--"
+                    : methodOrNote;
+
+            // Tính lần cập nhật tiếp theo dự kiến = 24 giờ sau lần cập nhật được chọn.
+            DateTime parsedTime;
+
+            if (DateTime.TryParse(updateTime, out parsedTime))
+            {
+                lblNextUpdateValue.Text =
+                    parsedTime.AddDays(1).ToString("dd/MM/yyyy HH:mm:ss");
+            }
+            else
+            {
+                lblNextUpdateValue.Text = "--";
+            }
+
+            // Màu thời gian theo trạng thái của bản ghi được chọn.
+            if (status == "Thành công")
+            {
+                lblLastUpdateValue.ForeColor = Color.Green;
+            }
+            else if (status == "Thất bại")
+            {
+                lblLastUpdateValue.ForeColor = Color.Red;
+            }
+            else
+            {
+                lblLastUpdateValue.ForeColor = Color.DarkOrange;
+            }
+        }
+
     }
 }

@@ -98,6 +98,7 @@
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Modal\ThreatDetection.cs" />
+    <Compile Include="Modal\UpdateHistoryItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Control\UcBaoVe.resx">
