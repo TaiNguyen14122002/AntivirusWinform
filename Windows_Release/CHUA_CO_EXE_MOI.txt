@@ -1,0 +1,3 @@
+EXE cu da duoc loai khoi goi de tranh chay nham giao dien loi thoi.
+Hay mo ScanAndRemoveVirus.sln trong Visual Studio, Rebuild Solution.
+Sau do nhan F5 hoac mo bin\Debug\ScanAndRemoveVirus.exe.

@@ -1,0 +1,1 @@
+Sample submission fixture: harmless content, do not flag as malware.

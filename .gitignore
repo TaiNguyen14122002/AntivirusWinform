@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+AppData/
+
+
+# Local secrets
+.env
+!.env.example

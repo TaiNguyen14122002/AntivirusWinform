@@ -1,0 +1,242 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using ScanAndRemoveVirus.Services;
+
+namespace ScanAndRemoveVirus.Control
+{
+    public partial class UcBaoVe : UserControl
+    {
+        // 10 tính năng — mỗi hàng có key điều khiển cơ chế THẬT tương ứng (row.Tag = key)
+        private static readonly string[,] Catalog = {
+            { "rt",       "Bảo vệ thời gian thực",       "Tự động giám sát và quét tệp mới/đổi trong Desktop, Downloads, Temp" },
+            { "restore",  "Bảo vệ tệp",                  "Quét tệp được tạo/sửa trong Desktop, Documents, Downloads; kiểm tra trước khi khôi phục cách ly" },
+            { "usb",      "Bảo vệ USB",                  "Tự động quét toàn bộ ổ removable ngay khi được cắm vào" },
+            { "download", "Bảo vệ tải xuống",            "Quét đầy đủ nội dung tệp có nguồn gốc Internet (MOTW) về thư mục Downloads" },
+            { "behavior", "Phát hiện hành vi đáng ngờ",  "Giám sát WMI và thay đổi tệp hàng loạt: cảnh báo nghi vấn, không tự cách ly" },
+            { "startup",  "Bảo vệ thư mục khởi động",    "Quét tệp mới xuất hiện trong StartUp — điểm cài persistence của malware" },
+            { "aq",       "Tự động cách ly",             "Tự động đưa tệp nguy hiểm vào khu vực cách ly, không hỏi" },
+            { "alerts",   "Cảnh báo mối đe dọa",         "Hiển thị pop-up khi phát hiện; tắt thì chỉ ghi lịch sử" },
+            { "update",   "Tự động cập nhật",            "Mở app khi chữ ký quá 24h: đóng dấu cập nhật + xóa cache để quét lại" },
+            { "vtq",      "Bảo vệ web (VirusTotal)",     "Tự tra VirusTotal theo hash cho dòng heuristic nghi vấn (cần API key)" },
+        };
+
+        private void LoadDuLieuBaoVe()
+        {
+            dgvProtecctionFeatures.Rows.Clear();
+            for (int i = 0; i < Catalog.GetLength(0); i++)
+            {
+                int r = dgvProtecctionFeatures.Rows.Add(Catalog[i, 1], Catalog[i, 2], "—", "—");
+                dgvProtecctionFeatures.Rows[r].Tag = Catalog[i, 0];
+            }
+        }
+
+        private static string NameForKey(string key)
+        {
+            for (int i = 0; i < Catalog.GetLength(0); i++)
+                if (Catalog[i, 0] == key) return Catalog[i, 1];
+            return key;
+        }
+
+        // Trạng thái HIỆN HÀNH của từng tính năng — một nguồn sự thật duy nhất
+        private static bool IsOn(string key)
+        {
+            switch (key)
+            {
+                case "rt": return RealTimeProtection.IsRunning;
+                case "aq": return RealTimeProtection.AutoQuarantine;
+                case "restore": return FeatureFlags.FileRestoreGuard && GuardService.IsGuardRunning("file");
+                case "usb": return FeatureFlags.UsbProtection && GuardService.IsGuardRunning("usb");
+                case "download": return FeatureFlags.DownloadProtection && GuardService.IsGuardRunning("download");
+                case "behavior": return FeatureFlags.BehaviorWatch && GuardService.IsGuardRunning("behavior");
+                case "startup": return FeatureFlags.StartupFoldersWatch && GuardService.IsGuardRunning("startup");
+                case "alerts": return FeatureFlags.ThreatAlerts;
+                case "update": return FeatureFlags.AutoUpdateEnabled;
+                case "vtq": return FeatureFlags.VtAutoQuery;
+                default: return false;
+            }
+        }
+
+        private static void SetState(string key, bool on)
+        {
+            switch (key)
+            {
+                case "rt":
+                    try
+                    {
+                        if (on && !RealTimeProtection.IsRunning) RealTimeProtection.Start();
+                        if (!on && RealTimeProtection.IsRunning) RealTimeProtection.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        AppDialog.Show("Không bật được bảo vệ thời gian thực: " + ex.Message,
+                            "Bảo vệ thời gian thực", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    FeatureFlags.RealTimeOn = RealTimeProtection.IsRunning;
+                    break;
+                case "aq":
+                    RealTimeProtection.AutoQuarantine = on;
+                    break;
+                case "restore":  FeatureFlags.FileRestoreGuard = on; GuardService.Configure("file", on); break;
+                case "usb":      FeatureFlags.UsbProtection = on; GuardService.Configure("usb", on); break;
+                case "download": FeatureFlags.DownloadProtection = on; GuardService.Configure("download", on); break;
+                case "behavior": FeatureFlags.BehaviorWatch = on; GuardService.Configure("behavior", on); break;
+                case "startup":  FeatureFlags.StartupFoldersWatch = on; GuardService.Configure("startup", on); break;
+                case "alerts":   FeatureFlags.ThreatAlerts = on; break;
+                case "update":   FeatureFlags.AutoUpdateEnabled = on; break;
+                case "vtq":      FeatureFlags.VtAutoQuery = on; break;
+            }
+            FeatureFlags.Persist();
+            FeatureFlags.NotifyChanged();
+            bool running = IsOn(key);
+            string title = NameForKey(key);
+            string stateMessage = on ? (running ? "Đã bật và sẵn sàng giám sát." :
+                "Đã yêu cầu bật nhưng bộ bảo vệ chưa hoạt động. Hãy mở cấu hình để kiểm tra.") :
+                "Đã tắt theo yêu cầu của người dùng.";
+            ProtectionNotificationService.Publish(title, stateMessage,
+                on && !running ? ProtectionNoticeLevel.Warning : on ?
+                ProtectionNoticeLevel.Success : ProtectionNoticeLevel.Info,
+                "toggle:" + key + ":" + on, 2, true);
+        }
+        public UcBaoVe()
+        {
+            InitializeComponent();
+            BackColor = Theme.PageBg;
+            // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
+            Theme.ScrollablePage(this, tableLayoutPanel1, 980, 640);
+            //Theme.StylePageHeader(lblProtectionTitle, lblProtectionSubtitle);
+            Theme.StyleCard(grpProtectionFeatures, grpProtectionInfo);
+            // StyleGrid phải chạy TRƯỚC khi nạp hàng để mọi dòng theo đúng RowTemplate chung
+            Theme.StyleGrid(dgvProtecctionFeatures);
+            LoadDuLieuBaoVe();
+            dgvProtecctionFeatures.CellClick += Grid_CellClick;
+            dgvProtecctionFeatures.CellFormatting += Grid_CellFormatting;
+            RealTimeProtection.StatusChanged += OnRealTimeStatus;
+            // Cảnh báo được hiển thị ở FrmMain, không mở nhiều modal khi watcher phát hiện hàng loạt.
+            FeatureFlags.Changed += OnFlagsChanged;
+            BuildSketchProtection();
+            SyncRealFeaturesUi();
+            SyncProtectionStats();
+        }
+
+        private void OnFlagsChanged()
+        {
+            try { BeginInvoke((MethodInvoker)(() => { SyncRealFeaturesUi(); SyncProtectionStats(); })); }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException) { }
+        }
+
+        // Panel "Trạng thái bảo vệ": mọi số liệu lấy từ source thật (không còn text mock 2025)
+        private void SyncProtectionStats()
+        {
+            // Đếm THẬT số tính năng đang bật. Câu cũ ("Tất cả các tính năng đang hoạt động
+            // tốt") chỉ hỏi mỗi RealTimeProtection.IsRunning nên vẫn báo "tốt" khi 9/10
+            // tính năng đã tắt — sai lệch ngay trên màn hình an toàn.
+            int total = Catalog.GetLength(0), onCount = 0;
+            for (int i = 0; i < total; i++) if (IsOn(Catalog[i, 0])) onCount++;
+
+            lblStatusValue.Text = RealTimeProtection.IsDegraded ? "Giám sát suy giảm - có sự kiện chưa kiểm tra" :
+                onCount == total ? "Tất cả " + total + " tính năng đang bật"
+                                : onCount == 0 ? "Tất cả tính năng đang tắt"
+                                : onCount + "/" + total + " tính năng đang bật";
+            // Bảo vệ thời gian thực là tính năng gốc: tắt nó là báo động đỏ, bật một phần là vàng.
+            lblStatusValue.ForeColor = !RealTimeProtection.IsRunning || RealTimeProtection.IsDegraded ? Theme.Red
+                                     : onCount == total ? Theme.Green : Theme.Amber;
+
+            lblDatabaseVersionValue.Text = System.Reflection.Assembly
+                .GetExecutingAssembly().GetName().Version.ToString(3);
+
+            DateTime last;
+            if (ScanHistoryStore.TryGetLastSignatureUpdate(out last))
+            {
+                lblDatabaseValue2.Text = "Đã cập nhật";
+                lblDatabaseValue2.ForeColor = Theme.Green;
+                lblUpdateDateValue.Text = last.ToString("dd/MM/yyyy HH:mm");
+            }
+            else
+            {
+                lblDatabaseValue2.Text = "Chưa cập nhật";
+                lblDatabaseValue2.ForeColor = Theme.Amber;
+                lblUpdateDateValue.Text = "—";
+            }
+
+            HistoryEntry lastRt = ScanHistoryStore.LatestOfType("Bảo vệ thời gian thực");
+            lblRealtimeScanValue.Text = lastRt == null
+                ? "Chưa có quét thời gian thực"
+                : lastRt.Time.ToString("dd/MM/yyyy HH:mm");
+
+            lblScannedFilesValue.Text = ScanHistoryStore.TotalFilesScanned().ToString("N0");
+            lblBlockedThreaetsValue.Text = ScanHistoryStore.TotalThreatsDetected().ToString("N0");
+            SyncSketchProtection();
+        }
+
+        // Mở lại tab -> refresh (số liệu có thể đổi do quét/RT ở tab khác)
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Visible) { SyncProtectionStats(); SyncRealFeaturesUi(); }
+        }
+
+        // Cột Trạng thái: Bật xanh lá / Tắt đỏ
+        private void Grid_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.Value == null) return;
+            if (e.ColumnIndex == colStatus.Index)
+                Theme.PaintStatusCell(e, e.Value.ToString());
+            else if (e.ColumnIndex == colAction.Index)
+            {
+                e.CellStyle.ForeColor = Theme.Blue;
+                e.CellStyle.Font = Theme.BoldFont;
+                e.CellStyle.SelectionForeColor = Theme.Blue;
+            }
+        }
+
+        private void Grid_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != colAction.Index) return;
+            DataGridViewRow row = dgvProtecctionFeatures.Rows[e.RowIndex];
+            string key = row.Tag as string;
+            if (string.IsNullOrEmpty(key)) return;
+            // Không cần đăng nhập quản trị khi điều chỉnh tính năng ở trang Bảo vệ.
+            if (key == "update") SignatureUpdateProgressForm.Open(this);
+            SetState(key, !IsOn(key));
+            SyncRealFeaturesUi();
+        }
+
+        // Đồng bộ ô Trạng thái/Hành động của MỌI hàng theo đúng state trong Services
+        private void SyncRealFeaturesUi()
+        {
+            foreach (DataGridViewRow row in dgvProtecctionFeatures.Rows)
+            {
+                string key = row.Tag as string;
+                if (string.IsNullOrEmpty(key)) continue;
+                SetFeatureState(row, IsOn(key));
+            }
+            SyncSketchProtection();
+        }
+
+        private void SetFeatureState(DataGridViewRow row, bool on)
+        {
+            row.Cells[colStatus.Index].Value = on ? "Bật" : "Tắt";
+            row.Cells[colAction.Index].Value = on ? "Tắt" : "Bật";
+        }
+
+        private void OnRealTimeStatus(bool running)
+        {
+            try
+            {
+                BeginInvoke((MethodInvoker)(() => { SyncRealFeaturesUi(); SyncProtectionStats(); }));
+            }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException) { }
+        }
+
+
+    }
+}

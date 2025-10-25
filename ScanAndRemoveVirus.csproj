@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C6C13A72-16EF-4383-B99A-F41823594085}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>ScanAndRemoveVirus</RootNamespace>
+    <AssemblyName>ScanAndRemoveVirus</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>7.3</LangVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PreferNativeArm64>true</PreferNativeArm64>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Control\ScanActionButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\UcBaoVe.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcBaoVe.Designer.cs">
+      <DependentUpon>UcBaoVe.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Control\UcQuanTri.cs"><SubType>UserControl</SubType></Compile>
+    <Compile Include="Control\UcQuanTri.Dashboard.cs" />
+    <Compile Include="Control\UcQuanTri.Classification.cs" />
+    <Compile Include="Control\AdminSecurity.cs" />
+    <Compile Include="Control\AdminAudit.cs" />
+    <Compile Include="Control\UcCaiDat.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcCaiDat.Designer.cs">
+      <DependentUpon>UcCaiDat.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Control\UcCachLy.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcCachLy.Designer.cs">
+      <DependentUpon>UcCachLy.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Control\UcLichSu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcLichSu.Designer.cs">
+      <DependentUpon>UcLichSu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Control\Theme.cs" />
+    <Compile Include="Control\AppDialog.cs" />
+    <Compile Include="Control\SignatureUpdateProgressForm.cs" />
+    <Compile Include="Control\SampleSubmissionForm.cs" />
+    <Compile Include="Control\SignatureManagementForm.cs" />
+    <Compile Include="Control\ScanScheduleForm.cs" />
+    <Compile Include="Control\VirusTotalConfigForm.cs" />
+    <Compile Include="Control\ScanExclusionForm.cs" />
+    <Compile Include="Control\SecurityHealthForm.cs" />
+    <Compile Include="Services\SignatureVerificationService.cs" />
+    <Compile Include="Services\ScanScheduleService.cs" />
+    <Compile Include="Services\ScheduledScanNoticeStore.cs" />
+    <Compile Include="Services\ScanExclusionService.cs" />
+    <Compile Include="Services\SecurityHealthCheckService.cs" />
+    <Compile Include="Services\ScanReportExporter.cs" />
+    <Compile Include="Services\SuspiciousSampleImporter.cs" />
+    <Compile Include="Services\SubmittedSignatureListImporter.cs" />
+    <Compile Include="Services\MalwareBazaarSignatureUpdater.cs" />
+    <Compile Include="FrmMain.ScheduleNotifications.cs" />
+    <Compile Include="FrmMain.ProtectionNotifications.cs" />
+    <Compile Include="FrmMain.Sketch20.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Control\Sketch20Backend.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\Sketch20Kit.cs" />
+    <Compile Include="Control\Sketch20Artwork.cs" />
+    <Compile Include="Control\Sketch20ReferenceAssets.cs" />
+    <Compile Include="Control\Sketch20ReferencePages.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\Sketch20Chrome.cs" />
+    <Compile Include="Control\Sketch20Inputs.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\Sketch20Samples.cs" />
+    <Compile Include="Control\Sketch20View.Threats.cs" />
+    <Compile Include="Control\Sketch20View.History.cs" />
+    <Compile Include="Control\Sketch20View.Quarantine.cs" />
+    <Compile Include="Control\Sketch20View.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\SketchUi.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\UcScreens.Sketch.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UiIcons.cs" />
+    <Compile Include="Control\UiKit.cs" />
+    <Compile Include="Control\UiSelect.cs" />
+    <Compile Include="Control\LoadingSpinner.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\VtDonut.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\UcTongQuan.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <!-- (25/09/2026) UcTongQuan.ChiTiet.cs + UcTongQuan.QuetNangCao.cs chi la CODE thuan (khong co
+         InitializeComponent; khai bao "partial class UcTongQuan" khong co base). Vi vay:
+           - KHONG dat <SubType>UserControl</SubType>: neu dat, double-click se mo WinForms Designer
+             cho file nay va bao loi "The base class 'System.Void' cannot be designed".
+           - KHONG dat <DependentUpon>: de Designer chi gop dung nhom
+             Control\UcTongQuan.cs + Control\UcTongQuan.Designer.cs + UcTongQuan.resx
+             (giong 4 UserControl/UcBaoVe, UcCachLy, UcLichSu, UcCaiDat dang chay tot).
+         Designer cua trang chi mo tu Control\UcTongQuan.cs. -->
+    <Compile Include="Control\UcTongQuan.Dashboard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcTongQuan.VirusTotalAuto.cs" />
+    <Compile Include="Control\UcTongQuan.SketchDetails.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcTongQuan.ChiTiet.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcTongQuan.QuetNangCao.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcTongQuan.Designer.cs">
+      <DependentUpon>UcTongQuan.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Database\DbConnection.cs" />
+    <Compile Include="Database\ScanHistoryRepository.cs" />
+    <Compile Include="Database\ScanIssueRepository.cs" />
+    <Compile Include="Database\ScanSignatureMetadataRepository.cs" />
+    <Compile Include="Database\SettingsRepository.cs" />
+    <Compile Include="Database\ThreatDatectionRepository.cs" />
+    <Compile Include="Database\VirusSignature.cs" />
+    <Compile Include="Database\VirusSignatureRepository.cs" />
+    <Compile Include="FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Services\DataDir.cs" />
+    <Compile Include="Services\DirectorySizeCalculator.cs" />
+    <Compile Include="Services\ScanEngine.cs" />
+    <Compile Include="Services\LocalScanIssueStore.cs" />
+    <Compile Include="Control\ScanIssuesForm.cs" />
+    <Compile Include="Services\QuarantineRecoveryJournal.cs" />
+    <Compile Include="Services\OfflineHistoryQueue.cs" />
+    <Compile Include="Services\PortableExecutableInspector.cs" />
+    <Compile Include="Control\PeInspectForm.cs" />
+    <Compile Include="Control\RecoveryJournalForm.cs" />
+    <Compile Include="Services\ArchiveScanService.cs" />
+    <Compile Include="Services\HybridSignatureScanner.cs" />
+    <Compile Include="Services\OfflineSignatureSnapshotService.cs" />
+    <Compile Include="Services\StaticHeuristicAnalyzer.cs" />
+    <Compile Include="Services\RealTimeProtection.cs" />
+    <Compile Include="Services\QuarantineLedger.cs" />
+    <Compile Include="Services\ScanHistoryStore.cs" />
+    <Compile Include="Services\VirusTotalClient.cs" />
+    <Compile Include="Services\AppSettings.cs" />
+    <Compile Include="Services\FeatureFlags.cs" />
+    <Compile Include="Services\GuardService.cs" />
+    <Compile Include="Services\ProtectionNotificationService.cs" />
+    <Compile Include="Services\BehavioralActivityAnalyzer.cs" />
+    <Compile Include="Services\TestSamples.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Control\UcBaoVe.resx">
+      <DependentUpon>UcBaoVe.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Control\UcCachLy.resx">
+      <DependentUpon>UcCachLy.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Control\UcCaiDat.resx">
+      <DependentUpon>UcCaiDat.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Control\UcLichSu.resx">
+      <DependentUpon>UcLichSu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Control\UcTongQuan.resx">
+      <DependentUpon>UcTongQuan.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
