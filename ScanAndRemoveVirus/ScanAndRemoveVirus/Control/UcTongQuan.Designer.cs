@@ -82,12 +82,16 @@
             this.tableLayoutPanel17 = new System.Windows.Forms.TableLayoutPanel();
             this.lblQuarantineCount = new System.Windows.Forms.Label();
             this.lblQuarantineUnit = new System.Windows.Forms.Label();
-            this.grpRecantActivity = new System.Windows.Forms.GroupBox();
+            this.grpAction = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel18 = new System.Windows.Forms.TableLayoutPanel();
-            this.dgvRecentActivity = new System.Windows.Forms.DataGridView();
-            this.colTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colEvent = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDetail = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgvActions = new System.Windows.Forms.DataGridView();
+            this.colActionFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colActionThreat = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.tableLayoutPanelActions = new System.Windows.Forms.TableLayoutPanel();
+            this.btnQuarantineSelected = new System.Windows.Forms.Button();
+            this.btnDeleteSelected = new System.Windows.Forms.Button();
+            this.btnQuarantineAll = new System.Windows.Forms.Button();
+            this.btnDeleteAll = new System.Windows.Forms.Button();
             this.pnlContent.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
             this.tableLayoutPanel12.SuspendLayout();
@@ -115,9 +119,10 @@
             this.tableLayoutPanel16.SuspendLayout();
             this.grpQuarantine.SuspendLayout();
             this.tableLayoutPanel17.SuspendLayout();
-            this.grpRecantActivity.SuspendLayout();
+            this.grpAction.SuspendLayout();
             this.tableLayoutPanel18.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvRecentActivity)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvActions)).BeginInit();
+            this.tableLayoutPanelActions.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlContent
@@ -136,7 +141,7 @@
             this.tableLayoutPanel11.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel11.Controls.Add(this.tableLayoutPanel12, 0, 0);
             this.tableLayoutPanel11.Controls.Add(this.grpStatistics, 0, 1);
-            this.tableLayoutPanel11.Controls.Add(this.grpRecantActivity, 0, 2);
+            this.tableLayoutPanel11.Controls.Add(this.grpAction, 0, 2);
             this.tableLayoutPanel11.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel11.Location = new System.Drawing.Point(30, 20);
             this.tableLayoutPanel11.Name = "tableLayoutPanel11";
@@ -209,7 +214,7 @@
             // 
             this.grpScanType.Controls.Add(this.tableLayoutPanel6);
             this.grpScanType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpScanType.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpScanType.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.grpScanType.Location = new System.Drawing.Point(3, 0);
             this.grpScanType.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.grpScanType.Name = "grpScanType";
@@ -273,7 +278,8 @@
             // 
             this.lblQuickDesc.AutoSize = true;
             this.lblQuickDesc.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lblQuickDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblQuickDesc.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblQuickDesc.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
             this.lblQuickDesc.Location = new System.Drawing.Point(23, 34);
             this.lblQuickDesc.Name = "lblQuickDesc";
             this.lblQuickDesc.Size = new System.Drawing.Size(255, 24);
@@ -300,7 +306,6 @@
             // rdoFullScan
             // 
             this.rdoFullScan.AutoSize = true;
-            this.rdoFullScan.Checked = true;
             this.rdoFullScan.Dock = System.Windows.Forms.DockStyle.Left;
             this.rdoFullScan.Location = new System.Drawing.Point(20, 0);
             this.rdoFullScan.Margin = new System.Windows.Forms.Padding(0);
@@ -315,7 +320,8 @@
             // 
             this.lblFullDesc.AutoSize = true;
             this.lblFullDesc.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lblFullDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblFullDesc.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblFullDesc.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
             this.lblFullDesc.Location = new System.Drawing.Point(23, 34);
             this.lblFullDesc.Name = "lblFullDesc";
             this.lblFullDesc.Size = new System.Drawing.Size(127, 24);
@@ -342,7 +348,6 @@
             // rdoCustomScan
             // 
             this.rdoCustomScan.AutoSize = true;
-            this.rdoCustomScan.Checked = true;
             this.rdoCustomScan.Dock = System.Windows.Forms.DockStyle.Left;
             this.rdoCustomScan.Location = new System.Drawing.Point(20, 0);
             this.rdoCustomScan.Margin = new System.Windows.Forms.Padding(0);
@@ -357,7 +362,8 @@
             // 
             this.lblCustomDesc.AutoSize = true;
             this.lblCustomDesc.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lblCustomDesc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblCustomDesc.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblCustomDesc.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
             this.lblCustomDesc.Location = new System.Drawing.Point(23, 34);
             this.lblCustomDesc.Name = "lblCustomDesc";
             this.lblCustomDesc.Size = new System.Drawing.Size(193, 24);
@@ -382,9 +388,9 @@
             // 
             // btnScanNow
             // 
-            this.btnScanNow.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.btnScanNow.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(243)))), ((int)(((byte)(244)))), ((int)(((byte)(246)))));
             this.btnScanNow.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnScanNow.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnScanNow.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(65)))), ((int)(((byte)(81)))));
             this.btnScanNow.Location = new System.Drawing.Point(95, 3);
             this.btnScanNow.Name = "btnScanNow";
             this.btnScanNow.Size = new System.Drawing.Size(179, 51);
@@ -440,16 +446,14 @@
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 3;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 55F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 45F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(425, 77);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
@@ -462,7 +466,6 @@
             // 
             // lblProtectionStatus
             // 
-            this.lblProtectionStatus.AutoSize = true;
             this.lblProtectionStatus.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblProtectionStatus.Font = new System.Drawing.Font("Segoe UI", 16.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblProtectionStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(163)))), ((int)(((byte)(74)))));
@@ -853,79 +856,141 @@
             this.lblQuarantineUnit.Text = "Tệp";
             this.lblQuarantineUnit.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // grpRecantActivity
+            // grpAction
             // 
-            this.grpRecantActivity.Controls.Add(this.tableLayoutPanel18);
-            this.grpRecantActivity.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpRecantActivity.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpRecantActivity.Location = new System.Drawing.Point(5, 477);
-            this.grpRecantActivity.Margin = new System.Windows.Forms.Padding(5);
-            this.grpRecantActivity.Name = "grpRecantActivity";
-            this.grpRecantActivity.Size = new System.Drawing.Size(1104, 307);
-            this.grpRecantActivity.TabIndex = 2;
-            this.grpRecantActivity.TabStop = false;
-            this.grpRecantActivity.Text = "Hoạt động gần đây";
+            this.grpAction.Controls.Add(this.tableLayoutPanel18);
+            this.grpAction.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpAction.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpAction.Location = new System.Drawing.Point(5, 477);
+            this.grpAction.Margin = new System.Windows.Forms.Padding(5);
+            this.grpAction.Name = "grpAction";
+            this.grpAction.Size = new System.Drawing.Size(1104, 307);
+            this.grpAction.TabIndex = 2;
+            this.grpAction.TabStop = false;
+            this.grpAction.Text = "Hành động";
             // 
             // tableLayoutPanel18
             // 
             this.tableLayoutPanel18.ColumnCount = 1;
             this.tableLayoutPanel18.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel18.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel18.Controls.Add(this.dgvRecentActivity, 0, 0);
+            this.tableLayoutPanel18.Controls.Add(this.dgvActions, 0, 0);
+            this.tableLayoutPanel18.Controls.Add(this.tableLayoutPanelActions, 0, 1);
             this.tableLayoutPanel18.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel18.Location = new System.Drawing.Point(3, 21);
             this.tableLayoutPanel18.Margin = new System.Windows.Forms.Padding(10);
             this.tableLayoutPanel18.Name = "tableLayoutPanel18";
-            this.tableLayoutPanel18.RowCount = 1;
+            this.tableLayoutPanel18.RowCount = 2;
             this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 285F));
+            this.tableLayoutPanel18.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 61F));
             this.tableLayoutPanel18.Size = new System.Drawing.Size(1098, 283);
             this.tableLayoutPanel18.TabIndex = 0;
             // 
-            // dgvRecentActivity
+            // dgvActions
             // 
-            this.dgvRecentActivity.AllowUserToAddRows = false;
-            this.dgvRecentActivity.AllowUserToDeleteRows = false;
-            this.dgvRecentActivity.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvRecentActivity.BackgroundColor = System.Drawing.Color.White;
-            this.dgvRecentActivity.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvRecentActivity.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvRecentActivity.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colTime,
-            this.colEvent,
-            this.colDetail});
-            this.dgvRecentActivity.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvRecentActivity.Location = new System.Drawing.Point(10, 10);
-            this.dgvRecentActivity.Margin = new System.Windows.Forms.Padding(10);
-            this.dgvRecentActivity.Name = "dgvRecentActivity";
-            this.dgvRecentActivity.ReadOnly = true;
-            this.dgvRecentActivity.RowHeadersVisible = false;
-            this.dgvRecentActivity.RowHeadersWidth = 82;
-            this.dgvRecentActivity.RowTemplate.Height = 33;
-            this.dgvRecentActivity.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvRecentActivity.Size = new System.Drawing.Size(1078, 263);
-            this.dgvRecentActivity.TabIndex = 0;
+            this.dgvActions.AllowUserToAddRows = false;
+            this.dgvActions.AllowUserToDeleteRows = false;
+            this.dgvActions.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvActions.BackgroundColor = System.Drawing.Color.White;
+            this.dgvActions.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvActions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvActions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colActionFile,
+            this.colActionThreat});
+            this.dgvActions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvActions.Location = new System.Drawing.Point(10, 10);
+            this.dgvActions.Margin = new System.Windows.Forms.Padding(10, 10, 10, 5);
+            this.dgvActions.Name = "dgvActions";
+            this.dgvActions.ReadOnly = true;
+            this.dgvActions.RowHeadersVisible = false;
+            this.dgvActions.RowHeadersWidth = 82;
+            this.dgvActions.RowTemplate.Height = 33;
+            this.dgvActions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvActions.Size = new System.Drawing.Size(1078, 207);
+            this.dgvActions.TabIndex = 0;
             // 
-            // colTime
+            // colActionFile
             // 
-            this.colTime.HeaderText = "Thời gian";
-            this.colTime.MinimumWidth = 10;
-            this.colTime.Name = "colTime";
-            this.colTime.ReadOnly = true;
+            this.colActionFile.FillWeight = 65F;
+            this.colActionFile.HeaderText = "Tệp";
+            this.colActionFile.MinimumWidth = 10;
+            this.colActionFile.Name = "colActionFile";
+            this.colActionFile.ReadOnly = true;
             // 
-            // colEvent
+            // colActionThreat
             // 
-            this.colEvent.HeaderText = "Sự kiện";
-            this.colEvent.MinimumWidth = 10;
-            this.colEvent.Name = "colEvent";
-            this.colEvent.ReadOnly = true;
+            this.colActionThreat.FillWeight = 35F;
+            this.colActionThreat.HeaderText = "Mối đe dọa";
+            this.colActionThreat.MinimumWidth = 10;
+            this.colActionThreat.Name = "colActionThreat";
+            this.colActionThreat.ReadOnly = true;
             // 
-            // colDetail
+            // tableLayoutPanelActions
             // 
-            this.colDetail.HeaderText = "Chi tiết";
-            this.colDetail.MinimumWidth = 10;
-            this.colDetail.Name = "colDetail";
-            this.colDetail.ReadOnly = true;
+            this.tableLayoutPanelActions.ColumnCount = 4;
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.Controls.Add(this.btnQuarantineSelected, 0, 0);
+            this.tableLayoutPanelActions.Controls.Add(this.btnDeleteSelected, 1, 0);
+            this.tableLayoutPanelActions.Controls.Add(this.btnQuarantineAll, 2, 0);
+            this.tableLayoutPanelActions.Controls.Add(this.btnDeleteAll, 3, 0);
+            this.tableLayoutPanelActions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanelActions.Location = new System.Drawing.Point(10, 227);
+            this.tableLayoutPanelActions.Margin = new System.Windows.Forms.Padding(10, 5, 10, 10);
+            this.tableLayoutPanelActions.Name = "tableLayoutPanelActions";
+            this.tableLayoutPanelActions.RowCount = 1;
+            this.tableLayoutPanelActions.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanelActions.Size = new System.Drawing.Size(1078, 46);
+            this.tableLayoutPanelActions.TabIndex = 1;
+            // 
+            // btnQuarantineSelected
+            // 
+            this.btnQuarantineSelected.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnQuarantineSelected.Enabled = false;
+            this.btnQuarantineSelected.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnQuarantineSelected.Location = new System.Drawing.Point(3, 3);
+            this.btnQuarantineSelected.Name = "btnQuarantineSelected";
+            this.btnQuarantineSelected.Size = new System.Drawing.Size(263, 40);
+            this.btnQuarantineSelected.TabIndex = 0;
+            this.btnQuarantineSelected.Text = "Cách ly đã chọn";
+            this.btnQuarantineSelected.UseVisualStyleBackColor = true;
+            // 
+            // btnDeleteSelected
+            // 
+            this.btnDeleteSelected.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnDeleteSelected.Enabled = false;
+            this.btnDeleteSelected.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDeleteSelected.Location = new System.Drawing.Point(272, 3);
+            this.btnDeleteSelected.Name = "btnDeleteSelected";
+            this.btnDeleteSelected.Size = new System.Drawing.Size(263, 40);
+            this.btnDeleteSelected.TabIndex = 1;
+            this.btnDeleteSelected.Text = "Xóa đã chọn";
+            this.btnDeleteSelected.UseVisualStyleBackColor = true;
+            // 
+            // btnQuarantineAll
+            // 
+            this.btnQuarantineAll.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnQuarantineAll.Enabled = false;
+            this.btnQuarantineAll.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnQuarantineAll.Location = new System.Drawing.Point(541, 3);
+            this.btnQuarantineAll.Name = "btnQuarantineAll";
+            this.btnQuarantineAll.Size = new System.Drawing.Size(263, 40);
+            this.btnQuarantineAll.TabIndex = 2;
+            this.btnQuarantineAll.Text = "Cách ly tất cả";
+            this.btnQuarantineAll.UseVisualStyleBackColor = true;
+            // 
+            // btnDeleteAll
+            // 
+            this.btnDeleteAll.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnDeleteAll.Enabled = false;
+            this.btnDeleteAll.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDeleteAll.Location = new System.Drawing.Point(810, 3);
+            this.btnDeleteAll.Name = "btnDeleteAll";
+            this.btnDeleteAll.Size = new System.Drawing.Size(265, 40);
+            this.btnDeleteAll.TabIndex = 3;
+            this.btnDeleteAll.Text = "Xóa tất cả";
+            this.btnDeleteAll.UseVisualStyleBackColor = true;
             // 
             // UcTongQuan
             // 
@@ -972,9 +1037,10 @@
             this.grpQuarantine.ResumeLayout(false);
             this.tableLayoutPanel17.ResumeLayout(false);
             this.tableLayoutPanel17.PerformLayout();
-            this.grpRecantActivity.ResumeLayout(false);
+            this.grpAction.ResumeLayout(false);
             this.tableLayoutPanel18.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvRecentActivity)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvActions)).EndInit();
+            this.tableLayoutPanelActions.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -1035,11 +1101,16 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel17;
         private System.Windows.Forms.Label lblQuarantineCount;
         private System.Windows.Forms.Label lblQuarantineUnit;
-        private System.Windows.Forms.GroupBox grpRecantActivity;
+        private System.Windows.Forms.GroupBox grpAction;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel18;
-        private System.Windows.Forms.DataGridView dgvRecentActivity;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colEvent;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colDetail;
+        private System.Windows.Forms.DataGridView dgvActions;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colActionFile;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colActionThreat;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelActions;
+        private System.Windows.Forms.Button btnQuarantineSelected;
+        private System.Windows.Forms.Button btnDeleteSelected;
+        private System.Windows.Forms.Button btnQuarantineAll;
+        private System.Windows.Forms.Button btnDeleteAll;
     }
 }
+

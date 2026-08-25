@@ -98,6 +98,7 @@
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="Services\ScanEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Control\UcBaoVe.resx">
       <DependentUpon>UcBaoVe.cs</DependentUpon>
