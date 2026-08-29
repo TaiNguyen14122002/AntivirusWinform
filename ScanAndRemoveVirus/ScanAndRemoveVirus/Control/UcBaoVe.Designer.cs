@@ -403,26 +403,26 @@
             // 
             this.lblStatusValue.AutoSize = true;
             this.lblStatusValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblStatusValue.ForeColor = System.Drawing.Color.Green;
+            this.lblStatusValue.ForeColor = ScanAndRemoveVirus.Control.Theme.Green;
             this.lblStatusValue.Location = new System.Drawing.Point(296, 10);
             this.lblStatusValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblStatusValue.Name = "lblStatusValue";
             this.lblStatusValue.Size = new System.Drawing.Size(368, 44);
             this.lblStatusValue.TabIndex = 7;
-            this.lblStatusValue.Text = "Tất cả các tính năng đang hoạt động tốt";
+            this.lblStatusValue.Text = "—";
             this.lblStatusValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblDatabaseValue2
             // 
             this.lblDatabaseValue2.AutoSize = true;
             this.lblDatabaseValue2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblDatabaseValue2.ForeColor = System.Drawing.Color.Green;
+            this.lblDatabaseValue2.ForeColor = ScanAndRemoveVirus.Control.Theme.Green;
             this.lblDatabaseValue2.Location = new System.Drawing.Point(296, 54);
             this.lblDatabaseValue2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDatabaseValue2.Name = "lblDatabaseValue2";
             this.lblDatabaseValue2.Size = new System.Drawing.Size(368, 44);
             this.lblDatabaseValue2.TabIndex = 8;
-            this.lblDatabaseValue2.Text = "Đã cập nhập";
+            this.lblDatabaseValue2.Text = "—";
             this.lblDatabaseValue2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblDatabaseVersionValue
@@ -434,7 +434,7 @@
             this.lblDatabaseVersionValue.Name = "lblDatabaseVersionValue";
             this.lblDatabaseVersionValue.Size = new System.Drawing.Size(368, 44);
             this.lblDatabaseVersionValue.TabIndex = 9;
-            this.lblDatabaseVersionValue.Text = "1.0.0.2025";
+            this.lblDatabaseVersionValue.Text = "—";
             this.lblDatabaseVersionValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblUpdateDateValue
@@ -446,7 +446,7 @@
             this.lblUpdateDateValue.Name = "lblUpdateDateValue";
             this.lblUpdateDateValue.Size = new System.Drawing.Size(368, 44);
             this.lblUpdateDateValue.TabIndex = 10;
-            this.lblUpdateDateValue.Text = "20/08/2025 08:30";
+            this.lblUpdateDateValue.Text = "—";
             this.lblUpdateDateValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblRealtimeScanValue
@@ -458,7 +458,7 @@
             this.lblRealtimeScanValue.Name = "lblRealtimeScanValue";
             this.lblRealtimeScanValue.Size = new System.Drawing.Size(368, 44);
             this.lblRealtimeScanValue.TabIndex = 11;
-            this.lblRealtimeScanValue.Text = "20/08/2025 10:15";
+            this.lblRealtimeScanValue.Text = "—";
             this.lblRealtimeScanValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblScannedFilesValue
@@ -470,7 +470,7 @@
             this.lblScannedFilesValue.Name = "lblScannedFilesValue";
             this.lblScannedFilesValue.Size = new System.Drawing.Size(368, 44);
             this.lblScannedFilesValue.TabIndex = 12;
-            this.lblScannedFilesValue.Text = "125.430";
+            this.lblScannedFilesValue.Text = "0";
             this.lblScannedFilesValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblBlockedThreaetsValue

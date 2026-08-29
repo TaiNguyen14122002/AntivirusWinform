@@ -57,7 +57,7 @@
             // 
             // pnlSidebar
             // 
-            this.pnlSidebar.BackColor = System.Drawing.SystemColors.Control;
+            this.pnlSidebar.BackColor = ScanAndRemoveVirus.Control.Theme.PageBg;
             this.pnlSidebar.Controls.Add(this.tableLayoutPanel2);
             this.pnlSidebar.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlSidebar.Location = new System.Drawing.Point(3, 3);
@@ -110,11 +110,11 @@
             // 
             // btnTongQuan
             // 
-            this.btnTongQuan.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(240)))), ((int)(((byte)(254)))));
+            this.btnTongQuan.BackColor = ScanAndRemoveVirus.Control.Theme.BlueFaint;
             this.btnTongQuan.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnTongQuan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnTongQuan.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTongQuan.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnTongQuan.ForeColor = ScanAndRemoveVirus.Control.Theme.Blue;
             this.btnTongQuan.Location = new System.Drawing.Point(23, 47);
             this.btnTongQuan.Name = "btnTongQuan";
             this.btnTongQuan.Size = new System.Drawing.Size(159, 38);
@@ -125,11 +125,11 @@
             // 
             // btnCachLy
             // 
-            this.btnCachLy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(240)))), ((int)(((byte)(254)))));
+            this.btnCachLy.BackColor = ScanAndRemoveVirus.Control.Theme.BlueFaint;
             this.btnCachLy.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnCachLy.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCachLy.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCachLy.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnCachLy.ForeColor = ScanAndRemoveVirus.Control.Theme.Blue;
             this.btnCachLy.Location = new System.Drawing.Point(23, 179);
             this.btnCachLy.Name = "btnCachLy";
             this.btnCachLy.Size = new System.Drawing.Size(159, 38);
@@ -140,11 +140,11 @@
             // 
             // btnLichSu
             // 
-            this.btnLichSu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(240)))), ((int)(((byte)(254)))));
+            this.btnLichSu.BackColor = ScanAndRemoveVirus.Control.Theme.BlueFaint;
             this.btnLichSu.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnLichSu.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLichSu.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnLichSu.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnLichSu.ForeColor = ScanAndRemoveVirus.Control.Theme.Blue;
             this.btnLichSu.Location = new System.Drawing.Point(23, 91);
             this.btnLichSu.Name = "btnLichSu";
             this.btnLichSu.Size = new System.Drawing.Size(159, 38);
@@ -155,11 +155,11 @@
             // 
             // btnBaoVe
             // 
-            this.btnBaoVe.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(240)))), ((int)(((byte)(254)))));
+            this.btnBaoVe.BackColor = ScanAndRemoveVirus.Control.Theme.BlueFaint;
             this.btnBaoVe.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnBaoVe.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBaoVe.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnBaoVe.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnBaoVe.ForeColor = ScanAndRemoveVirus.Control.Theme.Blue;
             this.btnBaoVe.Location = new System.Drawing.Point(23, 135);
             this.btnBaoVe.Name = "btnBaoVe";
             this.btnBaoVe.Size = new System.Drawing.Size(159, 38);
@@ -190,11 +190,11 @@
             // 
             this.btnCaiDat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCaiDat.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(240)))), ((int)(((byte)(254)))));
+            this.btnCaiDat.BackColor = ScanAndRemoveVirus.Control.Theme.BlueFaint;
             this.btnCaiDat.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnCaiDat.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCaiDat.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCaiDat.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnCaiDat.ForeColor = ScanAndRemoveVirus.Control.Theme.Blue;
             this.btnCaiDat.Location = new System.Drawing.Point(23, 398);
             this.btnCaiDat.Name = "btnCaiDat";
             this.btnCaiDat.Size = new System.Drawing.Size(159, 51);

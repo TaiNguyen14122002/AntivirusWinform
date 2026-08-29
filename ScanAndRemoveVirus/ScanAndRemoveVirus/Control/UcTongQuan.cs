@@ -18,31 +18,36 @@ namespace ScanAndRemoveVirus.Control
         private string customScanPath;
         private bool isScanning;
         private CancellationTokenSource cts;
-        // File lưu thời điểm cập nhật CSDL: %AppData%\ScanAndRemoveVirus\dbupdate.txt
-        private static string StatePath
-        {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "dbupdate.txt");
-            }
-        }
 
         public UcTongQuan()
         {
             InitializeComponent();
+            Theme.StyleGrid(dgvActions);
+            Theme.StyleButton(btnScanNow, Theme.BtnRole.Primary);
+            colActionThreat.DefaultCellStyle.ForeColor = Theme.RedSoft;
+            colActionThreat.DefaultCellStyle.Font = Theme.BoldFont;
+            lblThreatCount.ForeColor = Theme.Green;
+            lblQuarantineCount.ForeColor = Theme.TextDark;
+            lblScannedCount.ForeColor = Theme.Blue;
+            Theme.StyleNeutralButtons(btnCheckUpdate, btnPickFile, btnPickFolder);
             btnCheckUpdate.Click += BtnCheckUpdate_Click;
             btnScanNow.Click += BtnScanNow_Click;
+            ScanEngine.QuarantineChanged += OnQuarantineChangedTongQuan;
             // 3 radio nằm ở 3 container khác nhau -> WinForms không tự loại trừ, phải tự xử lý
             rdoQuickScan.CheckedChanged += ScanTypeChanged;
             rdoFullScan.CheckedChanged += ScanTypeChanged;
             rdoCustomScan.CheckedChanged += ScanTypeChanged;
+            btnPickFile.Click += BtnPickFile_Click;
+            btnPickFolder.Click += BtnPickFolder_Click;
+            UpdateCustomPickUi();
             LoadProtectionStatus();
             btnQuarantineSelected.Click += BtnQuarantineSelected_Click;
             btnDeleteSelected.Click += BtnDeleteSelected_Click;
             btnQuarantineAll.Click += BtnQuarantineAll_Click;
             btnDeleteAll.Click += BtnDeleteAll_Click;
+            btnVirusTotal.Click += BtnVirusTotal_Click;
+            Theme.StyleButton(btnVirusTotal, Theme.BtnRole.Action);
+            ApplyActionChips();
         }
 
         private void ScanTypeChanged(object sender, EventArgs e)
@@ -52,6 +57,47 @@ namespace ScanAndRemoveVirus.Control
             foreach (RadioButton other in new[] { rdoQuickScan, rdoFullScan, rdoCustomScan })
                 if (!ReferenceEquals(other, selected) && other.Checked)
                     other.Checked = false;
+            UpdateCustomPickUi();
+        }
+
+        // Nhóm chọn tệp/thư mục chỉ khả dụng khi đang chọn "Quét tùy chọn"
+        private void UpdateCustomPickUi()
+        {
+            bool custom = rdoCustomScan.Checked && !isScanning;
+            btnPickFile.Enabled = custom;
+            btnPickFolder.Enabled = custom;
+        }
+
+        private void BtnPickFile_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = "Chọn tệp cần quét";
+                dlg.Filter = "Tất cả tệp (*.*)|*.*";
+                dlg.CheckFileExists = true;
+                if (dlg.ShowDialog(FindForm()) == DialogResult.OK)
+                    SetCustomPath(dlg.FileName);
+            }
+        }
+
+        private void BtnPickFolder_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new FolderBrowserDialog())
+            {
+                dlg.Description = "Chọn thư mục cần quét";
+                dlg.ShowNewFolderButton = false;
+                if (dlg.ShowDialog(FindForm()) == DialogResult.OK)
+                    SetCustomPath(dlg.SelectedPath);
+            }
+        }
+
+        private void SetCustomPath(string path)
+        {
+            customScanPath = path;
+            rdoCustomScan.Checked = true;
+            lblCustomPath.Text = path;
+            lblCustomPath.ForeColor = Theme.TextMid;
+            lblCustomPath.TextAlign = ContentAlignment.MiddleLeft;
         }
 
         private ScanType GetSelectedScanType()
@@ -71,6 +117,15 @@ namespace ScanAndRemoveVirus.Control
             }
         }
 
+        private static string ScopeOf(ScanType type, string customPath)
+        {
+            if (type == ScanType.Full) return "Toàn bộ ổ đĩa";
+            if (type == ScanType.Quick) return "Khu vực hệ thống (Desktop, Downloads, Temp)";
+            return File.Exists(customPath)
+                ? "Tệp: " + customPath
+                : "Thư mục: " + customPath;
+        }
+
         // Nút Quét ngay kiêm nút Hủy khi đang quét
         private async void BtnScanNow_Click(object sender, EventArgs e)
         {
@@ -84,19 +139,17 @@ namespace ScanAndRemoveVirus.Control
             string path = customScanPath;
             if (type == ScanType.Custom && string.IsNullOrEmpty(path))
             {
-                using (var dlg = new FolderBrowserDialog())
-                {
-                    dlg.Description = "Chọn thư mục cần quét";
-                    if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
-                    path = dlg.SelectedPath;
-                    customScanPath = path;
-                }
+                MessageBox.Show("Hãy bấm \"Chọn tệp\" hoặc \"Chọn thư mục\" để chọn mục cần quét trước.",
+                    "Quét tùy chọn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
+            if (type != ScanType.Custom) path = null;
 
             SetScanning(true);
             cts = new CancellationTokenSource();
             CancellationToken token = cts.Token;
 
+            bool completed = false;
             try
             {
                 ScanResult result = await Task.Run(() =>
@@ -104,16 +157,28 @@ namespace ScanAndRemoveVirus.Control
                     {
                         try
                         {
-                            BeginInvoke((MethodInvoker)(() => lblScannedCount.Text = count.ToString("N0")));
+                            BeginInvoke((MethodInvoker)(() =>
+                            {
+                                lblScannedCount.Text = count.ToString("N0");
+                                if (current != null)
+                                    lblScanProgress.Text = string.Format("Đang quét: {0}  ({1:N0} tệp)",
+                                        current, count);
+                            }));
                         }
                         catch (ObjectDisposedException) { } // form đã đóng giữa chừng
                         catch (InvalidOperationException) { }
                     }));
 
+                completed = true;
                 lblScannedCount.Text = result.FilesScanned.ToString("N0");
+                lblScanProgress.Text = string.Format("Hoàn tất — đã quét {0:N0} tệp trong {1:0.#} giây.",
+                    result.FilesScanned, result.Duration.TotalSeconds);
+                lblScanProgress.ForeColor = result.HasThreats ? Theme.Amber : Theme.Green;
                 LoadDetectedThreats(result);
                 lblLastScanDate.Text = DateTime.Now.ToString("dd/MM/yyyy  HH:mm");
                 lblLastScanType.Text = DescribeScan(type);
+                ScanHistoryStore.Add(DescribeScan(type), ScopeOf(type, path),
+                    result.FilesScanned, result.Threats.Count, result.Duration.TotalSeconds);
                 MessageBox.Show(
                     result.HasThreats
                         ? string.Format("Phát hiện {0} mối đe dọa trong {1:N0} tệp. Hãy xử lý trong khu vực \"Hành động\" bên dưới.",
@@ -125,26 +190,57 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (OperationCanceledException)
             {
+                lblScanProgress.ForeColor = Theme.Amber;
+                lblScanProgress.Text = "Đã hủy phiên quét.";
                 MessageBox.Show("Đã hủy phiên quét.", DescribeScan(type),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                // Bất kỳ lỗi nền nào cũng chỉ dừng ở thông báo — không được làm chết app
+                lblScanProgress.ForeColor = Theme.Red;
+                lblScanProgress.Text = "Quét dừng vì lỗi.";
+                MessageBox.Show("Quét dừng vì lỗi: " + ex.Message, DescribeScan(type),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 SetScanning(false);
+                if (completed)
+                {
+                    // Thanh đầy = phiên quét trọn vẹn (xanh lá hệ thống); hủy/lỗi -> về 0
+                    pgbScan.Style = ProgressBarStyle.Blocks;
+                    pgbScan.Value = 100;
+                    pgbScan.Visible = true;
+                }
+                else
+                {
+                    pgbScan.Style = ProgressBarStyle.Blocks;
+                    pgbScan.Value = 0;
+                }
             }
         }
 
         private void SetScanning(bool scanning)
         {
             isScanning = scanning;
+            // Xanh dương = "Quét ngay"; trong lúc chạy nút thành "Hủy quét" -> đổi đỏ (hành động dừng)
             btnScanNow.Text = scanning ? "Hủy quét" : "Quét ngay";
+            Theme.StyleButton(btnScanNow, scanning ? Theme.BtnRole.Cancel : Theme.BtnRole.Primary);
+            pgbScan.Visible = scanning;
+            pgbScan.Style = ProgressBarStyle.Marquee;
+            lblScanProgress.ForeColor = Theme.Blue;
+            if (scanning)
+                lblScanProgress.Text = "Đang quét...";
+            UpdateCustomPickUi();
         }
 
         private void LoadDetectedThreats(ScanResult result)
         {
             dgvActions.Rows.Clear();
             foreach (ThreatFound threat in result.Threats)
-                dgvActions.Rows.Add(threat.FilePath, threat.Reason);
+                dgvActions.Rows.Add(threat.FilePath,
+                    string.IsNullOrEmpty(threat.Kind) ? threat.Reason : threat.Kind + ": " + threat.Reason);
             UpdateThreatUi();
         }
 
@@ -152,11 +248,24 @@ namespace ScanAndRemoveVirus.Control
         {
             bool hasRows = dgvActions.Rows.Count > 0;
             lblThreatCount.Text = dgvActions.Rows.Count.ToString();
+            lblThreatCount.ForeColor = hasRows ? Theme.Red : Theme.Green;
             lblThreatText.Text = hasRows ? "Cần xử lý" : "Không phát hiện mối đe dọa";
+            lblThreatText.ForeColor = hasRows ? Theme.Red : Theme.Green;
             btnQuarantineSelected.Enabled = hasRows;
             btnDeleteSelected.Enabled = hasRows;
             btnQuarantineAll.Enabled = hasRows;
             btnDeleteAll.Enabled = hasRows;
+            btnVirusTotal.Enabled = hasRows;
+            ApplyActionChips();
+        }
+
+        // Chip đổi màu theo trạng thái Enabled -> repaint sau mỗi lần bật/tắt nút
+        private void ApplyActionChips()
+        {
+                        Theme.StyleButton(btnQuarantineSelected, Theme.BtnRole.Action);
+            Theme.StyleButton(btnQuarantineAll, Theme.BtnRole.Action);
+            Theme.StyleButton(btnDeleteSelected, Theme.BtnRole.Danger);
+            Theme.StyleButton(btnDeleteAll, Theme.BtnRole.Danger);
         }
 
         private void BtnQuarantineSelected_Click(object sender, EventArgs e)
@@ -177,7 +286,9 @@ namespace ScanAndRemoveVirus.Control
             foreach (DataGridViewRow row in rows)
             {
                 string path = row.Cells[0].Value as string;
-                if (string.IsNullOrEmpty(path) || !File.Exists(path) || ScanEngine.Quarantine(path))
+                string reason = row.Cells[1].Value as string; // lưu lý do/loại phát hiện vào sổ cách ly
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)
+                    || ScanEngine.Quarantine(path, reason))
                 {
                     dgvActions.Rows.Remove(row);
                     done++;
@@ -228,38 +339,197 @@ namespace ScanAndRemoveVirus.Control
                 done == rows.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
 
+        // ==== Tra cứu VirusTotal (đám mây, kỹ thuật 1 nâng cấp: chỉ gửi hash SHA256) ====
+        private async void BtnVirusTotal_Click(object sender, EventArgs e)
+        {
+            if (isScanning || dgvActions.SelectedRows.Count == 0) return;
+            DataGridViewRow row = dgvActions.SelectedRows[0];
+            string path = row.Cells[0].Value as string;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                MessageBox.Show("Tệp không còn ở vị trí cũ nên không tính được hash.",
+                    "VirusTotal", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (!VirusTotalClient.IsConfigured)
+            {
+                string key = NhapApiKeyDialog();
+                if (key == null) return; // người dùng hủy
+                if (key.Length == 0)
+                {
+                    MessageBox.Show("Lấy API key miễn phí tại virustotal.com (Hồ sơ → API key), "
+                        + "hoặc tự tạo tệp:\n" + VirusTotalClient.ApiKeyPath,
+                        "VirusTotal cần API key", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                VirusTotalClient.SaveApiKey(key);
+            }
+
+            string hash = null;
+            btnVirusTotal.Enabled = false;
+            lblScanProgress.Text = "Đang tính hash + tra cứu VirusTotal...";
+            lblScanProgress.ForeColor = Theme.Blue;
+            try
+            {
+                VirusTotalReport report = await Task.Run(() =>
+                {
+                    hash = ScanEngine.ComputeFileSha256(path);
+                    var r = hash == null
+                        ? new VirusTotalReport { Error = "Không đọc được tệp để tính SHA256" }
+                        : VirusTotalClient.QueryHash(hash);
+                    return r;
+                });
+
+                string verdict = report.Error != null ? "lỗi"
+                    : !report.Found ? "chưa có mẫu"
+                    : report.IsMalicious ? "ĐỘC HẠI"
+                    : report.IsSuspicious ? "nghi ngờ" : "AN TOÀN";
+                lblScanProgress.Text = "VirusTotal: " + report.Summary();
+                lblScanProgress.ForeColor = report.IsMalicious ? Theme.Red : Theme.Green;
+                if (report.Error == null)
+                    row.Cells[1].Value = string.Format("VirusTotal [{0}]: {1}{2}",
+                        verdict, report.Summary(), hash != null ? "  —  SHA256 " + hash.Substring(0, 16) + "…" : "");
+                MessageBox.Show(report.Summary(), "VirusTotal: " + verdict,
+                    MessageBoxButtons.OK,
+                    report.IsMalicious ? MessageBoxIcon.Error : MessageBoxIcon.Information);
+            }
+            finally
+            {
+                btnVirusTotal.Enabled = dgvActions.Rows.Count > 0;
+            }
+        }
+
+        private string NhapApiKeyDialog()
+        {
+            using (var f = new Form())
+            {
+                f.Text = "API key VirusTotal";
+                f.FormBorderStyle = FormBorderStyle.FixedDialog;
+                f.StartPosition = FormStartPosition.CenterParent;
+                f.MinimizeBox = false;
+                f.MaximizeBox = false;
+                f.ClientSize = new Size(460, 140);
+                var lbl = new Label
+                {
+                    Text = "Dán API key miễn phí (virustotal.com → Profile → API key).\n"
+                        + "App chỉ gửi hash SHA256 ra ngoài — KHÔNG upload nội dung tệp của bạn.",
+                    Left = 12, Top = 10, Width = 436, Height = 44
+                };
+                var txt = new TextBox { Left = 12, Top = 60, Width = 436 };
+                var ok = new Button { Text = "Lưu", DialogResult = DialogResult.OK, Left = 272, Top = 94, Width = 85 };
+                var cancel = new Button { Text = "Hủy", DialogResult = DialogResult.Cancel, Left = 363, Top = 94, Width = 85 };
+                Theme.StyleButton(ok, Theme.BtnRole.Primary);
+                Theme.StyleButton(cancel, Theme.BtnRole.Neutral);
+                f.Controls.AddRange(new System.Windows.Forms.Control[] { lbl, txt, ok, cancel });
+                f.AcceptButton = ok;
+                f.CancelButton = cancel;
+                if (f.ShowDialog(FindForm()) != DialogResult.OK) return null;
+                return txt.Text.Trim();
+            }
+        }
+
         private void LoadProtectionStatus()
         {
             lblVersionValue.Text = System.Reflection.Assembly
                 .GetExecutingAssembly().GetName().Version.ToString(3);
+            ApplyQuarantineCount();
 
             DateTime last;
-            if (File.Exists(StatePath) && DateTime.TryParse(File.ReadAllText(StatePath), out last))
+            if (ScanHistoryStore.TryGetLastSignatureUpdate(out last))
                 MarkDbUpdated(last);
             else
                 lblLastUpdateTitle.Text = "Chưa cập nhật";
+
+            ApplyLastScanFromHistory();
+
+            // Trạng thái real-time thật (kỹ thuật 3) + cập nhật tức thì khi tab Bảo vệ bật/tắt
+            RealTimeProtection.StatusChanged += OnRealTimeStatus;
+            OnRealTimeStatus(RealTimeProtection.IsRunning);
+        }
+
+        // "Lần quét gần nhất" khôi phục từ lịch sử thật — restart app không còn hiện dữ liệu mock
+        private void ApplyLastScanFromHistory()
+        {
+            HistoryEntry e = ScanHistoryStore.LatestOfType("Quét");
+            if (e == null)
+            {
+                lblLastScanDate.Text = "Chưa có phiên quét nào";
+                lblLastScanType.Text = "—";
+            }
+            else
+            {
+                lblLastScanDate.Text = e.Time.ToString("dd/MM/yyyy  HH:mm");
+                lblLastScanType.Text = e.Type;
+            }
+        }
+
+        private void OnRealTimeStatus(bool running)
+        {
+            if (!IsHandleCreated)
+            {
+                ApplyRealTimeStatus(running);
+                return;
+            }
+            try { BeginInvoke((MethodInvoker)(() => ApplyRealTimeStatus(running))); }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException) { }
+        }
+
+        private void ApplyRealTimeStatus(bool running)
+        {
+            lblRealtimeValue.Text = running ? "Bật" : "Tắt";
+            lblRealtimeValue.ForeColor = running
+                ? Theme.Green
+                : Theme.Red;
+            lblProtectionStatus.Text = running
+                ? "Máy tính của bạn được bảo vệ"
+                : "Bảo vệ thời gian thực đang tắt";
+            lblProtectionStatus.ForeColor = running
+                ? Theme.Green
+                : Theme.Amber;
         }
 
         private void BtnCheckUpdate_Click(object sender, EventArgs e)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(StatePath));
             DateTime now = DateTime.Now;
-            File.WriteAllText(StatePath, now.ToString("o"));
+            ScanHistoryStore.MarkSignatureUpdated(now);
+            // "Cập nhật CSDL chữ ký" -> vô hiệu hóa cache để lần quét sau kiểm tra lại toàn bộ
+            ScanEngine.ClearScanCache();
             MarkDbUpdated(now);
+            ScanHistoryStore.Add("Cập nhật CSDL", "Bảng chữ ký virus", 0, 0, 0);
             MessageBox.Show("Cơ sở dữ liệu virus đã được cập nhật.",
                 "Kiểm tra cập nhật", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // Ô "Cách ly" ở khu Thống kê luôn phản ánh số tệp thật trong khu cách ly
+        private void OnQuarantineChangedTongQuan()
+        {
+            try { BeginInvoke((MethodInvoker)ApplyQuarantineCount); }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException) { }
+        }
+
+        private void ApplyQuarantineCount()
+        {
+            int n = ScanEngine.CountQuarantined();
+            lblQuarantineCount.Text = n.ToString();
+            // Số tệp đang cách ly: hổ phách khi >0 (còn thứ cần lưu ý), xám khi hết
+            lblQuarantineCount.ForeColor = n > 0 ? Theme.Amber : Theme.TextDark;
         }
 
         private void MarkDbUpdated(DateTime when)
         {
             lblDatabaseValue.Text = "Đã cập nhật";
-            lblDatabaseValue.ForeColor = Color.FromArgb(22, 163, 74);
+            lblDatabaseValue.ForeColor = Theme.Green;
             lblLastUpdateTitle.Text = when.ToString("dd/MM/yyyy HH:mm");
         }
 
         private void lblQuarantineCount_Click(object sender, EventArgs e)
         {
-
+            // Bấm vào số cách ly -> mở thẳng tab Cách ly để xử lý
+            var main = FindForm() as FrmMain;
+            if (main != null) main.MoTabCachLy();
         }
     }
 }

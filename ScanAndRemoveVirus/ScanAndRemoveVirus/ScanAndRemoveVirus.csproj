@@ -67,6 +67,7 @@
     <Compile Include="Control\UcLichSu.Designer.cs">
       <DependentUpon>UcLichSu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Control\Theme.cs" />
     <Compile Include="Control\UcTongQuan.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -99,6 +100,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Services\ScanEngine.cs" />
+    <Compile Include="Services\RealTimeProtection.cs" />
+    <Compile Include="Services\QuarantineLedger.cs" />
+    <Compile Include="Services\ScanHistoryStore.cs" />
+    <Compile Include="Services\VirusTotalClient.cs" />
+    <Compile Include="Services\AppSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Control\UcBaoVe.resx">
       <DependentUpon>UcBaoVe.cs</DependentUpon>

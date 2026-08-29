@@ -1,5 +1,4 @@
-﻿using ScanAndRemoveVirus.form;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,7 +6,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Forms;
 using ScanAndRemoveVirus.Control;
 
@@ -38,23 +36,17 @@ namespace ScanAndRemoveVirus
                 btnCachLy
             };
             foreach(Button btn in buttons)
-            {
-                btn.BackColor = Color.FromArgb(247, 248, 250);
-                btn.ForeColor = Color.FromArgb(37, 99, 235);
-                btn.Font = new Font("Segoe UI", 10, FontStyle.Regular);
-            }
+                Theme.StyleNav(btn, false);
         }
         private void ActiveSidebar(Button button)
         {
             ResetSidebar();
-
-            button.BackColor = Color.FromArgb(10, 86, 216);
-            button.ForeColor = Color.White;
-            button.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            Theme.StyleNav(button, true);
         }
         public FrmMain()
         {
             InitializeComponent();
+            Theme.StyleNav(btnCaiDat, false); // nút Cài đặt ngoài danh sách điều hướng 4 tab
 
             LoadContent(ucTongQuan);
             ActiveSidebar(btnTongQuan);
@@ -62,7 +54,16 @@ namespace ScanAndRemoveVirus
             btnBaoVe.Click += btnBaoVe_Click;
             btnLichSu.Click += btnLichSu_Click;
             btnCachLy.Click += btnCachLy_Click;
+            // Vùng Cài đặt (checkbox + nút Lưu) nằm trong tab Bảo vệ -> nút Cài đặt mở sang đó
+            btnCaiDat.Click += (s, ev) => { LoadContent(ucBaoVe); ActiveSidebar(btnBaoVe); };
 
+        }
+
+        //API cho các UserControl điều hướng (vd: bấm số đếm cách ly ở tab Tổng quan)
+        public void MoTabCachLy()
+        {
+            LoadContent(ucCachLy);
+            ActiveSidebar(btnCachLy);
         }
         
 
