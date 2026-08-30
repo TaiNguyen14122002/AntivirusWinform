@@ -103,6 +103,8 @@
     <Compile Include="FrmMain.Designer.cs">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modal\ThreatDetection.cs" />
+    <Compile Include="Modal\UpdateHistoryItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Services\DataDir.cs" />
     <Compile Include="Services\ScanEngine.cs" />
