@@ -13,138 +13,111 @@ namespace ScanAndRemoveVirus.Control
 {
     public partial class UcBaoVe : UserControl
     {
-        private const string FeatureRealTime = "Bảo vệ thời gian thực";
-        private const string FeatureAutoQuarantine = "Tự động cách ly";
+        // 10 tính năng — mỗi hàng có key điều khiển cơ chế THẬT tương ứng (row.Tag = key)
+        private static readonly string[,] Catalog = {
+            { "rt",       "Bảo vệ thời gian thực",       "Tự động giám sát và quét tệp mới/đổi trong Desktop, Downloads, Temp" },
+            { "restore",  "Bảo vệ tệp",                  "Kiểm tra lại tệp cách ly trước khi khôi phục về máy" },
+            { "usb",      "Bảo vệ USB",                  "Tự động quét toàn bộ ổ removable ngay khi được cắm vào" },
+            { "download", "Bảo vệ tải xuống",            "Quét đầy đủ nội dung tệp có nguồn gốc Internet (MOTW) về thư mục Downloads" },
+            { "behavior", "Phát hiện hành vi đáng ngờ",  "Giám sát tiến trình qua WMI: chạy từ Temp, PowerShell mã hóa, Office sinh shell" },
+            { "startup",  "Bảo vệ thư mục khởi động",    "Quét tệp mới xuất hiện trong StartUp — điểm cài persistence của malware" },
+            { "aq",       "Tự động cách ly",             "Tự động đưa tệp nguy hiểm vào khu vực cách ly, không hỏi" },
+            { "alerts",   "Cảnh báo mối đe dọa",         "Hiển thị pop-up khi phát hiện; tắt thì chỉ ghi lịch sử" },
+            { "update",   "Tự động cập nhật",            "Mở app khi chữ ký quá 24h: đóng dấu cập nhật + xóa cache để quét lại" },
+            { "vtq",      "Bảo vệ web (VirusTotal)",     "Tự tra VirusTotal theo hash cho dòng heuristic nghi vấn (cần API key)" },
+        };
 
         private void LoadDuLieuBaoVe()
         {
             dgvProtecctionFeatures.Rows.Clear();
+            for (int i = 0; i < Catalog.GetLength(0); i++)
+            {
+                int r = dgvProtecctionFeatures.Rows.Add(Catalog[i, 1], Catalog[i, 2], "—", "—");
+                dgvProtecctionFeatures.Rows[r].Tag = Catalog[i, 0];
+            }
+        }
 
-            dgvProtecctionFeatures.Rows.Add(
-                "Bảo vệ thời gian thực",
-                "Tự động giám sát tệp và chương trình đang được mở hoặc thực thi",
-                "Bật",
-                "Tắt"
-            );
+        private static string NameForKey(string key)
+        {
+            for (int i = 0; i < Catalog.GetLength(0); i++)
+                if (Catalog[i, 0] == key) return Catalog[i, 1];
+            return key;
+        }
 
-            dgvProtecctionFeatures.Rows.Add(
-                "Bảo vệ tệp",
-                "Kiểm tra tệp khi người dùng mở, sao chép hoặc tải xuống",
-                "Bật",
-                "Tắt"
-            );
+        // Trạng thái HIỆN HÀNH của từng tính năng — một nguồn sự thật duy nhất
+        private static bool IsOn(string key)
+        {
+            switch (key)
+            {
+                case "rt": return RealTimeProtection.IsRunning;
+                case "aq": return RealTimeProtection.AutoQuarantine;
+                case "restore": return FeatureFlags.FileRestoreGuard;
+                case "usb": return FeatureFlags.UsbProtection;
+                case "download": return FeatureFlags.DownloadProtection;
+                case "behavior": return FeatureFlags.BehaviorWatch;
+                case "startup": return FeatureFlags.StartupFoldersWatch;
+                case "alerts": return FeatureFlags.ThreatAlerts;
+                case "update": return FeatureFlags.AutoUpdateEnabled;
+                case "vtq": return FeatureFlags.VtAutoQuery;
+                default: return false;
+            }
+        }
 
-            dgvProtecctionFeatures.Rows.Add(
-                "Bảo vệ USB",
-                "Kiểm tra thiết bị USB và các tệp khi kết nối với máy tính",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Bảo vệ tải xuống",
-                "Kiểm tra các tệp được tải xuống từ Internet",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Phát hiện hành vi đáng ngờ",
-                "Phân tích hành vi của chương trình để phát hiện hoạt động bất thường",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Bảo vệ thư mục hệ thống",
-                "Giám sát các thư mục quan trọng của Windows",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Tự động cách ly",
-                "Tự động đưa tệp nguy hiểm vào khu vực cách ly",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Cảnh báo mối đe dọa",
-                "Hiển thị thông báo khi phát hiện virus hoặc hoạt động đáng ngờ",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Tự động cập nhật",
-                "Tự động cập nhật cơ sở dữ liệu virus",
-                "Bật",
-                "Tắt"
-            );
-
-            dgvProtecctionFeatures.Rows.Add(
-                "Bảo vệ trình duyệt",
-                "Kiểm tra các trang web và nội dung tải xuống có nguy cơ gây hại",
-                "Tắt",
-                "Bật"
-            );
+        private static void SetState(string key, bool on)
+        {
+            switch (key)
+            {
+                case "rt":
+                    try
+                    {
+                        if (on && !RealTimeProtection.IsRunning) RealTimeProtection.Start();
+                        if (!on && RealTimeProtection.IsRunning) RealTimeProtection.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Không bật được bảo vệ thời gian thực: " + ex.Message,
+                            "Bảo vệ thời gian thực", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    FeatureFlags.RealTimeOn = RealTimeProtection.IsRunning;
+                    break;
+                case "aq":
+                    RealTimeProtection.AutoQuarantine = on;
+                    break;
+                case "restore":  FeatureFlags.FileRestoreGuard = on; break;
+                case "usb":      FeatureFlags.UsbProtection = on; GuardService.Configure("usb", on); break;
+                case "download": FeatureFlags.DownloadProtection = on; GuardService.Configure("download", on); break;
+                case "behavior": FeatureFlags.BehaviorWatch = on; GuardService.Configure("behavior", on); break;
+                case "startup":  FeatureFlags.StartupFoldersWatch = on; GuardService.Configure("startup", on); break;
+                case "alerts":   FeatureFlags.ThreatAlerts = on; break;
+                case "update":   FeatureFlags.AutoUpdateEnabled = on; break;
+                case "vtq":      FeatureFlags.VtAutoQuery = on; break;
+            }
+            FeatureFlags.Persist();
+            FeatureFlags.NotifyChanged();
         }
         public UcBaoVe()
         {
             InitializeComponent();
             BackColor = Theme.PageBg;
-            Theme.StyleNeutralButtons(btnSaveSettings);
+            Theme.StylePageHeader(lblProtectionTitle, lblProtectionSubtitle);
+            Theme.StyleCard(grpProtectionFeatures, grpProtectionInfo);
             LoadDuLieuBaoVe();
             Theme.StyleGrid(dgvProtecctionFeatures);
-            // Chỉ 2 hàng dưới đây điều khiển tính năng THẬT; các hàng khác là hiển thị mẫu
             dgvProtecctionFeatures.CellClick += Grid_CellClick;
             dgvProtecctionFeatures.CellFormatting += Grid_CellFormatting;
             RealTimeProtection.StatusChanged += OnRealTimeStatus;
             RealTimeProtection.ThreatDetected += OnThreatDetected;
+            GuardService.ThreatDetected += OnThreatDetected;
+            FeatureFlags.Changed += OnFlagsChanged;
             SyncRealFeaturesUi();
             SyncProtectionStats();
-            // Cài đặt: nạp flags đã lưu + nút Lưu ghi thật (tự khởi động = vào registry Run)
-            LoadSettingsIntoUi();
-            btnSaveSettings.Click += BtnSaveSettings_Click;
         }
 
-        private void LoadSettingsIntoUi()
+        private void OnFlagsChanged()
         {
-            var s = AppSettings.Load();
-            chkAutoStart.Checked = AppSettings.IsAutoStartEnabled();
-            chkAutoUpdate.Checked = s.AutoUpdate;
-            chkSendSamples.Checked = s.SendSamples;
-            chkShowNotification.Checked = s.ShowNotifications;
-        }
-
-        private void BtnSaveSettings_Click(object sender, EventArgs e)
-        {
-            var f = new SettingsFlags
-            {
-                AutoStart = chkAutoStart.Checked,
-                AutoUpdate = chkAutoUpdate.Checked,
-                SendSamples = chkSendSamples.Checked,
-                ShowNotifications = chkShowNotification.Checked
-            };
-            try
-            {
-                AppSettings.Save(f);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Không lưu được tệp cài đặt: " + ex.Message,
-                    "Cài đặt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            bool startupOk = AppSettings.ApplyAutoStart(f.AutoStart);
-            chkAutoStart.Checked = AppSettings.IsAutoStartEnabled(); // trung thực với kết quả registry
-            string note = f.AutoStart
-                ? (startupOk ? "\nĐã đăng ký chạy cùng Windows." : "\nKHÔNG đăng ký được chạy cùng Windows (registry từ chối).")
-                : (startupOk ? "\nĐã bỏ đăng ký chạy cùng Windows." : "");
-            MessageBox.Show("Cài đặt đã lưu." + note, "Cài đặt",
-                MessageBoxButtons.OK,
-                startupOk ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            try { BeginInvoke((MethodInvoker)(() => { SyncRealFeaturesUi(); SyncProtectionStats(); })); }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException) { }
         }
 
         // Panel "Trạng thái bảo vệ": mọi số liệu lấy từ source thật (không còn text mock 2025)
@@ -186,7 +159,7 @@ namespace ScanAndRemoveVirus.Control
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
-            if (Visible) { SyncProtectionStats(); SyncRealFeaturesUi(); LoadSettingsIntoUi(); }
+            if (Visible) { SyncProtectionStats(); SyncRealFeaturesUi(); }
         }
 
         // Cột Trạng thái: Bật xanh lá / Tắt đỏ
@@ -206,35 +179,21 @@ namespace ScanAndRemoveVirus.Control
         private void Grid_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex != colAction.Index) return;
-            string feature = Convert.ToString(dgvProtecctionFeatures.Rows[e.RowIndex].Cells[colFeature.Index].Value);
-            if (feature == FeatureRealTime)
-            {
-                if (RealTimeProtection.IsRunning) RealTimeProtection.Stop();
-                else RealTimeProtection.Start();
-                SyncRealFeaturesUi();
-            }
-            else if (feature == FeatureAutoQuarantine)
-            {
-                RealTimeProtection.AutoQuarantine = !RealTimeProtection.AutoQuarantine;
-                SyncRealFeaturesUi();
-            }
-            else
-            {
-                MessageBox.Show("Tính năng \"" + feature + "\" là hiển thị mẫu — bản mô phỏng chưa triển khai.",
-                    "Chưa khả dụng", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            DataGridViewRow row = dgvProtecctionFeatures.Rows[e.RowIndex];
+            string key = row.Tag as string;
+            if (string.IsNullOrEmpty(key)) return;
+            SetState(key, !IsOn(key));
+            SyncRealFeaturesUi();
         }
 
-        // Đồng bộ ô "Trạng thái" của 2 tính năng thật theo đúng state trong engine
+        // Đồng bộ ô Trạng thái/Hành động của MỌI hàng theo đúng state trong Services
         private void SyncRealFeaturesUi()
         {
             foreach (DataGridViewRow row in dgvProtecctionFeatures.Rows)
             {
-                string feature = Convert.ToString(row.Cells[colFeature.Index].Value);
-                if (feature == FeatureRealTime)
-                    SetFeatureState(row, RealTimeProtection.IsRunning);
-                else if (feature == FeatureAutoQuarantine)
-                    SetFeatureState(row, RealTimeProtection.AutoQuarantine);
+                string key = row.Tag as string;
+                if (string.IsNullOrEmpty(key)) continue;
+                SetFeatureState(row, IsOn(key));
             }
         }
 
@@ -254,13 +213,14 @@ namespace ScanAndRemoveVirus.Control
             catch (InvalidOperationException) { }
         }
 
-        // Kỹ thuật 3 phát hiện đe dọa: hỏi người dùng, hoặc cách ly thẳng nếu "Tự động cách ly" đang bật
+        // Kỹ thuật 3 phát hiện đe dọa: pop-up xác nhận cách ly (bỏ qua nếu tắt "Cảnh báo")
         private void OnThreatDetected(ThreatFound threat)
         {
             try
             {
                 BeginInvoke((MethodInvoker)(() =>
                 {
+                    if (!FeatureFlags.ThreatAlerts) return; // chế độ im lặng — lịch sử vẫn ghi ở tầng service
                     if (RealTimeProtection.AutoQuarantine)
                     {
                         MessageBox.Show(
@@ -282,11 +242,6 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (ObjectDisposedException) { }
             catch (InvalidOperationException) { }
-        }
-
-        private void chkAutoStart_CheckedChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

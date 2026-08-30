@@ -2,3 +2,6 @@ bin/
 obj/
 .vs/
 *.user
+
+# VirusTotal API key (gi?i phát tri?n c?c b? - không commit)
+vtapikey.txt

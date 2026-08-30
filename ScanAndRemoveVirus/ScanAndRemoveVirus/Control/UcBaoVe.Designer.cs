@@ -57,14 +57,6 @@
             this.lblRealtimeScanValue = new System.Windows.Forms.Label();
             this.lblScannedFilesValue = new System.Windows.Forms.Label();
             this.lblBlockedThreaetsValue = new System.Windows.Forms.Label();
-            this.grpOtherSettings = new System.Windows.Forms.GroupBox();
-            this.tableLayoutPanel7 = new System.Windows.Forms.TableLayoutPanel();
-            this.chkAutoStart = new System.Windows.Forms.CheckBox();
-            this.chkAutoUpdate = new System.Windows.Forms.CheckBox();
-            this.chkSendSamples = new System.Windows.Forms.CheckBox();
-            this.chkShowNotification = new System.Windows.Forms.CheckBox();
-            this.tableLayoutPanel8 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnSaveSettings = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -74,9 +66,6 @@
             this.tableLayoutPanel5.SuspendLayout();
             this.grpProtectionInfo.SuspendLayout();
             this.tableLayoutPanel6.SuspendLayout();
-            this.grpOtherSettings.SuspendLayout();
-            this.tableLayoutPanel7.SuspendLayout();
-            this.tableLayoutPanel8.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -249,11 +238,9 @@
             // 
             // tableLayoutPanel5
             // 
-            this.tableLayoutPanel5.ColumnCount = 2;
-            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
-            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel5.ColumnCount = 1;
+            this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel5.Controls.Add(this.grpProtectionInfo, 0, 0);
-            this.tableLayoutPanel5.Controls.Add(this.grpOtherSettings, 1, 0);
             this.tableLayoutPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel5.Location = new System.Drawing.Point(2, 457);
             this.tableLayoutPanel5.Margin = new System.Windows.Forms.Padding(2);
@@ -485,132 +472,6 @@
             this.lblBlockedThreaetsValue.Text = "0";
             this.lblBlockedThreaetsValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // grpOtherSettings
-            // 
-            this.grpOtherSettings.Controls.Add(this.tableLayoutPanel7);
-            this.grpOtherSettings.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpOtherSettings.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpOtherSettings.Location = new System.Drawing.Point(704, 2);
-            this.grpOtherSettings.Margin = new System.Windows.Forms.Padding(2);
-            this.grpOtherSettings.Name = "grpOtherSettings";
-            this.grpOtherSettings.Padding = new System.Windows.Forms.Padding(2);
-            this.grpOtherSettings.Size = new System.Drawing.Size(464, 366);
-            this.grpOtherSettings.TabIndex = 1;
-            this.grpOtherSettings.TabStop = false;
-            this.grpOtherSettings.Text = "Thiết lập khác";
-            // 
-            // tableLayoutPanel7
-            // 
-            this.tableLayoutPanel7.ColumnCount = 3;
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 25F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 25F));
-            this.tableLayoutPanel7.Controls.Add(this.chkAutoStart, 1, 1);
-            this.tableLayoutPanel7.Controls.Add(this.chkAutoUpdate, 1, 2);
-            this.tableLayoutPanel7.Controls.Add(this.chkSendSamples, 1, 3);
-            this.tableLayoutPanel7.Controls.Add(this.chkShowNotification, 1, 4);
-            this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel8, 1, 6);
-            this.tableLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel7.Location = new System.Drawing.Point(2, 22);
-            this.tableLayoutPanel7.Margin = new System.Windows.Forms.Padding(2);
-            this.tableLayoutPanel7.Name = "tableLayoutPanel7";
-            this.tableLayoutPanel7.RowCount = 8;
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 21F));
-            this.tableLayoutPanel7.Size = new System.Drawing.Size(460, 342);
-            this.tableLayoutPanel7.TabIndex = 0;
-            // 
-            // chkAutoStart
-            // 
-            this.chkAutoStart.AutoSize = true;
-            this.chkAutoStart.Checked = true;
-            this.chkAutoStart.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoStart.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkAutoStart.Location = new System.Drawing.Point(27, 12);
-            this.chkAutoStart.Margin = new System.Windows.Forms.Padding(2);
-            this.chkAutoStart.Name = "chkAutoStart";
-            this.chkAutoStart.Size = new System.Drawing.Size(406, 54);
-            this.chkAutoStart.TabIndex = 0;
-            this.chkAutoStart.Text = "Tự động khởi động cùng Windows";
-            this.chkAutoStart.UseVisualStyleBackColor = true;
-            this.chkAutoStart.CheckedChanged += new System.EventHandler(this.chkAutoStart_CheckedChanged);
-            // 
-            // chkAutoUpdate
-            // 
-            this.chkAutoUpdate.AutoSize = true;
-            this.chkAutoUpdate.Checked = true;
-            this.chkAutoUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoUpdate.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkAutoUpdate.Location = new System.Drawing.Point(27, 70);
-            this.chkAutoUpdate.Margin = new System.Windows.Forms.Padding(2);
-            this.chkAutoUpdate.Name = "chkAutoUpdate";
-            this.chkAutoUpdate.Size = new System.Drawing.Size(406, 54);
-            this.chkAutoUpdate.TabIndex = 1;
-            this.chkAutoUpdate.Text = "Tự động cập nhập cơ sở dữ liệu virus";
-            this.chkAutoUpdate.UseVisualStyleBackColor = true;
-            // 
-            // chkSendSamples
-            // 
-            this.chkSendSamples.AutoSize = true;
-            this.chkSendSamples.Checked = true;
-            this.chkSendSamples.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkSendSamples.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkSendSamples.Location = new System.Drawing.Point(27, 128);
-            this.chkSendSamples.Margin = new System.Windows.Forms.Padding(2);
-            this.chkSendSamples.Name = "chkSendSamples";
-            this.chkSendSamples.Size = new System.Drawing.Size(406, 54);
-            this.chkSendSamples.TabIndex = 2;
-            this.chkSendSamples.Text = "Gửi mẫu tệp nghi ngờ để phân tích";
-            this.chkSendSamples.UseVisualStyleBackColor = true;
-            // 
-            // chkShowNotification
-            // 
-            this.chkShowNotification.AutoSize = true;
-            this.chkShowNotification.Checked = true;
-            this.chkShowNotification.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkShowNotification.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkShowNotification.Location = new System.Drawing.Point(27, 186);
-            this.chkShowNotification.Margin = new System.Windows.Forms.Padding(2);
-            this.chkShowNotification.Name = "chkShowNotification";
-            this.chkShowNotification.Size = new System.Drawing.Size(406, 54);
-            this.chkShowNotification.TabIndex = 3;
-            this.chkShowNotification.Text = "Hiển thị thông báo khi phát hiện mối đe dọa";
-            this.chkShowNotification.UseVisualStyleBackColor = true;
-            // 
-            // tableLayoutPanel8
-            // 
-            this.tableLayoutPanel8.ColumnCount = 3;
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 125F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 125F));
-            this.tableLayoutPanel8.Controls.Add(this.btnSaveSettings, 1, 0);
-            this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel8.Location = new System.Drawing.Point(27, 265);
-            this.tableLayoutPanel8.Margin = new System.Windows.Forms.Padding(2);
-            this.tableLayoutPanel8.Name = "tableLayoutPanel8";
-            this.tableLayoutPanel8.RowCount = 1;
-            this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(406, 54);
-            this.tableLayoutPanel8.TabIndex = 4;
-            // 
-            // btnSaveSettings
-            // 
-            this.btnSaveSettings.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnSaveSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSaveSettings.Location = new System.Drawing.Point(127, 2);
-            this.btnSaveSettings.Margin = new System.Windows.Forms.Padding(2);
-            this.btnSaveSettings.Name = "btnSaveSettings";
-            this.btnSaveSettings.Size = new System.Drawing.Size(152, 50);
-            this.btnSaveSettings.TabIndex = 0;
-            this.btnSaveSettings.Text = "Lưu thiết lập";
-            this.btnSaveSettings.UseVisualStyleBackColor = true;
-            // 
             // UcBaoVe
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -630,10 +491,6 @@
             this.grpProtectionInfo.ResumeLayout(false);
             this.tableLayoutPanel6.ResumeLayout(false);
             this.tableLayoutPanel6.PerformLayout();
-            this.grpOtherSettings.ResumeLayout(false);
-            this.tableLayoutPanel7.ResumeLayout(false);
-            this.tableLayoutPanel7.PerformLayout();
-            this.tableLayoutPanel8.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -669,13 +526,5 @@
         private System.Windows.Forms.Label lblRealtimeScanValue;
         private System.Windows.Forms.Label lblScannedFilesValue;
         private System.Windows.Forms.Label lblBlockedThreaetsValue;
-        private System.Windows.Forms.GroupBox grpOtherSettings;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel7;
-        private System.Windows.Forms.CheckBox chkAutoStart;
-        private System.Windows.Forms.CheckBox chkAutoUpdate;
-        private System.Windows.Forms.CheckBox chkSendSamples;
-        private System.Windows.Forms.CheckBox chkShowNotification;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel8;
-        private System.Windows.Forms.Button btnSaveSettings;
     }
 }

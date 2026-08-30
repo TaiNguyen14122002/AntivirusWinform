@@ -114,22 +114,12 @@ namespace ScanAndRemoveVirus.Services
 
         public static string QuarantineDir
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "Quarantine");
-            }
+            get { return DataDir.Resolve("Quarantine"); }
         }
 
         public static string ScanCachePath
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "scancache.dat");
-            }
+            get { return DataDir.Resolve("scancache.dat"); }
         }
 
         public static void ClearScanCache()
@@ -357,6 +347,12 @@ namespace ScanAndRemoveVirus.Services
         // Điểm vào cho RealTimeProtection + quét 1 tệp. Trả về null nếu tệp sạch.
         public static ThreatFound EvaluateFile(string path)
         {
+            return EvaluateFile(path, false);
+        }
+
+        /// <summary>forceContent=true: bỏ qua cửa "diện nghi vấn" (guard đặc chủng: USB/startup/MOTW/khôi phục).</summary>
+        public static ThreatFound EvaluateFile(string path, bool forceContent)
+        {
             FileInfo file;
             try
             {
@@ -366,7 +362,7 @@ namespace ScanAndRemoveVirus.Services
             catch (Exception) { return null; }
 
             string kind, reason;
-            if (Evaluate(file, out kind, out reason))
+            if (Evaluate(file, out kind, out reason, forceContent))
                 return new ThreatFound { FilePath = file.FullName, Kind = kind, Reason = reason };
             return null;
         }
@@ -462,8 +458,10 @@ namespace ScanAndRemoveVirus.Services
 
         /// <summary>
         /// Pipeline 2 lớp (kỹ thuật 1 + kỹ thuật 2). Trả về true nếu đe dọa.
+        /// forceContent: guard đặc chủng bỏ qua cửa "diện nghi vấn" để soi mọi đuôi/file.
         /// </summary>
-        private static bool Evaluate(FileInfo file, out string kind, out string reason)
+        private static bool Evaluate(FileInfo file, out string kind, out string reason,
+            bool forceContent = false)
         {
             // --- Kỹ thuật 1a: tên trùng chuẩn EICAR ---
             if (file.Name.IndexOf("eicar", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -475,8 +473,8 @@ namespace ScanAndRemoveVirus.Services
 
             // --- Kỹ thuật 1b: chữ ký byte đầu + hash SHA256 (chỉ với tệp diện nghi vấn) ---
             long length = file.Length;
-            bool contentGate = ContentScanExtensions.Contains(file.Extension)
-                && length >= SignatureBytes.Length && length <= MaxContentScanBytes;
+            bool contentGate = forceContent || (ContentScanExtensions.Contains(file.Extension)
+                && length >= SignatureBytes.Length && length <= MaxContentScanBytes);
             if (contentGate)
             {
                 CacheEntry prev;

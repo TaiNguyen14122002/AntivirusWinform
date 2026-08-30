@@ -43,7 +43,7 @@ static class ButtonAudit
         Walk(form, "FrmMain", false);
         // 3 UC còn lại không nằm trong Controls của form (chỉ UC đang mở mới được attach)
         // -> duyệt trực tiếp instance tạo từ ctor của FrmMain
-        foreach (string fieldName in new[] { "ucBaoVe", "ucLichSu", "ucCachLy" })
+        foreach (string fieldName in new[] { "ucBaoVe", "ucLichSu", "ucCachLy", "ucCaiDat" })
         {
             var uc = (UserControl)typeof(FrmMain)
                 .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(form);

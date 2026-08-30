@@ -14,12 +14,7 @@ namespace ScanAndRemoveVirus.Services
 
         private static string LogPath
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "quarantine.log");
-            }
+            get { return DataDir.Resolve("quarantine.log"); }
         }
 
         public static void Record(string id, string originalPath, DateTime time,

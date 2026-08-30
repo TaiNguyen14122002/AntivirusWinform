@@ -30,6 +30,9 @@
         {
             this.pnlContent = new System.Windows.Forms.Panel();
             this.tableLayoutPanel11 = new System.Windows.Forms.TableLayoutPanel();
+            this.pnlOverviewHeader = new System.Windows.Forms.TableLayoutPanel();
+            this.lblOverviewTitle = new System.Windows.Forms.Label();
+            this.lblOverviewSubtitle = new System.Windows.Forms.Label();
             this.tableLayoutPanel12 = new System.Windows.Forms.TableLayoutPanel();
             this.grpScan = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
@@ -100,6 +103,7 @@
             this.btnVirusTotal = new System.Windows.Forms.Button();
             this.pnlContent.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
+            this.pnlOverviewHeader.SuspendLayout();
             this.tableLayoutPanel12.SuspendLayout();
             this.grpScan.SuspendLayout();
             this.tableLayoutPanel6.SuspendLayout();
@@ -134,6 +138,7 @@
             // 
             this.pnlContent.Controls.Add(this.tableLayoutPanel11);
             this.pnlContent.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlContent.AutoScroll = true;
             this.pnlContent.Location = new System.Drawing.Point(0, 0);
             this.pnlContent.Name = "pnlContent";
             this.pnlContent.Padding = new System.Windows.Forms.Padding(30, 20, 30, 20);
@@ -144,18 +149,67 @@
             // 
             this.tableLayoutPanel11.ColumnCount = 1;
             this.tableLayoutPanel11.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel11.Controls.Add(this.tableLayoutPanel12, 0, 0);
-            this.tableLayoutPanel11.Controls.Add(this.grpStatistics, 0, 1);
-            this.tableLayoutPanel11.Controls.Add(this.grpAction, 0, 2);
+            this.tableLayoutPanel11.Controls.Add(this.pnlOverviewHeader, 0, 0);
+            this.tableLayoutPanel11.Controls.Add(this.tableLayoutPanel12, 0, 1);
+            this.tableLayoutPanel11.Controls.Add(this.grpStatistics, 0, 2);
+            this.tableLayoutPanel11.Controls.Add(this.grpAction, 0, 3);
             this.tableLayoutPanel11.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel11.Location = new System.Drawing.Point(30, 20);
             this.tableLayoutPanel11.Name = "tableLayoutPanel11";
-            this.tableLayoutPanel11.RowCount = 3;
-            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel11.RowCount = 4;
+            // Header 58 cố định; card scan/protection 306 = chiều cao thiết kế (không bị header mới chèn ép);
+            // statistics 123; Hàng động co giãn nốt; MinimumSize + AutoScroll => cửa sổ thấp chỉ scroll, không cắt
+            this.tableLayoutPanel11.MinimumSize = new System.Drawing.Size(1085, 832);
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 58F));
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 318F));
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 123F));
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel11.Size = new System.Drawing.Size(1114, 789);
             this.tableLayoutPanel11.TabIndex = 0;
+            // 
+            // pnlOverviewHeader
+            // 
+            this.pnlOverviewHeader.ColumnCount = 1;
+            this.pnlOverviewHeader.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.pnlOverviewHeader.Controls.Add(this.lblOverviewTitle, 0, 0);
+            this.pnlOverviewHeader.Controls.Add(this.lblOverviewSubtitle, 0, 1);
+            this.pnlOverviewHeader.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlOverviewHeader.Location = new System.Drawing.Point(0, 0);
+            this.pnlOverviewHeader.Margin = new System.Windows.Forms.Padding(0);
+            this.pnlOverviewHeader.Name = "pnlOverviewHeader";
+            this.pnlOverviewHeader.RowCount = 2;
+            this.pnlOverviewHeader.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 58F));
+            this.pnlOverviewHeader.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 42F));
+            this.pnlOverviewHeader.Size = new System.Drawing.Size(1114, 58);
+            this.pnlOverviewHeader.TabIndex = 0;
+            // 
+            // lblOverviewTitle
+            // 
+            this.lblOverviewTitle.AutoSize = true;
+            this.lblOverviewTitle.Dock = System.Windows.Forms.DockStyle.Left;
+            this.lblOverviewTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblOverviewTitle.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
+            this.lblOverviewTitle.Location = new System.Drawing.Point(0, 0);
+            this.lblOverviewTitle.Margin = new System.Windows.Forms.Padding(0);
+            this.lblOverviewTitle.Name = "lblOverviewTitle";
+            this.lblOverviewTitle.Size = new System.Drawing.Size(160, 33);
+            this.lblOverviewTitle.TabIndex = 0;
+            this.lblOverviewTitle.Text = "Tổng quan";
+            // 
+            // lblOverviewSubtitle
+            // 
+            this.lblOverviewSubtitle.AutoSize = true;
+            this.lblOverviewSubtitle.Dock = System.Windows.Forms.DockStyle.Left;
+            this.lblOverviewSubtitle.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblOverviewSubtitle.ForeColor = ScanAndRemoveVirus.Control.Theme.TextGray;
+            this.lblOverviewSubtitle.Location = new System.Drawing.Point(0, 33);
+            this.lblOverviewSubtitle.Margin = new System.Windows.Forms.Padding(0);
+            this.lblOverviewSubtitle.Name = "lblOverviewSubtitle";
+            this.lblOverviewSubtitle.Size = new System.Drawing.Size(390, 24);
+            this.lblOverviewSubtitle.TabIndex = 1;
+            this.lblOverviewSubtitle.Text = "Theo dõi trạng thái bảo vệ, khởi động quét và xử lý mối đe dọa";
             // 
             // tableLayoutPanel12
             // 
@@ -1081,6 +1135,8 @@
             this.Size = new System.Drawing.Size(1174, 829);
             this.pnlContent.ResumeLayout(false);
             this.tableLayoutPanel11.ResumeLayout(false);
+            this.pnlOverviewHeader.ResumeLayout(false);
+            this.pnlOverviewHeader.PerformLayout();
             this.tableLayoutPanel12.ResumeLayout(false);
             this.grpScan.ResumeLayout(false);
             this.tableLayoutPanel6.ResumeLayout(false);
@@ -1129,6 +1185,9 @@
 
         private System.Windows.Forms.Panel pnlContent;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel11;
+        private System.Windows.Forms.TableLayoutPanel pnlOverviewHeader;
+        private System.Windows.Forms.Label lblOverviewTitle;
+        private System.Windows.Forms.Label lblOverviewSubtitle;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel12;
         private System.Windows.Forms.GroupBox grpScan;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;

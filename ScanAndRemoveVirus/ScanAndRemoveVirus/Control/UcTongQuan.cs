@@ -22,9 +22,15 @@ namespace ScanAndRemoveVirus.Control
         public UcTongQuan()
         {
             InitializeComponent();
+            // Ngôn ngữ thiết kế chuẩn như tab Lịch sử: header trang + card xanh brand
+            Theme.StylePageHeader(lblOverviewTitle, lblOverviewSubtitle);
+            Theme.StyleCard(grpScan, grpProtection, grpStatistics, grpThreats, grpScannedFiles,
+                grpLastScan, grpQuarantine, grpAction);
             Theme.StyleGrid(dgvActions);
+            panel1.Height = 40;   // nút Kiểm tra cập nhật về compact 40px chuẩn Lịch sử
+            btnCheckUpdate.Margin = new Padding(0, 2, 0, 2);
             Theme.StyleButton(btnScanNow, Theme.BtnRole.Primary);
-            colActionThreat.DefaultCellStyle.ForeColor = Theme.RedSoft;
+            colActionThreat.DefaultCellStyle.ForeColor = Theme.RedText;
             colActionThreat.DefaultCellStyle.Font = Theme.BoldFont;
             lblThreatCount.ForeColor = Theme.Green;
             lblQuarantineCount.ForeColor = Theme.TextDark;
@@ -179,6 +185,7 @@ namespace ScanAndRemoveVirus.Control
                 lblLastScanType.Text = DescribeScan(type);
                 ScanHistoryStore.Add(DescribeScan(type), ScopeOf(type, path),
                     result.FilesScanned, result.Threats.Count, result.Duration.TotalSeconds);
+                AutoQueryHeuristicRows(result); // hàng "Bảo vệ web" nếu đang bật
                 MessageBox.Show(
                     result.HasThreats
                         ? string.Format("Phát hiện {0} mối đe dọa trong {1:N0} tệp. Hãy xử lý trong khu vực \"Hành động\" bên dưới.",
@@ -375,10 +382,7 @@ namespace ScanAndRemoveVirus.Control
                 VirusTotalReport report = await Task.Run(() =>
                 {
                     hash = ScanEngine.ComputeFileSha256(path);
-                    var r = hash == null
-                        ? new VirusTotalReport { Error = "Không đọc được tệp để tính SHA256" }
-                        : VirusTotalClient.QueryHash(hash);
-                    return r;
+                    return VirusTotalClient.QueryHashOrUpload(hash, path);
                 });
 
                 string verdict = report.Error != null ? "lỗi"
@@ -429,8 +433,43 @@ namespace ScanAndRemoveVirus.Control
             }
         }
 
+        // Hàng "Bảo vệ web (VirusTotal)": heuristic nghi vấn -> tự tra hash trên cloud
+        // (tối đa 2 dòng, cách 16s — giữ ngưỡng 4 request/phút của gói miễn phí)
+        private void AutoQueryHeuristicRows(ScanResult result)
+        {
+            if (!FeatureFlags.VtAutoQuery || !VirusTotalClient.IsConfigured) return;
+            var targets = result.Threats.Where(t => t.Kind == "Heuristic").Take(2).ToList();
+            if (targets.Count == 0) return;
+            Task.Run(() =>
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (i > 0) Thread.Sleep(16000);
+                    ThreatFound t = targets[i];
+                    string hash = ScanEngine.ComputeFileSha256(t.FilePath);
+                    if (hash == null) continue;
+                    VirusTotalReport rep = VirusTotalClient.QueryHashOrUpload(hash, t.FilePath);
+                    if (rep.Error != null || !rep.Found) continue;
+                    string label = "VirusTotal [tự động]: " + rep.Summary();
+                    try
+                    {
+                        BeginInvoke((MethodInvoker)(() =>
+                        {
+                            foreach (DataGridViewRow r in dgvActions.Rows)
+                                if (Equals(r.Cells[0].Value, t.FilePath))
+                                    r.Cells[1].Value = label;
+                        }));
+                    }
+                    catch (ObjectDisposedException) { return; }
+                    catch (InvalidOperationException) { return; }
+                }
+            });
+        }
+
         private void LoadProtectionStatus()
         {
+            // Hàng "Tự động cập nhật": tem chữ ký quá hạn 24h -> tự đóng dấu + xóa cache ngay khi mở tab
+            GuardService.EnsureDailyAutoUpdate();
             lblVersionValue.Text = System.Reflection.Assembly
                 .GetExecutingAssembly().GetName().Version.ToString(3);
             ApplyQuarantineCount();

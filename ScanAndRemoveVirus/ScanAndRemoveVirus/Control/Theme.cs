@@ -39,6 +39,34 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Font BodyFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);
         public static readonly Font BoldFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
         public static readonly Font TitleFont = new Font("Segoe UI", 13.5F, FontStyle.Bold);
+        // Ngôn ngữ thiết kế chuẩn (khởi đầu từ tab Lịch sử): header trang + card + lưới dày
+        public static readonly Font PageTitleFont = new Font("Segoe UI", 18F, FontStyle.Bold);
+        public static readonly Font PageSubFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);
+        public static readonly Font CardTitleFont = new Font("Segoe UI", 10.125F, FontStyle.Bold);
+        public static readonly Font HintFont = new Font("Segoe UI", 8.25F, FontStyle.Italic);
+
+        // Trang chuẩn hóa: tiêu đề 18B TextDark + phụ đề xám (mọi tab theo tab Lịch sử)
+        public static void StylePageHeader(Label title, Label subtitle)
+        {
+            title.Font = PageTitleFont;
+            title.ForeColor = TextDark;
+            if (subtitle != null)
+            {
+                subtitle.Font = PageSubFont;
+                subtitle.ForeColor = TextGray;
+            }
+        }
+
+        // Card/GroupBox chuẩn: chữ đậm Xanh brand (một nguồn, ghi đè designer)
+        public static void StyleCard(params GroupBox[] cards)
+        {
+            foreach (var c in cards)
+            {
+                if (c == null) continue;
+                c.Font = CardTitleFont;
+                c.ForeColor = BlueDark;
+            }
+        }
 
         // Header xanh nhạt chữ xanh đậm brand + dòng xen kẽ nhạt: áp cho mọi DataGridView
         public static void StyleGrid(DataGridView g)
@@ -49,9 +77,13 @@ namespace ScanAndRemoveVirus.Control
             g.ColumnHeadersDefaultCellStyle.ForeColor = BlueDark;
             g.ColumnHeadersDefaultCellStyle.Font = BoldFont;
             g.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            g.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            g.ColumnHeadersHeight = 40;
             g.BackgroundColor = PageBg;
             g.BorderStyle = BorderStyle.None;
             g.RowTemplate.DefaultCellStyle.ForeColor = TextDark;
+            g.RowTemplate.Height = 34;
+            g.AllowUserToResizeRows = false;
             AlternatingRows(g);
             g.GridColor = Line;
             g.DefaultCellStyle.SelectionBackColor = BlueSoft;

@@ -12,6 +12,7 @@
    - [Tab Bảo vệ](#2-bảo-vệ--ucbaove)
    - [Tab Lịch sử](#3-lịch-sử--uclichsu)
    - [Tab Cách ly](#4-cách-ly--uccachly)
+   - [Tab Cài đặt](#5-cài-đặt--uccaidat)
 3. [VirusTotal API — hướng dẫn đầy đủ](#-virustotal-api--hướng-dẫn-đầy-đủ)
 4. [3 kỹ thuật quét virus](#-3-kỹ-thuật-quét-virus--trong-app)
 5. [Kiến trúc & dữ liệu](#-kiến-trúc--dữ-liệu)
@@ -36,14 +37,25 @@ ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\ScanAndRemoveVirus.exe
 
 > ⚠️ Đây là bài tập lớn mô phỏng giao diện + engine giáo dục. Chữ ký cục bộ là chuỗi thử nghiệm
 > (`XVIRUS-TEST-SIGNATURE::`, mẫu EICAR nhận theo tên) — **không** phải CSDL virus thương mại.
-> Riêng tra cứu **VirusTotal** thì cho kết luận virus **thật** (xem chương 3).
+> Tất cả 10 tính năng ở tab Bảo vệ đều là cơ chế **thật** (watcher/WMI/MOTW/registry/VirusTotal).
+
+> 🎨 **Ngôn ngữ thiết kế chung (chuẩn = tab Lịch sử):** mỗi tab có page-header (tên 18pt Bold + phụ đề xám),
+> GroupBox dạng card (nhãn 10.125 Bold xanh brand `#0A3E8C` trên nền trắng), lưới header 40px xanh nhạt,
+> nút theo 5 vai trò `Theme.BtnRole` (kể cả ô chọn dạng checkbox trong lưới Lịch sử). Ép buộc bằng test
+> `UiEndToEnd` section 9b — thêm tab mới chỉ cần gọi `Theme.StylePageHeader/StyleCard/StyleGrid`.
 
 ---
 
 ## 📖 Hướng dẫn từng tab
 
 Thanh bên trái có 5 nút: **Tổng quan · Bảo vệ · Lịch sử · Cách ly · Cài đặt**.
-Nút *Cài đặt* mở thẳng tới vùng cài đặt nằm trong tab Bảo vệ; bấm số **"Cách ly"** ở thẻ Thống kê (tab Tổng quan) nhảy nhanh sang tab Cách ly.
+Mỗi nút mở đúng một tab riêng (`UcTongQuan`, `UcBaoVe`, `UcLichSu`, `UcCachLy`, `UcCaiDat`). Bấm số **"Cách ly"** ở thẻ Thống kê (tab Tổng quan) cũng nhảy thẳng sang tab Cách ly.
+
+> 💡 **Không có virus thật để test?** Bộ 6 tệp mock **VÔ HẠI đã nằm sẵn trong repo** tại `ScanAndRemoveVirus\Samples\`.
+> Cần tạo mới/restore? Mở tab **Cài đặt** → bấm **"Tạo tệp mẫu 3 kỹ thuật"**.
+> Gồm: 3 tệp khớp kỹ thuật 1 (chữ ký prefix / hash SHA256 / tên `eicar`), 2 tệp khớp kỹ thuật 2
+> (đuôi kép `.pdf.exe`, PowerShell độc), **1 tệp sạch đối chứng** (không được phép báo).
+> Quét thư mục đó (Quét tùy chọn → Chọn thư mục → `Samples`) → app phải trả về **đúng 5** đe dọa.
 
 ### 1. Tổng quan — `UcTongQuan`
 
@@ -57,16 +69,23 @@ Nút *Cài đặt* mở thẳng tới vùng cài đặt nằm trong tab Bảo v�
 
 ### 2. Bảo vệ — `UcBaoVe`
 
-* **Bảng "Tính năng bảo vệ"** — 2 hàng đầu là **chức năng thật**, bấm nút cột cuối để bật/tắt:
-  * **Bảo vệ thời gian thực** — gắn `FileSystemWatcher` theo dõi Desktop/Downloads/Temp: tệp **mới xuất hiện hoặc bị sửa** được quét *ngay lập tức* bằng cả chữ ký + heuristic (không cần bấm Quét). Thấy đe dọa → pop-up hỏi **Cách ly ngay?**.
-  * **Tự động cách ly** — bật thì watcher tự dời tệp nghi ngờ vào vùng cách ly + hiện thông báo kết quả, không hỏi.
-  * Các hàng còn lại là hiển thị mẫu — bấm vào sẽ có thông báo "chưa triển khai" trung thực.
-  * Trạng thái 2 công tắc **đồng bộ màu + chữ** sang thẻ "Trạng thái bảo vệ" của tab Tổng quan.
+* **Bảng "Tính năng bảo vệ"** — **cả 10 hàng đều là công tắc THẬT** (bấm nút cột cuối; trạng thái lưu vào `settings.ini`, nhớ qua lần mở app):
+
+| Hàng | Cơ chế thật phía sau |
+|---|---|
+| Bảo vệ thời gian thực | `FileSystemWatcher` Desktop/Downloads/Temp — tệp mới/sửa được quét tức thì bằng chữ ký + heuristic |
+| Bảo vệ tệp | Quét **lại** tệp cách ly ngay trước khi cho Khôi phục về máy — chặn malware quay ngược vào hệ thống |
+| Bảo vệ USB | Timer phát hiện **ổ removable vừa cắm** → tự quét nguyên ổ, kết quả vào Hành động + lịch sử |
+| Bảo vệ tải xuống | Watcher Downloads soi **MOTW (`Zone.Identifier` của trình duyệt)** → quét *đầy đủ nội dung* tệp tải từ Internet, kể cả đuôi lạ |
+| Phát hiện hành vi đáng ngờ | **WMI `Win32_Process`**: tiến trình chạy từ %TEMP% (dropper), PowerShell `-enc`/`iex(`/`DownloadString`, Office (winword/excel/outlook…) sinh shell — đúng mẫu chuỗi khai thác macro |
+| Bảo vệ thư mục khởi động | Watcher 2 thư mục StartUp (user + common) — tệp lạ rơi vào = persistence → quét + cảnh báo |
+| Tự động cách ly | Gộp pipeline mọi guard: phát hiện là dời thẳng vào Quarantine kèm lý do, không hỏi |
+| Cảnh báo mối đe dọa | Công tắc pop-up chung — tắt thì mọi phát hiện vẫn ghi lịch sử, im lặng tuyệt đối |
+| Tự động cập nhật | Mở app mà tem chữ ký quá 24h → tự đóng tem mới + xóa cache để quét lại toàn bộ |
+| Bảo vệ web (VirusTotal) | dòng `Heuristic` sau phiên quét → **tự tra hash trên VirusTotal** tối đa 2 dòng/phiên, cách 16s (giữ ngưỡng 4 req/phút) — cần API key |
+
 * **Panel "Trạng thái chi tiết"** — 7 chỉ số đều đọc từ nguồn thật: phiên bản CSDL (= version assembly), ngày cập nhật cuối (`dbupdate.txt`), lần quét thời gian thực gần nhất, **tổng số tệp đã quét** và **tổng đe dọa đã chặn** (tính từ toàn bộ lịch sử).
-* **Vùng "Cài đặt"** (ngoài sidebar cũng có nút *Cài đặt* nhảy tới):
-  * ☑ *Tự động khởi động cùng Windows* — **thật 100%**: ghi/xóa giá trị `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần admin).
-  * ☑ *Tự động cập nhật* · ☑ *Gửi mẫu ẩn danh* · ☑ *Hiển thị thông báo* — lưu vào `settings.ini`.
-  * Bấm **"Lưu cài đặt"** → ghi file + áp dụng autostart ngay; nếu registry từ chối, checkbox tự nhả và cảnh báo đỏ.
+* **Vùng Cài đặt** chuyển thành **tab riêng** — xem mục "Cài đặt — `UcCaiDat`" bên dưới.
 
 ### 3. Lịch sử — `UcLichSu`
 
@@ -91,6 +110,19 @@ Danh sách **thật** các tệp đang bị giữ trong `%AppData%\ScanAndRemove
 
 ---
 
+### 5. Cài đặt — `UcCaiDat`
+
+Tab riêng (nút **Cài đặt** trên sidebar):
+
+* ☑ *Tự động khởi động cùng Windows* — **thật 100%**: ghi/xóa `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần admin).
+* ☑ *Tự động cập nhật* · ☑ *Gửi mẫu ẩn danh* · ☑ *Hiển thị thông báo* — lưu vào `settings.ini`; **đồng bộ hai chiều** với các hàng "Tự động cập nhật"/"Cảnh báo mối đe dọa" của tab Bảo vệ.
+* **"Lưu thiết lập"** — ghi file + áp dụng autostart ngay; registry từ chối thì checkbox tự nhả về đúng thực tế + cảnh báo.
+* **"Tạo tệp mẫu 3 kỹ thuật"** — phục hồi 6 tệp vô hại trong `ScanAndRemoveVirus\Samples\` của repo (idempotent); nếu app chạy ngoài repo sẽ tạo ở `Desktop\XVirus-Samples`.
+
+> ⚠️ Lưu ý khi tự chạy test: guard hành vi WMI coi "exe chạy từ %TEMP%" là dropper. Nếu app THẬT đang bật guard mà bạn compile + chạy binary test vào TEMP, nó sẽ cách ly chính file test. Tạm tắt guard (hoặc để harness test tự tắt như `UiEndToEnd.cs`).
+
+---
+
 ## 🌐 VirusTotal API — hướng dẫn đầy đủ
 
 ### VirusTotal là gì và nó cho app thứ gì?
@@ -106,8 +138,7 @@ Danh sách **thật** các tệp đang bị giữ trong `%AppData%\ScanAndRemove
 2. Đăng nhập → avatar góc phải → **Profile** → mục **API key** → *Reveal key* → sao chép (64 ký tự hex).
 3. Trong app: ở khu **Hành động**, chọn 1 dòng đe dọa → bấm **"Tra VirusTotal"**.
    * **Lần đầu** (chưa có key) sẽ hiện hộp thoại *"API key VirusTotal"* → **dán key → Lưu**.
-   * Key lưu tại `C:\Users\<bạn>\AppData\Roaming\ScanAndRemoveVirus\vtapikey.txt` — file này nằm **ngoài repo**, đừng bao giờ commit.
-   * Có thể tự tạo file trên với nội dung = key nếu không muốn dùng hộp thoại.
+   * Key nằm ngay trong project tại `ScanAndRemoveVirus\ScanAndRemoveVirus\vtapikey.txt` — đã có trong `.gitignore` nên không bao giờ bị commit (khi app chạy ngoài repo, dự phòng là `%AppData%\ScanAndRemoveVirus\vtapikey.txt`).   * Có thể tự tạo file trên với nội dung = key nếu không muốn dùng hộp thoại.
 
 ### App gọi API như thế nào?
 
@@ -172,13 +203,17 @@ ScanAndRemoveVirus/
 │   ├── QuarantineLedger.cs       #   sổ cái cách ly (nội bộ, công khai qua ScanEngine)
 │   ├── ScanHistoryStore.cs       #   lịch sử + tem cập nhật + số liệu dẫn xuất + export CSV
 │   ├── VirusTotalClient.cs       #   API v3: GET /files/{sha256} + ParseReport offline-testable
-│   └── AppSettings.cs            #   settings.ini + đăng ký Run registry (autostart thật)
+│   ├── AppSettings.cs            #   settings.ini + đăng ký Run registry (autostart thật)
+│   ├── FeatureFlags.cs           #   10 công tắc tính năng — một nguồn, persist settings.ini
+│   ├── GuardService.cs           #   các guard: USB / Tải xuống(MOTW) / WMI hành vi / StartUp / auto-update
+│   └── TestSamples.cs            #   bộ 6 tệp mock VÔ HẠI phủ 3 kỹ thuật (nút "Tạo tệp mẫu")
 ├── Control/                      # UI per-tab
 │   ├── Theme.cs                  #   ✅ NGUỒN MÀU DUY NHẤT — mọi control tham chiếu Theme.X
 │   ├── UcTongQuan.cs (+Designer) #   quét + hành động + VT + thống kê
-│   ├── UcBaoVe.cs (+Designer)    #   công tắc RT/auto-isolate + panel trạng thái + cài đặt
+│   ├── UcBaoVe.cs (+Designer)    #   10 công tắc guard thật + panel trạng thái
 │   ├── UcLichSu.cs (+Designer)   #   3 tab lọc + chi tiết + xuất CSV
-│   └── UcCachLy.cs (+Designer)   #   danh sách + restore/delete/chọn/tất cả/refresh
+│   ├── UcCachLy.cs (+Designer)   #   danh sách + restore/delete/chọn/tất cả/refresh
+│   └── UcCaiDat.cs (+Designer)   #   tab Cài đặt: 4 checkbox + lưu thiết lập + tạo tệp mẫu
 ├── form/                         # 3 form cũ chưa sử dụng (Form1, FrmBaoVe, FrmCachLy)
 ├── AntivirusDB.sql               # schema CSDL chữ ký thật (VirusSignatures) — chờ kết nối
 └── Tests/                        # harness csc (xem mục Kiểm thử)
@@ -193,8 +228,8 @@ ScanAndRemoveVirus/
 | `scanhistory.log` | mọi phiên quét/cảnh báo/RT/cập nhật (giữ 1000 dòng) | Lịch sử trống |
 | `scancache.dat` | cache `đường dẫn → (mtime, size, độc?)` (≤ 500k mục) | quét lại từ đầu, chậm hơn |
 | `dbupdate.txt` | tem ngày "cập nhật CSDL chữ ký" (kèm xóa cache khi bấm nút) | hiện "Chưa cập nhật" |
-| `settings.ini` | 4 cờ cài đặt tab Bảo vệ | về mặc định |
-| `vtapikey.txt` | **API key VirusTotal** | bấm Tra VT sẽ hỏi lại key |
+| `settings.ini` | 11 cờ: 4 cài đặt + 10 công tắc tính năng tab Bảo vệ (FeatureFlags) | về mặc định |
+| `vtapikey.txt` (project, **gitignored**) | **API key VirusTotal** — nằm cạnh file .csproj; ngoài repo -> fallback AppData | bấm Tra VT sẽ hỏi lại key |
 
 ---
 
@@ -204,23 +239,32 @@ Hai harness **không** nằm trong build app — biên dịch trực tiếp mã 
 
 ```powershell
 cd ScanAndRemoveVirus
-$csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+$csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\Roslyn\csc.exe" | Select-Object -First 1  # Roslyn: nguồn dùng C#7
 
-# 1) Engine — 50 check: 3 kỹ thuật + cache + cách ly/ledger/restore xung đột,
-#    history + CSV + tem CSDL, stress scan×hủy giữa chừng (8 vòng), VT parse offline
-#    + vector SHA256 NIST, AppSettings + registry (tự backup/restore máy chạy test)
-& $csc /nologo /out:eng.exe /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Net.Http.dll `
+# 1) Engine — 86 check: 3 kỹ thuật + cache + cách ly/ledger/restore xung đột,
+#    history + CSV + tem CSDL + auto-update 24h, stress scan×hủy giữa chừng (8 vòng),
+#    VT parse offline + vector SHA256 NIST, AppSettings + registry (tự backup/restore),
+#    Guard thật: USB-simulate, Download-MOTW (ADS), StartUp, Restore-guard, WMI HÀNH VI LIVE
+& $csc /nologo /out:eng.exe /r:System.Windows.Forms.dll /r:System.Drawing.dll `
+  /r:System.Net.Http.dll /r:System.Management.dll `
   ScanAndRemoveVirus\Services\ScanEngine.cs   ScanAndRemoveVirus\Services\RealTimeProtection.cs `
   ScanAndRemoveVirus\Services\QuarantineLedger.cs ScanAndRemoveVirus\Services\ScanHistoryStore.cs `
   ScanAndRemoveVirus\Services\VirusTotalClient.cs ScanAndRemoveVirus\Services\AppSettings.cs `
+  ScanAndRemoveVirus\Services\FeatureFlags.cs ScanAndRemoveVirus\Services\GuardService.cs `
+  ScanAndRemoveVirus\Services\TestSamples.cs ScanAndRemoveVirus\Services\DataDir.cs `
   Tests\ScanEngineTest.cs
-.\eng.exe        # kỳ vọng: == ALL TESTS PASSED ==
+.\eng.exe        # kỳ vọng: == ALL TESTS PASSED ==   (~40s nếu WMI live hoạt động)
 
-# 2) UI End-to-End — 55 check: dựng FrmMain + 4 UserControl THẬT, PerformClick TỪNG NÚT
+# 2) UI End-to-End — 88 check: dựng FrmMain + 5 UserControl THẬT, PerformClick TỪNG NÚT
 #    (5 nút sidebar, quét + Hủy giữa phiên, radio loại trừ, VT flow với key giả,
-#     cách ly/xóa chọn & tất cả, tab lịch sử, chi tiết, lưu cài đặt),
-#    thread auto-close MessageBox (Ưu tiên "Có"), form ẩn ngoài màn hình.
+#     cách ly/xóa CHỌN & TẤT CẢ, bộ mẫu 6 tệp -> đúng 5 threat, tab lịch sử (cột colPick chọn
+#     nhiều + nút xóa mục đã chọn), chi tiết, làm mới, tab Cài đặt (8 checkbox live-apply, VTkey,
+#     Khôi phục mặc định, Xóa cache, nhãn info), LẬT 2 CHIỀU 10 HÀNG tab Bảo vệ,
+#     thống kê khởi động không còn mock 2025) — closer-thread tự bấm Có/OK cho MessageBox.
 #    Danh sách file đầy đủ: xem comment đầu Tests\UiEndToEnd.cs
+#    Matrix phủ nút: powershell -File Tests\coverage-matrix.ps1 -> 28/32 CLICKED;
+#    4 nút còn lại mở HỘP THOẠI HỆ THỐNG không auto-safe (Chọn tệp, Chọn thư mục, Xuất CSV,
+#    Mở thư mục dữ liệu) — logic phía sau chúng được test trực tiếp (SetCustomPath/ExportCsv/RefreshDataInfo).
 # 3) Tests\ButtonAudit.cs — audit 20/20 nút đều đi qua Theme.StyleButton/StyleNav thống nhất
 ```
 
@@ -231,9 +275,9 @@ Toàn bộ chạy trong ~1–2 phút; kết quả hiện `PASS/FAIL` từng chec
 ## 🗺 Hướng phát triển
 
 - [ ] Nạp chữ ký **thật** từ bảng `VirusSignatures` (`AntivirusDB.sql` đã có schema) thay chuỗi thử nghiệm → local tự bắt virus thật, giảm phụ thuộc mạng khi tra VT.
-- [ ] Luồng **upload VT có kiểm soát**: `POST /files/upload_url` + poll `GET /analyses/{id}` cho dòng Heuristic mà hash chưa có trên cloud — size-gate 32MB, xác nhận riêng tư *từng tệp*, hiện thị thanh chờ phân tích.
-- [ ] Giám sát **hành vi tiến trình** (WMI `Win32_ProcessStartTrace`) để hoàn thiện kỹ thuật 3.
+- [ ] Luồng **upload VT có kiểm soát**: `POST /files/upload_url` + poll `GET /analyses/{id}` cho tệp nghi vấn chưa có trên cloud — size-gate 32MB, xác nhận riêng tư *từng tệp*, hiện thanh chờ phân tích.
+- [ ] Guard hành vi hiện **phát hiện + ghi log + cách ly tệp của tiến trình**; nâng cấp thành chặn/kill tiến trình đang chạy (cân nhắc vì dễ làm phiền phần mềm lành).
 - [ ] Kết nối SQL Server thay các file log `%AppData%` (lịch sử/cách ly/cache/tem).
-- [ ] Hiện thực các hàng mẫu còn lại của tab Bảo vệ (USB, tải xuống, trình duyệt…).
-- [ ] "Tự động cách ly" chuyển vào `settings.ini` để nhớ giữa các lần mở app.
 - [ ] Dọn: 3 form cũ trong `form/`; untrack `bin/`, `obj/`, `.vs/` khỏi git.
+
+> ✅ Đã hoàn thành so với bản trước: **cả 10 hàng tab Bảo vệ là cơ chế thật** (USB auto-scan, tải-xuống-MOTW, WMI hành vi, StartUp guard, auto-isolate, auto-update, VT tự động), autostart ghi registry thật, lịch sử/cách ly/cài đặt đều là dữ liệu thật.

@@ -12,6 +12,15 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
             BackColor = Theme.PageBg;
+            Theme.StylePageHeader(lblQuarantineTitle, lblQuarantineSubtitle);
+            Theme.StyleCard(grpQuarentineList, grpQuarantineInfo);
+            // compact chuẩn Lịch sử: nút 40px thay vì band 49-61px
+            btnRestore.Margin = btnRestoreAll.Margin = btnDeletePermanent.Margin =
+                btnDeleteAll.Margin = btnRefreshQuarantine.Margin = new Padding(2, 8, 2, 8);
+            lblTotalFilesTitle.Font = Theme.PageSubFont;
+            lblTotalFilesTitle.ForeColor = Theme.TextGray;
+            lblTotalFilesValue.Font = Theme.TitleFont;
+            lblTotalFilesValue.ForeColor = Theme.BlueDark;
             Theme.StyleGrid(dgvQuarantine);
             Theme.StyleNeutralButtons(btnRefreshQuarantine);
             btnRestore.Click += delegate { RestoreSelected(); };
@@ -34,9 +43,9 @@ namespace ScanAndRemoveVirus.Control
             if (e.RowIndex < 0 || e.Value == null) return;
             if (e.ColumnIndex == colThreatName.Index)
             {
-                e.CellStyle.ForeColor = Theme.RedSoft;
+                e.CellStyle.ForeColor = Theme.RedText;
                 e.CellStyle.Font = Theme.BoldFont;
-                e.CellStyle.SelectionForeColor = Theme.RedSoft;
+                e.CellStyle.SelectionForeColor = Theme.RedText;
             }
             else if (e.ColumnIndex == colDetectedTime.Index || e.ColumnIndex == colFileSize.Index)
                 e.CellStyle.ForeColor = Theme.TextGray;
@@ -82,12 +91,27 @@ namespace ScanAndRemoveVirus.Control
                     "Khôi phục", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            if (!ConfirmRestore(ids)) return;
             int failed = 0;
             foreach (string id in ids)
                 if (!ScanEngine.RestoreQuarantined(id)) failed++;
             if (failed > 0)
                 MessageBox.Show(failed + " tệp không khôi phục được (đã bị xóa khỏi khu cách ly hoặc bị khóa).",
                     "Khôi phục", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        // Hàng "Bảo vệ tệp": quét lại tệp cách ly TRƯỚC khi thả về máy — chặn malware quay ngược vào hệ thống
+        private bool ConfirmRestore(List<string> ids)
+        {
+            if (!FeatureFlags.FileRestoreGuard) return true;
+            string warning = GuardService.RestoreWarningFor(ids);
+            if (warning == null) return true;
+            var answer = MessageBox.Show(
+                "Cảnh báo — các tệp vẫn khớp phát hiện nguy hiểm:\n\n" + warning
+                + "\n\nVẫn khôi phục chúng về máy?",
+                "Bảo vệ tệp: tệp cách ly còn nghi vấn",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            return answer == DialogResult.Yes;
         }
 
         private void DeleteSelected()
@@ -114,6 +138,7 @@ namespace ScanAndRemoveVirus.Control
                 "Khôi phục toàn bộ " + ids.Count + " tệp về vị trí cũ?",
                 "Khôi phục tất cả", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (answer != DialogResult.Yes) return;
+            if (!ConfirmRestore(ids)) return;
             foreach (string id in ids) ScanEngine.RestoreQuarantined(id);
         }
 

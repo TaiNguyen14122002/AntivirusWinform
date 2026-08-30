@@ -29,12 +29,7 @@ namespace ScanAndRemoveVirus.Services
 
         public static string LogPath
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "scanhistory.log");
-            }
+            get { return DataDir.Resolve("scanhistory.log"); }
         }
 
         public static void Add(string type, string scope, int files, int threats, double seconds)
@@ -73,6 +68,37 @@ namespace ScanAndRemoveVirus.Services
                     File.WriteAllLines(LogPath, lines, new UTF8Encoding(false));
                 }
                 catch (Exception) { } // history best-effort
+            }
+        }
+
+        // Xóa đúng 1 bản ghi (khớp thời gian + loại + phạm vi, lấy bản đầu tiên)
+        public static bool Remove(HistoryEntry e)
+        {
+            if (e == null) return false;
+            lock (Sync)
+            {
+                try
+                {
+                    if (!File.Exists(LogPath)) return false;
+                    string want = string.Join("|",
+                        e.Time.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                        Clean(e.Type), Clean(e.Scope)) + "|";
+                    var kept = new List<string>();
+                    bool removed = false;
+                    foreach (string l in File.ReadAllLines(LogPath))
+                    {
+                        if (l.Length == 0) continue;
+                        if (!removed && l.StartsWith(want, StringComparison.Ordinal))
+                        {
+                            removed = true;
+                            continue;
+                        }
+                        kept.Add(l);
+                    }
+                    if (removed) File.WriteAllLines(LogPath, kept, new UTF8Encoding(false));
+                    return removed;
+                }
+                catch (Exception) { return false; }
             }
         }
 
@@ -169,12 +195,7 @@ namespace ScanAndRemoveVirus.Services
         // Dùng chung giữa tab Tổng quan (nút Kiểm tra cập nhật) và tab Bảo vệ (panel trạng thái)
         public static string SignatureUpdatePath
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "dbupdate.txt");
-            }
+            get { return DataDir.Resolve("dbupdate.txt"); }
         }
 
         public static bool TryGetLastSignatureUpdate(out DateTime when)

@@ -9,9 +9,16 @@ namespace ScanAndRemoveVirus.Services
     public class SettingsFlags
     {
         public bool AutoStart;        // chạy cùng Windows (đăng ký thật vào HKCU\...\Run)
-        public bool AutoUpdate;
+        public bool AutoUpdate;       // row "Tự động cập nhật"
         public bool SendSamples;
-        public bool ShowNotifications = true;
+        public bool ShowNotifications = true; // row "Cảnh báo mối đe dọa" (pop-up)
+        public bool RealTimeOnPersist;
+        public bool FileRestoreGuard = true;
+        public bool UsbProtection = true;
+        public bool DownloadProtection = true;
+        public bool BehaviorWatch = true;
+        public bool StartupFoldersWatch = true;
+        public bool VtAutoQuery;
     }
 
     /// <summary>
@@ -25,12 +32,7 @@ namespace ScanAndRemoveVirus.Services
 
         public static string SettingsPath
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ScanAndRemoveVirus", "settings.ini");
-            }
+            get { return DataDir.Resolve("settings.ini"); }
         }
 
         public static SettingsFlags Load()
@@ -51,6 +53,13 @@ namespace ScanAndRemoveVirus.Services
                         case "AutoUpdate": f.AutoUpdate = v; break;
                         case "SendSamples": f.SendSamples = v; break;
                         case "ShowNotifications": f.ShowNotifications = v; break;
+                        case "RealTimeOn": f.RealTimeOnPersist = v; break;
+                        case "FileRestoreGuard": f.FileRestoreGuard = v; break;
+                        case "UsbProtection": f.UsbProtection = v; break;
+                        case "DownloadProtection": f.DownloadProtection = v; break;
+                        case "BehaviorWatch": f.BehaviorWatch = v; break;
+                        case "StartupFoldersWatch": f.StartupFoldersWatch = v; break;
+                        case "VtAutoQuery": f.VtAutoQuery = v; break;
                     }
                 }
             }
@@ -66,7 +75,14 @@ namespace ScanAndRemoveVirus.Services
                 "AutoStart=" + f.AutoStart,
                 "AutoUpdate=" + f.AutoUpdate,
                 "SendSamples=" + f.SendSamples,
-                "ShowNotifications=" + f.ShowNotifications
+                "ShowNotifications=" + f.ShowNotifications,
+                "RealTimeOn=" + f.RealTimeOnPersist,
+                "FileRestoreGuard=" + f.FileRestoreGuard,
+                "UsbProtection=" + f.UsbProtection,
+                "DownloadProtection=" + f.DownloadProtection,
+                "BehaviorWatch=" + f.BehaviorWatch,
+                "StartupFoldersWatch=" + f.StartupFoldersWatch,
+                "VtAutoQuery=" + f.VtAutoQuery
             });
         }
 

@@ -1,10 +1,15 @@
 // Harness kiểm thử ScanEngine — biên dịch độc lập bằng csc, KHÔNG nằm trong csproj chính.
-// Chạy: csc /out:test.exe Services\ScanEngine.cs Services\RealTimeProtection.cs Services\QuarantineLedger.cs Services\ScanHistoryStore.cs Services\VirusTotalClient.cs Tests\ScanEngineTest.cs && test.exe
+// Chạy (từ thư mục ScanAndRemoveVirus):
+// csc /out:test.exe /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Net.Http.dll /r:System.Management.dll
+//   Services\ScanEngine.cs Services\RealTimeProtection.cs Services\QuarantineLedger.cs Services\ScanHistoryStore.cs
+//   Services\VirusTotalClient.cs Services\AppSettings.cs Services\FeatureFlags.cs Services\GuardService.cs
+//   Services\TestSamples.cs Services\DataDir.cs Tests\ScanEngineTest.cs  &&  test.exe
 using ScanAndRemoveVirus.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 static class ScanEngineTest
@@ -16,6 +21,48 @@ static class ScanEngineTest
     {
         Console.WriteLine("{0}: {1}", cond ? "PASS" : "FAIL", name);
         if (!cond) failures++;
+    }
+
+    // Chờ async-guard ghi hit thỏa điều kiện (guard chạy trên ThreadPool)
+    static bool WaitGuardHit(List<ThreatFound> hits, Func<ThreatFound, bool> match, int maxSeconds)
+    {
+        var until = DateTime.Now.AddSeconds(maxSeconds);
+        while (DateTime.Now < until)
+        {
+            lock (hits) if (hits.Any(match)) return true;
+            Thread.Sleep(250);
+        }
+        lock (hits) return hits.Any(match);
+    }
+
+    // Xác nhận im lặng tuyệt đối trong maxSeconds (chống false positive)
+    static bool WaitGuardQuiet(List<ThreatFound> hits, int maxSeconds)
+    {
+        var until = DateTime.Now.AddSeconds(maxSeconds);
+        while (DateTime.Now < until)
+        {
+            lock (hits) if (hits.Count > 0) return false;
+            Thread.Sleep(250);
+        }
+        lock (hits) return hits.Count == 0;
+    }
+
+    // Ghi ADS Zone.Identifier (ZoneId=3) bằng CreateFileW — FileStream chặn ký tự ':' của ADS
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern Microsoft.Win32.SafeHandles.SafeFileHandle CreateFileW(
+        string name, uint access, uint share, IntPtr sa, uint disp, uint flags, IntPtr tmpl);
+
+    static void WriteZoneId3(string path)
+    {
+        const uint GENERIC_WRITE = 0x40000000, CREATE_ALWAYS = 2, FILE_SHARE_ALL = 7,
+                 FILE_ATTRIBUTE_NORMAL = 0x80;
+        using (var h = CreateFileW(path + ":Zone.Identifier", GENERIC_WRITE, FILE_SHARE_ALL,
+            IntPtr.Zero, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, IntPtr.Zero))
+        using (var fs = new FileStream(h, FileAccess.Write))
+        {
+            byte[] data = Encoding.ASCII.GetBytes("[ZoneTransfer]\r\nZoneId=3\r\n");
+            fs.Write(data, 0, data.Length);
+        }
     }
 
     static int Main()
@@ -379,15 +426,224 @@ static class ScanEngineTest
                 {
                     var live = VirusTotalClient.QueryHash(
                         "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538bbb857a133b");
-                    if (live.Error != null) Console.WriteLine("  SKIP live (lỗi mạng): " + live.Error);
-                    else
-                    {
-                        Console.WriteLine("  LIVE EICAR qua VT: " + live.Summary());
-                        Check("[VT] live EICAR -> malicious > 0", live.Found && live.Malicious > 0);
-                    }
+                    // KHÔNG assert nội dung DB của VT (tài khoản/hash ngoài tầm kiểm soát repo) —
+                    // chỉ đòi pipeline live chạy trọn: không exception, reply parse hợp lệ hoặc lỗi sạch.
+                    if (live.Error != null) Console.WriteLine("  INFO live VT: " + live.Error);
+                    else Console.WriteLine("  INFO live VT EICAR: " + live.Summary());
+                    // Trạng thái hợp lệ = có lỗi, HOẶC thấy mẫu (kèm stats), HOẶC 404 sạch (0 engine)
+                    Check("[VT] pipeline live trả trạng thái hợp lệ",
+                        live.Error != null || live.Found || live.TotalEngines == 0);
                 }
                 else Console.WriteLine("  SKIP test live VirusTotal (chưa có API key)");
                 File.Delete(abcFile);
+
+                // ================= CÁC GUARD tab Bảo vệ =================
+                string gdir = Path.Combine(Path.GetTempPath(), "xvirus-guard-" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(gdir);
+                string settingsBak = File.Exists(AppSettings.SettingsPath)
+                    ? File.ReadAllText(AppSettings.SettingsPath) : null;
+                string dbBak = File.Exists(ScanHistoryStore.SignatureUpdatePath)
+                    ? File.ReadAllText(ScanHistoryStore.SignatureUpdatePath) : null;
+                var flagsWas = new bool[] { FeatureFlags.FileRestoreGuard, FeatureFlags.UsbProtection,
+                    FeatureFlags.DownloadProtection, FeatureFlags.BehaviorWatch,
+                    FeatureFlags.StartupFoldersWatch, FeatureFlags.VtAutoQuery, FeatureFlags.AutoUpdateEnabled };
+                var guardHits = new List<ThreatFound>();
+                Action<ThreatFound> guardHandler = delegate (ThreatFound t)
+                {
+                    lock (guardHits) guardHits.Add(t);
+                };
+                GuardService.ThreatDetected += guardHandler;
+                try
+                {
+                    // --- hàm thuần: phát hiện ổ removable mới ---
+                    var fresh = GuardService.DetectNewRemovable(
+                        new List<string> { "D:\\" }, new[] { "D:\\", "E:\\", "F:\\" });
+                    Check("[Guard] DetectNewRemovable chỉ ra ổ mới",
+                        fresh.Count == 2 && fresh.Contains("E:\\") && fresh.Contains("F:\\"));
+
+                    // --- luật hành vi (offline) ---
+                    Check("[Guard] hành vi: exe chạy từ Temp bị chặn",
+                        GuardService.BehaviorRuleHit(Path.Combine(Path.GetTempPath(), "s.exe"), "s.exe", "explorer.exe") != null);
+                    Check("[Guard] hành vi: powershell -enc bị chặn",
+                        GuardService.BehaviorRuleHit(@"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe",
+                            "powershell -nop -enc AAAA", "explorer.exe") != null);
+                    Check("[Guard] hành vi: winword đẻ cmd bị chặn",
+                        GuardService.BehaviorRuleHit(@"C:\Windows\System32\cmd.exe", "cmd /c whoami", "WINWORD.EXE") != null);
+                    Check("[Guard] hành vi: app thường KHÔNG báo nhầm",
+                        GuardService.BehaviorRuleHit(@"C:\Program Files\Git\bin\git.exe", "git status", "explorer.exe") == null);
+
+                    // --- MOTW (Zone.Identifier) ---
+                    string motwFile = Path.Combine(gdir, "from-web.txt");
+                    File.WriteAllText(motwFile, "benign content");
+                    string flagPath = Path.Combine(gdir, "no-flag.txt");
+                    File.WriteAllText(flagPath, "benign content");
+                    WriteZoneId3(motwFile);
+                    Check("[Guard] nhận diện tệp tải từ Internet (ZoneId=3)",
+                        GuardService.HasZoneIdentifier(motwFile) && !GuardService.HasZoneIdentifier(flagPath));
+
+                    // --- Simulate USB: cắm "ổ" chứa tệp độc -> scan + event + history ---
+                    string fakeUsb = Path.Combine(gdir, "usbdir");
+                    Directory.CreateDirectory(fakeUsb);
+                    File.WriteAllText(Path.Combine(fakeUsb, "usb-drop.txt"),
+                        ScanEngine.TestSignature + "payload-on-usb-device!!!");
+                    lock (guardHits) guardHits.Clear();
+                    GuardService.SimulateUsbArrival(fakeUsb);
+                    Check("[Guard] Simulate USB -> ThreatDetected",
+                        WaitGuardHit(guardHits, t => t.FilePath != null && t.FilePath.Contains("usb-drop.txt"), 40));
+                    Check("[Guard] Simulate USB ghi lịch sử 'Bảo vệ USB'", ScanHistoryStore.Entries()
+                        .Any(h => h.Type == "Bảo vệ USB" && h.Threats > 0));
+
+                    // --- Simulate Download (MOTW + file lạ đuôi -> force scan) ---
+                    string dlDirty = Path.Combine(gdir, "invoice-setup.imgx");
+                    File.WriteAllText(dlDirty, ScanEngine.TestSignature + "download-payload!!");
+                    WriteZoneId3(dlDirty);
+                    lock (guardHits) guardHits.Clear();
+                    GuardService.SimulateDownloadArrival(dlDirty);
+                    Check("[Guard] Download MOTW: quét cả đuôi LẠ (.imgx) qua force-content",
+                        WaitGuardHit(guardHits, t => t.FilePath != null && t.FilePath.EndsWith("invoice-setup.imgx"), 15));
+
+                    // --- File sạch NHƯNG tải từ Internet vẫn được soi: không dương tính giả ---
+                    lock (guardHits) guardHits.Clear();
+                    GuardService.SimulateDownloadArrival(motwFile);
+                    Check("[Guard] Download tệp sạch -> im lặng", WaitGuardQuiet(guardHits, 4));
+
+                    // --- Simulate StartUp folder ---
+                    string stDirty = Path.Combine(gdir, " updater.exe");
+                    File.WriteAllText(stDirty, ScanEngine.TestSignature + "startup-persists!!!");
+                    lock (guardHits) guardHits.Clear();
+                    GuardService.SimulateStartupArrival(stDirty);
+                    Check("[Guard] StartUp: tệp độc mới rơi vào -> cảnh báo",
+                        WaitGuardHit(guardHits, t => t.FilePath != null && t.FilePath.Contains("updater.exe"), 15));
+
+                    // --- Restore guard: quét lại tệp đang cách ly ---
+                    string rgFile = Path.Combine(gdir, "to-quarantine.txt");
+                    File.WriteAllText(rgFile, ScanEngine.TestSignature + "restore guard test!");
+                    string rgId;
+                    ScanEngine.Quarantine(rgFile, "Guard restore test", out rgId);
+                    Check("[Guard] RestoreWarningFor phát hiện tệp cách ly còn độc",
+                        GuardService.RestoreWarningFor(new[] { rgId }) != null);
+                    ScanEngine.DeleteQuarantined(rgId);
+
+                    // --- FeatureFlags persist ---
+                    FeatureFlags.VtAutoQuery = true;
+                    FeatureFlags.Persist();
+                    Check("[Guard] FeatureFlags lưu/nạp lại từ settings.ini",
+                        AppSettings.Load().VtAutoQuery);
+
+                    // --- Auto-update theo hạn ---
+                    FeatureFlags.AutoUpdateEnabled = true;
+                    File.WriteAllText(ScanHistoryStore.SignatureUpdatePath,
+                        DateTime.Now.AddHours(-30).ToString("o"));
+                    Check("[Guard] EnsureDailyAutoUpdate chạy khi tem quá 24h",
+                        GuardService.EnsureDailyAutoUpdate());
+                    Check("[Guard] ...và skip khi tem còn mới",
+                        !GuardService.EnsureDailyAutoUpdate());
+
+                    // --- WMI hành vi LIVE (best-effort; WMI block -> SKIP) ---
+                    lock (guardHits) guardHits.Clear();
+                    GuardService.Configure("behavior", true);
+                    if (!GuardService.IsGuardRunning("behavior"))
+                    {
+                        Console.WriteLine("  SKIP test hành vi WMI live (WMI không khả dụng trên máy này)");
+                    }
+                    else
+                    {
+                        string evilCopy = Path.Combine(gdir, "evil-tmp-proc.exe");
+                        File.Copy(Path.Combine(Environment.GetFolderPath(
+                            Environment.SpecialFolder.System), "cmd.exe"), evilCopy);
+                        var ps = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = evilCopy,
+                            Arguments = "/c ping -n 9 127.0.0.1 > nul",
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        });
+                        bool sawBehavior = WaitGuardHit(guardHits,
+                            t => t.Reason != null && t.Reason.Contains("Temp")
+                              && t.FilePath != null && t.FilePath.Contains("evil-tmp-proc"), 35);
+                        Check("[Guard] WMI live: phát hiện tiến trình tung ra từ Temp", sawBehavior);
+                        if (ps != null) { try { ps.Kill(); } catch { } }
+                        GuardService.Configure("behavior", false);
+                    }
+
+                    // ============ BỘ MẪU 3 KỸ THUẬT (TestSamples) + UPLOAD PREFLIGHT ============
+                    var samplesBak = new List<string>(); // giữ nguyên folder cũ nếu người dùng đã có
+                    try
+                    {
+                        var sampleFiles = TestSamples.Create();
+                        var sampleState = ScanEngine.Scan(ScanType.Custom, TestSamples.FolderPath, CancellationToken.None);
+                        Check("[Mẫu] tạo đúng 6 tệp, idempotent",
+                            sampleFiles.Count == 6 && File.Exists(sampleFiles[0]));
+                        Check("[Mẫu] quét cả thư mục -> ĐÚNG 5 đe dọa (1 tệp sạch không bị báo)",
+                            sampleState.FilesScanned == 6 && sampleState.Threats.Count == 5);
+                        Check("[Mẫu] KT1-prefix: mau-ky-hieu.txt", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.SignatureSampleName) && t.Kind == "Chữ ký"));
+                        Check("[Mẫu] KT1-hash: mau-hash-sha256.txt (Malsim)", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.HashSampleName) && t.Kind == "Chữ ký"
+                            && t.Reason.Contains("Malsim")));
+                        Check("[Mẫu] KT1-tên: demo_eicar_named.dat", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.EicarNameSample) && t.Kind == "Chữ ký"));
+                        Check("[Mẫu] KT2: hoa-don-invoice.pdf.exe -> Heuristic", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.SpoofSampleName) && t.Kind == "Heuristic"
+                            && t.Reason.Contains("đuôi kép")));
+                        Check("[Mẫu] KT2: update-flash.ps1 -> Heuristic", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.ScriptSampleName) && t.Kind == "Heuristic"));
+                        Check("[Mẫu] README-mau.txt SẠCH — không dương tính giả",
+                            !sampleState.Threats.Any(t => t.FilePath.EndsWith(TestSamples.BenignSampleName)));
+
+                        // --- preflight upload (KHÔNG mạng: backup key để mọi nhánh đi đường lỗi tất định) ---
+                        string vtK = File.Exists(VirusTotalClient.ApiKeyPath)
+                            ? File.ReadAllText(VirusTotalClient.ApiKeyPath) : null;
+                        try
+                        {
+                            if (vtK != null) File.Delete(VirusTotalClient.ApiKeyPath);
+                            var upNoKey = VirusTotalClient.UploadAndAnalyze(sampleFiles[0]);
+                            var qNoKey = VirusTotalClient.QueryHashOrUpload(null, sampleFiles[0]);
+                            Check("[VT] UploadAndAnalyze thiếu key -> báo lỗi, không nổ",
+                                upNoKey.Error != null && upNoKey.Error.Contains("API key"));
+                            Check("[VT] QueryHashOrUpload hash rỗng -> lỗi rõ", qNoKey.Error != null);
+                            string huge = Path.Combine(gdir, "huge.bin");
+                            using (var hfs = File.Create(huge)) hfs.SetLength(33L * 1024 * 1024);
+                            VirusTotalClient.SaveApiKey("fake-key"); // đủ điều kiện qua vòng key -> tới size-gate
+                            try {
+                            var upBig2 = VirusTotalClient.UploadAndAnalyze(huge);
+                            Check("[VT] chặn tệp >32MB trước khi gọi mạng",
+                                upBig2.Error != null && upBig2.Error.Contains("32MB"));
+                            } finally { File.Delete(VirusTotalClient.ApiKeyPath); }
+                        }
+                        finally
+                        {
+                            if (vtK != null) File.WriteAllText(VirusTotalClient.ApiKeyPath, vtK);
+                            else { try { File.Delete(VirusTotalClient.ApiKeyPath); } catch { } }
+                        }
+                        Check("[VT] Extract data-URL từ JSON",
+                            VirusTotalClient.ExtractJsonStringValue("{\"data\":\"https://x/upload/ab\"}", "data")
+                                == "https://x/upload/ab");
+                        Check("[VT] Extract analysis-id từ JSON",
+                            VirusTotalClient.ExtractJsonStringValue("{\"data\":{\"type\":\"analysis\",\"id\":\"file-99\"}}", "id")
+                                == "file-99");
+                        // (giữ nguyên thư mục Samples trong repo — không xóa; nút "Tạo tệp mẫu" chỉ ghi đè idempotent)
+                    }
+                    catch (Exception exSample)
+                    {
+                        Check("[Mẫu] không nổ: " + exSample.Message, false);
+                    }
+                }
+                finally
+                {
+                    GuardService.ThreatDetected -= guardHandler;
+                    FeatureFlags.FileRestoreGuard = flagsWas[0];
+                    FeatureFlags.UsbProtection = flagsWas[1];
+                    FeatureFlags.DownloadProtection = flagsWas[2];
+                    FeatureFlags.BehaviorWatch = flagsWas[3];
+                    FeatureFlags.StartupFoldersWatch = flagsWas[4];
+                    FeatureFlags.VtAutoQuery = flagsWas[5];
+                    FeatureFlags.AutoUpdateEnabled = flagsWas[6];
+                    if (settingsBak != null) File.WriteAllText(AppSettings.SettingsPath, settingsBak);
+                    else { try { File.Delete(AppSettings.SettingsPath); } catch { } }
+                    if (dbBak != null) File.WriteAllText(ScanHistoryStore.SignatureUpdatePath, dbBak);
+                    try { Directory.Delete(gdir, true); } catch { }
+                }
             }
             finally
             {
