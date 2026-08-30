@@ -1,5 +1,4 @@
-﻿using ScanAndRemoveVirus.form;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,8 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms;
 using ScanAndRemoveVirus.Control;
+using ScanAndRemoveVirus.Services;
 
 namespace ScanAndRemoveVirus
 {
@@ -19,6 +18,7 @@ namespace ScanAndRemoveVirus
         private readonly UcBaoVe ucBaoVe = new UcBaoVe();
         private readonly UcLichSu ucLichSu = new UcLichSu();
         private readonly UcCachLy ucCachLy = new UcCachLy();
+        private readonly UcCaiDat ucCaiDat = new UcCaiDat();
 
         private void LoadContent(UserControl control)
         {
@@ -35,26 +35,27 @@ namespace ScanAndRemoveVirus
                 btnTongQuan,
                 btnBaoVe,
                 btnLichSu,
-                btnCachLy
+                btnCachLy,
+                btnCaiDat
             };
             foreach(Button btn in buttons)
-            {
-                btn.BackColor = Color.FromArgb(247, 248, 250);
-                btn.ForeColor = Color.FromArgb(37, 99, 235);
-                btn.Font = new Font("Segoe UI", 10, FontStyle.Regular);
-            }
+                Theme.StyleNav(btn, false);
         }
         private void ActiveSidebar(Button button)
         {
             ResetSidebar();
-
-            button.BackColor = Color.FromArgb(10, 86, 216);
-            button.ForeColor = Color.White;
-            button.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            Theme.StyleNav(button, true);
         }
         public FrmMain()
         {
             InitializeComponent();
+            // Khởi động các guard theo cờ đã lưu (USB/Tải xuống/Hành vi/StartUp) + khôi phục RT
+            FeatureFlags.LoadFromStore();
+            GuardService.ApplyAll();
+            if (FeatureFlags.RealTimeOn && !RealTimeProtection.IsRunning)
+            {
+                try { RealTimeProtection.Start(); } catch (Exception) { FeatureFlags.RealTimeOn = false; }
+            }
 
             LoadContent(ucTongQuan);
             ActiveSidebar(btnTongQuan);
@@ -62,7 +63,15 @@ namespace ScanAndRemoveVirus
             btnBaoVe.Click += btnBaoVe_Click;
             btnLichSu.Click += btnLichSu_Click;
             btnCachLy.Click += btnCachLy_Click;
+            btnCaiDat.Click += btnCaiDat_Click;
 
+        }
+
+        //API cho các UserControl điều hướng (vd: bấm số đếm cách ly ở tab Tổng quan)
+        public void MoTabCachLy()
+        {
+            LoadContent(ucCachLy);
+            ActiveSidebar(btnCachLy);
         }
         
 
@@ -77,6 +86,13 @@ namespace ScanAndRemoveVirus
         {
             LoadContent(ucBaoVe);
             ActiveSidebar(btnBaoVe);
+
+        }
+
+        private void btnCaiDat_Click(object sender, EventArgs e)
+        {
+            LoadContent(ucCaiDat);
+            ActiveSidebar(btnCaiDat);
         }
 
         private void tableLayoutPanel3_Paint(object sender, PaintEventArgs e)
