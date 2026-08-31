@@ -138,7 +138,7 @@ Tab riêng (nút **Cài đặt** trên sidebar):
 2. Đăng nhập → avatar góc phải → **Profile** → mục **API key** → *Reveal key* → sao chép (64 ký tự hex).
 3. Trong app: ở khu **Hành động**, chọn 1 dòng đe dọa → bấm **"Tra VirusTotal"**.
    * **Lần đầu** (chưa có key) sẽ hiện hộp thoại *"API key VirusTotal"* → **dán key → Lưu**.
-   * Key nằm ngay trong project tại `ScanAndRemoveVirus\ScanAndRemoveVirus\vtapikey.txt` — đã có trong `.gitignore` nên không bao giờ bị commit (khi app chạy ngoài repo, dự phòng là `%AppData%\ScanAndRemoveVirus\vtapikey.txt`).   * Có thể tự tạo file trên với nội dung = key nếu không muốn dùng hộp thoại.
+   * Key nằm trong project tại `ScanAndRemoveVirus\ScanAndRemoveVirus\vtapikey.txt` — **được commit có chủ đích** để cả nhóm dùng chung quota free-tier của một key VT (rủi ro: ai cũng thấy được key; nếu bị đốt quota hết sạch → Profile → API key → *regenerate* rồi commit bản mới). Chạy app ngoài repo: fallback `%AppData%\ScanAndRemoveVirus\vtapikey.txt`.   * Có thể tự tạo file trên với nội dung = key nếu không muốn dùng hộp thoại.
 
 ### App gọi API như thế nào?
 
@@ -229,7 +229,7 @@ ScanAndRemoveVirus/
 | `scancache.dat` | cache `đường dẫn → (mtime, size, độc?)` (≤ 500k mục) | quét lại từ đầu, chậm hơn |
 | `dbupdate.txt` | tem ngày "cập nhật CSDL chữ ký" (kèm xóa cache khi bấm nút) | hiện "Chưa cập nhật" |
 | `settings.ini` | 11 cờ: 4 cài đặt + 10 công tắc tính năng tab Bảo vệ (FeatureFlags) | về mặc định |
-| `vtapikey.txt` (project, **gitignored**) | **API key VirusTotal** — nằm cạnh file .csproj; ngoài repo -> fallback AppData | bấm Tra VT sẽ hỏi lại key |
+| `vtapikey.txt` (project, **commit có chủ đích**) | **API key VirusTotal** dùng chung cho team — nằm cạnh file .csproj; ngoài repo -> fallback AppData | bấm Tra VT sẽ hỏi lại key |
 
 ---
 

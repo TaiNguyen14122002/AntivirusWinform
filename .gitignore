@@ -3,5 +3,5 @@ obj/
 .vs/
 *.user
 
-# VirusTotal API key (gi?i phát tri?n c?c b? - không commit)
-vtapikey.txt
+# VirusTotal API key duoc commit CO Y thich cho team dung chung quota
+# (free-tier key, ruoi ro thap - xem README). Ne track cac secret khac!
