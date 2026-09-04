@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ScanAndRemoveVirus.Services
 {
-    // Sổ cái các tệp đã cách ly: %AppData%\ScanAndRemoveVirus\quarantine.log
+    // Sổ cái các tệp đã cách ly: <solution>\AppData\quarantine.log (xem DataDir)
     // Mỗi dòng: id|originalPath|yyyy-MM-dd HH:mm:ss|threat|name|sizeBytes (NTFS không có '|')
     internal static class QuarantineLedger
     {

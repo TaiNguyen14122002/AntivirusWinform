@@ -224,14 +224,7 @@
             // 
             // dgvHistory
             // 
-            this.dgvHistory.AllowUserToAddRows = false;
-            this.dgvHistory.AllowUserToDeleteRows = false;
-            this.dgvHistory.AllowUserToResizeRows = false;
-            this.dgvHistory.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvHistory.BackgroundColor = System.Drawing.Color.White;
-            this.dgvHistory.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvHistory.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dgvHistory.ColumnHeadersHeight = 40;
+            // Hình thức + hành vi chung của table do Theme.StyleGrid đảm nhiệm (code-behind)
             this.dgvHistory.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colPick,
             this.colTime,
@@ -245,10 +238,6 @@
             this.dgvHistory.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
             this.dgvHistory.Name = "dgvHistory";
             this.dgvHistory.ReadOnly = false;
-            this.dgvHistory.RowHeadersVisible = false;
-            this.dgvHistory.RowHeadersWidth = 82;
-            this.dgvHistory.RowTemplate.Height = 34;
-            this.dgvHistory.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvHistory.Size = new System.Drawing.Size(1142, 610);
             this.dgvHistory.TabIndex = 1;
             // 

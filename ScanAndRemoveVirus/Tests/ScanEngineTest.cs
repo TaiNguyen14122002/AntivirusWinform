@@ -67,6 +67,9 @@ static class ScanEngineTest
 
     static int Main()
     {
+        // Test ghi vào kho dữ liệu riêng, không đụng scanhistory.log/quarantine thật của user
+        Environment.SetEnvironmentVariable("XVIRUS_DATA_DIR",
+            Path.Combine(Path.GetTempPath(), "xvirus-test-data-" + Guid.NewGuid().ToString("N")));
         string root = Path.Combine(Path.GetTempPath(), "xvirus-engine-test-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         quarantineBefore = Directory.Exists(ScanEngine.QuarantineDir)
@@ -572,10 +575,10 @@ static class ScanEngineTest
                     {
                         var sampleFiles = TestSamples.Create();
                         var sampleState = ScanEngine.Scan(ScanType.Custom, TestSamples.FolderPath, CancellationToken.None);
-                        Check("[Mẫu] tạo đúng 6 tệp, idempotent",
-                            sampleFiles.Count == 6 && File.Exists(sampleFiles[0]));
-                        Check("[Mẫu] quét cả thư mục -> ĐÚNG 5 đe dọa (1 tệp sạch không bị báo)",
-                            sampleState.FilesScanned == 6 && sampleState.Threats.Count == 5);
+                        Check("[Mẫu] tạo đúng 11 tệp, idempotent",
+                            sampleFiles.Count == 11 && File.Exists(sampleFiles[0]));
+                        Check("[Mẫu] quét cả thư mục -> ĐÚNG 8 đe dọa (3 tệp sạch không bị báo)",
+                            sampleState.FilesScanned == 11 && sampleState.Threats.Count == 8);
                         Check("[Mẫu] KT1-prefix: mau-ky-hieu.txt", sampleState.Threats.Any(t =>
                             t.FilePath.EndsWith(TestSamples.SignatureSampleName) && t.Kind == "Chữ ký"));
                         Check("[Mẫu] KT1-hash: mau-hash-sha256.txt (Malsim)", sampleState.Threats.Any(t =>
@@ -583,11 +586,22 @@ static class ScanEngineTest
                             && t.Reason.Contains("Malsim")));
                         Check("[Mẫu] KT1-tên: demo_eicar_named.dat", sampleState.Threats.Any(t =>
                             t.FilePath.EndsWith(TestSamples.EicarNameSample) && t.Kind == "Chữ ký"));
+                        Check("[Mẫu] KT1-prefix đuôi .js: hook-tien-ich.js (byte 0)", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.JsPrefixName) && t.Kind == "Chữ ký"));
                         Check("[Mẫu] KT2: hoa-don-invoice.pdf.exe -> Heuristic", sampleState.Threats.Any(t =>
                             t.FilePath.EndsWith(TestSamples.SpoofSampleName) && t.Kind == "Heuristic"
                             && t.Reason.Contains("đuôi kép")));
                         Check("[Mẫu] KT2: update-flash.ps1 -> Heuristic", sampleState.Threats.Any(t =>
                             t.FilePath.EndsWith(TestSamples.ScriptSampleName) && t.Kind == "Heuristic"));
+                        Check("[Mẫu] KT2: downloader-tien-ich.vbs -> 3 marker script", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.VbsSampleName) && t.Kind == "Heuristic"));
+                        Check("[Mẫu] KT2: exe ẩn + mồi câu (70/100)", sampleState.Threats.Any(t =>
+                            t.FilePath.EndsWith(TestSamples.HiddenExeName) && t.Kind == "Heuristic"
+                            && t.Reason.Contains("tệp thực thi bị ẩn")));
+                        Check("[Mẫu] ĐỐI CHỨNG: keygen-pro.exe mồi câu 30/100 — KHÔNG báo",
+                            !sampleState.Threats.Any(t => t.FilePath.EndsWith(TestSamples.CrackedExeName)));
+                        Check("[Mẫu] ĐỐI CHỨNG: script-sach.ps1 script lành — KHÔNG báo",
+                            !sampleState.Threats.Any(t => t.FilePath.EndsWith(TestSamples.CleanScriptName)));
                         Check("[Mẫu] README-mau.txt SẠCH — không dương tính giả",
                             !sampleState.Threats.Any(t => t.FilePath.EndsWith(TestSamples.BenignSampleName)));
 

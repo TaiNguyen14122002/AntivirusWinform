@@ -93,13 +93,13 @@
             this.grpAction = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel18 = new System.Windows.Forms.TableLayoutPanel();
             this.dgvActions = new System.Windows.Forms.DataGridView();
+            this.colPickAction = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colActionFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colActionThreat = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tableLayoutPanelActions = new System.Windows.Forms.TableLayoutPanel();
             this.btnQuarantineSelected = new System.Windows.Forms.Button();
             this.btnDeleteSelected = new System.Windows.Forms.Button();
             this.btnQuarantineAll = new System.Windows.Forms.Button();
-            this.btnDeleteAll = new System.Windows.Forms.Button();
             this.btnVirusTotal = new System.Windows.Forms.Button();
             this.pnlContent.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
@@ -1006,26 +1006,29 @@
             // 
             // dgvActions
             // 
-            this.dgvActions.AllowUserToAddRows = false;
-            this.dgvActions.AllowUserToDeleteRows = false;
-            this.dgvActions.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvActions.BackgroundColor = System.Drawing.Color.White;
-            this.dgvActions.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvActions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            // Hình thức + hành vi chung của table do Theme.StyleGrid đảm nhiệm (code-behind)
             this.dgvActions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colPickAction,
             this.colActionFile,
             this.colActionThreat});
             this.dgvActions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvActions.Location = new System.Drawing.Point(10, 10);
             this.dgvActions.Margin = new System.Windows.Forms.Padding(10, 10, 10, 5);
             this.dgvActions.Name = "dgvActions";
-            this.dgvActions.ReadOnly = true;
-            this.dgvActions.RowHeadersVisible = false;
-            this.dgvActions.RowHeadersWidth = 82;
-            this.dgvActions.RowTemplate.Height = 33;
-            this.dgvActions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvActions.ReadOnly = false;
             this.dgvActions.Size = new System.Drawing.Size(1078, 207);
             this.dgvActions.TabIndex = 0;
+            // 
+            // colPickAction
+            // 
+            this.colPickAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.colPickAction.HeaderText = "";
+            this.colPickAction.Name = "colPickAction";
+            this.colPickAction.ReadOnly = false;
+            this.colPickAction.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.colPickAction.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colPickAction.ToolTipText = "Nhấp để chọn / bỏ chọn tất cả";
+            this.colPickAction.Width = 48;
             // 
             // colActionFile
             // 
@@ -1045,17 +1048,15 @@
             // 
             // tableLayoutPanelActions
             // 
-            this.tableLayoutPanelActions.ColumnCount = 5;
-            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanelActions.ColumnCount = 4;
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanelActions.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanelActions.Controls.Add(this.btnQuarantineSelected, 0, 0);
             this.tableLayoutPanelActions.Controls.Add(this.btnDeleteSelected, 1, 0);
             this.tableLayoutPanelActions.Controls.Add(this.btnQuarantineAll, 2, 0);
-            this.tableLayoutPanelActions.Controls.Add(this.btnDeleteAll, 3, 0);
-            this.tableLayoutPanelActions.Controls.Add(this.btnVirusTotal, 4, 0);
+            this.tableLayoutPanelActions.Controls.Add(this.btnVirusTotal, 3, 0);
             this.tableLayoutPanelActions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanelActions.Location = new System.Drawing.Point(10, 227);
             this.tableLayoutPanelActions.Margin = new System.Windows.Forms.Padding(10, 5, 10, 10);
@@ -1100,19 +1101,8 @@
             this.btnQuarantineAll.TabIndex = 2;
             this.btnQuarantineAll.Text = "Cách ly tất cả";
             this.btnQuarantineAll.UseVisualStyleBackColor = true;
-            // 
-            // btnDeleteAll
-            // 
-            this.btnDeleteAll.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnDeleteAll.Enabled = false;
-            this.btnDeleteAll.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnDeleteAll.Location = new System.Drawing.Point(810, 3);
-            this.btnDeleteAll.Name = "btnDeleteAll";
-            this.btnDeleteAll.Size = new System.Drawing.Size(265, 40);
-            this.btnDeleteAll.TabIndex = 3;
-            this.btnDeleteAll.Text = "Xóa tất cả";
-            this.btnDeleteAll.UseVisualStyleBackColor = true;
-            // 
+            // btnDeleteAll đã bỏ: nút xóa theo lựa chọn là đủ — tránh xóa nhầm toàn bộ bằng 1 cú click
+            //
             // btnVirusTotal
             // 
             this.btnVirusTotal.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -1248,13 +1238,13 @@
         private System.Windows.Forms.GroupBox grpAction;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel18;
         private System.Windows.Forms.DataGridView dgvActions;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colPickAction;
         private System.Windows.Forms.DataGridViewTextBoxColumn colActionFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colActionThreat;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelActions;
         private System.Windows.Forms.Button btnQuarantineSelected;
         private System.Windows.Forms.Button btnDeleteSelected;
         private System.Windows.Forms.Button btnQuarantineAll;
-        private System.Windows.Forms.Button btnDeleteAll;
         private System.Windows.Forms.Button btnVirusTotal;
     }
 }

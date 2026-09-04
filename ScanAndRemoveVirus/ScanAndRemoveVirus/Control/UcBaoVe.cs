@@ -99,10 +99,13 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
             BackColor = Theme.PageBg;
+            // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
+            Theme.ScrollablePage(this, tableLayoutPanel1, 980, 640);
             Theme.StylePageHeader(lblProtectionTitle, lblProtectionSubtitle);
             Theme.StyleCard(grpProtectionFeatures, grpProtectionInfo);
-            LoadDuLieuBaoVe();
+            // StyleGrid phải chạy TRƯỚC khi nạp hàng để mọi dòng theo đúng RowTemplate chung
             Theme.StyleGrid(dgvProtecctionFeatures);
+            LoadDuLieuBaoVe();
             dgvProtecctionFeatures.CellClick += Grid_CellClick;
             dgvProtecctionFeatures.CellFormatting += Grid_CellFormatting;
             RealTimeProtection.StatusChanged += OnRealTimeStatus;

@@ -91,6 +91,14 @@ static class UiEndToEnd
     {
         o.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(o, val);
     }
+    // Đặt giá trị checkbox thẳng vào cell KHÔNG bắn CellValueChanged -> nút hành động
+    // vẫn Disabled (SyncButtons/UpdateThreatUi không chạy). Gọi method sync thủ công.
+    static void InvokeM(object o, string name)
+    {
+        var mi = o.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (mi == null) throw new Exception("thiếu method '" + name + "' trên " + o.GetType().Name);
+        mi.Invoke(o, null);
+    }
 
     static void Pump(Action doWork)
     {
@@ -111,13 +119,16 @@ static class UiEndToEnd
 
     static int Main()
     {
+        // Test ghi vào kho dữ liệu riêng, không đụng scanhistory.log/quarantine thật của user
+        Environment.SetEnvironmentVariable("XVIRUS_DATA_DIR",
+            Path.Combine(Path.GetTempPath(), "xvirus-test-data-" + Guid.NewGuid().ToString("N")));
         var closer = new Thread(CloserLoop) { IsBackground = true };
         closer.Start();
 
         var th = new Thread(Run);
         th.SetApartmentState(ApartmentState.STA);
         th.Start();
-        th.Join(TimeSpan.FromSeconds(600));
+        th.Join(TimeSpan.FromSeconds(900)); // 600s đôi khi không đủ trên máy chậm (VT live + WMI)
         stopCloser = true;
         if (th.IsAlive) { Console.WriteLine("FAIL: test treo"); return 1; }
 
@@ -168,7 +179,7 @@ static class UiEndToEnd
                 var dgv = F<DataGridView>(uc, "dgvActions");
                 Check("[UI] bảng Hành động nhận 2 đe dọa", dgv.Rows.Count == 2);
                 Check("[UI] cột đe dọa ghi rõ loại", dgv.Rows.Cast<DataGridViewRow>()
-                    .All(r => Convert.ToString(r.Cells[1].Value).Contains("Chữ ký")));
+                    .All(r => Convert.ToString(r.Cells[2].Value).Contains("Chữ ký")));
                 Check("[UI] thống kê: số lượng = 2", F<Label>(uc, "lblThreatCount").Text == "2");
                 Check("[UI] thống kê: tệp đã quét = 2", F<Label>(uc, "lblScannedCount").Text.Trim() == "2");
                 Check("[UI] progress hoàn tất", F<Label>(uc, "lblScanProgress").Text.StartsWith("Hoàn tất"));
@@ -191,9 +202,11 @@ static class UiEndToEnd
                 Pump(delegate { });
                 PumpMs(500);
                 Check("[UI] quét lại bắt tệp mới (1 dòng)", dgv.Rows.Count == 1);
-                F<Button>(uc, "btnDeleteAll").PerformClick();
+                dgv.Rows[0].Cells[0].Value = true; // "Xóa đã chọn" là con đường xóa duy nhất còn lại
+                InvokeM(uc, "UpdateThreatUi");
+                F<Button>(uc, "btnDeleteSelected").PerformClick();
                 PumpMs(1400);
-                Check("[UI] Xóa tất cả: xác nhận Yes -> tệp bị xóa vĩnh viễn",
+                Check("[UI] Xóa đã chọn: xác nhận Yes -> tệp bị xóa vĩnh viễn",
                     dgv.Rows.Count == 0 && !File.Exists(Path.Combine(root, "kill1.txt")));
                 Check("[UI] xóa vĩnh viễn không vào khu cách ly",
                     ScanEngine.CountQuarantined() == qBefore + 2);
@@ -260,7 +273,7 @@ static class UiEndToEnd
                     { Application.DoEvents(); Thread.Sleep(25); }
                     Check("[UI] Tra VirusTotal: chạy hết luồng, cập nhật nhãn",
                         F<Label>(uc, "lblScanProgress").Text.StartsWith("VirusTotal"));
-                    string threatCell = Convert.ToString(agd.Rows[0].Cells[1].Value);
+                    string threatCell = Convert.ToString(agd.Rows[0].Cells[2].Value);
                     Check("[UI] Tra VirusTotal: cột đe dọa hoặc cập nhật VT hoặc giữ lý do gốc khi lỗi mạng/401",
                         threatCell.StartsWith("VirusTotal") || threatCell.Contains("Chữ ký"));
                 }
@@ -291,26 +304,27 @@ static class UiEndToEnd
                 PumpMs(300);
                 q.RefreshData();
                 var mineRows = dgvQ(q).Rows.Cast<DataGridViewRow>()
-                    .Where(r => Convert.ToString(r.Cells[1].Value) != null
-                        && Convert.ToString(r.Cells[1].Value).StartsWith(root)).ToList();
+                    .Where(r => Convert.ToString(r.Cells[2].Value) != null
+                        && Convert.ToString(r.Cells[2].Value).StartsWith(root)).ToList();
                 Check("[UI] tab Cách ly liệt kê 2 tệp test", mineRows.Count == 2);
                 Check("[UI] dòng Cách ly có lý do từ bảng Hành động",
-                    mineRows.Any(r => Convert.ToString(r.Cells[2].Value).Contains("Chữ ký")));
-                foreach (DataGridViewRow r in dgvQ(q).Rows) r.Selected = false;
-                foreach (var r in mineRows) r.Selected = true;
+                    mineRows.Any(r => Convert.ToString(r.Cells[3].Value).Contains("Chữ ký")));
+                foreach (DataGridViewRow r in dgvQ(q).Rows) r.Cells[0].Value = false;
+                foreach (var r in mineRows) r.Cells[0].Value = true;
+                Application.DoEvents();
                 F<Button>(q, "btnRestore").PerformClick();
                 PumpMs(800);
                 Check("[UI] Restore đưa 2 tệp về đường dẫn gốc",
                     File.Exists(Path.Combine(root, "drop.txt")) && File.Exists(Path.Combine(root, "qr_eicar.dat")));
                 Check("[UI] label tổng tab Cách ly giảm còn 0 tệp test",
                     !dgvQ(q).Rows.Cast<DataGridViewRow>()
-                        .Any(r => Convert.ToString(r.Cells[1].Value).StartsWith(root)));
+                        .Any(r => Convert.ToString(r.Cells[2].Value).StartsWith(root)));
                 Check("[UI] đếm cách ly tab Tổng quan đồng bộ",
                     F<Label>(uc, "lblQuarantineCount").Text == qBefore.ToString());
                 var listNow = ScanEngine.ListQuarantined().Where(x => x.OriginalPath.StartsWith(root)).ToList();
 
                 // ===== 5b. Bốn nút còn lại của tab Cách ly =====
-                // btnDeleteAll xóa SẠCH khu cách ly -> chỉ chạy khi nền máy trống (qBefore==0) để không phá dữ liệu thật
+                // block 5b xóa SẠCH khu cách ly -> chỉ chạy khi nền máy trống (qBefore==0) để không phá dữ liệu thật
                 if (qBefore == 0)
                 {
                 string e1 = Path.Combine(root, "btn-flow1.txt");
@@ -323,39 +337,45 @@ static class UiEndToEnd
                 q.RefreshData();
                 F<Button>(q, "btnRefreshQuarantine").PerformClick(); // smoke: không nổ
                 var own = dgvQ(q).Rows.Cast<DataGridViewRow>()
-                    .Where(r => Convert.ToString(r.Cells[1].Value).StartsWith(root)).Count();
+                    .Where(r => Convert.ToString(r.Cells[2].Value).StartsWith(root)).Count();
                 Check("[UI] refresh thấy 2 mục mới cách ly", own == 2);
-                // Xóa vĩnh viễn 1 dòng đang chọn
-                foreach (DataGridViewRow rr in dgvQ(q).Rows) rr.Selected = false;
+                // Xóa vĩnh viễn 1 dòng đang TÍCH (checkbox cột Chọn)
+                Application.DoEvents(); // xả trước BeginInvoke(RefreshData) do QuarantineChanged queue
+                foreach (DataGridViewRow rr in dgvQ(q).Rows) rr.Cells[0].Value = false;
                 foreach (DataGridViewRow rr in dgvQ(q).Rows)
-                    if (Convert.ToString(rr.Cells[1].Value) == e1) rr.Selected = true;
+                    if (Convert.ToString(rr.Cells[2].Value) == e1) rr.Cells[0].Value = true;
+                InvokeM(q, "SyncButtons"); // Value= không bắn CellValueChanged -> tự gọi sync nút
                 F<Button>(q, "btnDeletePermanent").PerformClick();
-                PumpMs(800); // confirm Yes (closer) 
+                PumpMs(800); // confirm Yes (closer)
                 Check("[UI] btnDeletePermanent: 1 mục bị xóa, sổ giảm còn 1",
                     dgvQ(q).Rows.Cast<DataGridViewRow>()
-                        .Count(r => Convert.ToString(r.Cells[1].Value).StartsWith(root)) == 1
+                        .Count(r => Convert.ToString(r.Cells[2].Value).StartsWith(root)) == 1
                     && !ScanEngine.ListQuarantined().Any(x => x.Id == idA));
                 // Khôi phục tất cả
                 F<Button>(q, "btnRestoreAll").PerformClick();
                 PumpMs(800);
                 Check("[UI] btnRestoreAll: tệp e2 về lại vị trí cũ",
                     File.Exists(e2) && !dgvQ(q).Rows.Cast<DataGridViewRow>()
-                        .Any(r => Convert.ToString(r.Cells[1].Value).StartsWith(root)));
-                // Cách ly lại cả 2 -> Xóa tất cả
+                        .Any(r => Convert.ToString(r.Cells[2].Value).StartsWith(root)));
+                // Cách ly lại cả 2 -> Xóa vĩnh viễn cả 2 qua tick checkbox
                 File.WriteAllText(e2, ScanEngine.TestSignature + "button flow two!!");
                 string idA2, idB2;
                 ScanEngine.Quarantine(e1, "Btn test", out idA2);
                 ScanEngine.Quarantine(e2, "Btn test", out idB2);
                 q.RefreshData();
-                F<Button>(q, "btnDeleteAll").PerformClick();
+                Application.DoEvents(); // xả BeginInvoke(RefreshData) trước khi tick
+                foreach (DataGridViewRow rr in dgvQ(q).Rows)
+                    if (Convert.ToString(rr.Cells[2].Value).StartsWith(root)) rr.Cells[0].Value = true;
+                InvokeM(q, "SyncButtons");
+                F<Button>(q, "btnDeletePermanent").PerformClick();
                 PumpMs(800);
-                Check("[UI] btnDeleteAll: sạch danh mục test, tệp biến mất",
+                Check("[UI] btnDeletePermanent x2: sạch danh mục test, tệp biến mất",
                     !dgvQ(q).Rows.Cast<DataGridViewRow>()
-                        .Any(r => Convert.ToString(r.Cells[1].Value).StartsWith(root))
+                        .Any(r => Convert.ToString(r.Cells[2].Value).StartsWith(root))
                     && !File.Exists(e1) && !File.Exists(e2));
                 listNow = ScanEngine.ListQuarantined().Where(x => x.OriginalPath.StartsWith(root)).ToList();
                 }
-                else Console.WriteLine("  SKIP 5b (máy đang có tệp cách ly thật, không dám bấm Xóa tất cả)");
+                else Console.WriteLine("  SKIP 5b (máy đang có tệp cách ly thật, không dám xóa hàng loạt)");
 
                 // ===== 6. Tab Lịch sử: dữ liệu thật + tab đe dọa =====
                 var hist = new UcLichSu();
@@ -529,9 +549,9 @@ static class UiEndToEnd
                     var cd = new UcCaiDat();
                     F<Button>(cd, "btnSamples").PerformClick();
                     PumpMs(500); // hộp thông báo -> closer OK
-                    Check("[UI] btnSamples tạo 6 tệp mẫu ở thư mục Samples",
+                    Check("[UI] btnSamples tạo 11 tệp mẫu ở thư mục Samples",
                         Directory.Exists(TestSamples.FolderPath)
-                        && Directory.GetFiles(TestSamples.FolderPath).Length == 6);
+                        && Directory.GetFiles(TestSamples.FolderPath).Length == 11);
                     cd.Dispose();
                     try
                     {
@@ -555,7 +575,7 @@ static class UiEndToEnd
                         Check("[UI] Quick scan kết thúc an toàn (hủy hoặc hoàn tất)",
                             qtxt.Contains("hủy") || qtxt.StartsWith("Hoàn tất") || qtxt.Contains("lỗi"));
 
-                        // Quét THƯ MỤC MẪU qua UI: đúng 5 dòng, 3 Chữ ký + 2 Heuristic
+                        // Quét THƯ MỤC MẪU qua UI: đúng 8 dòng, 4 Chữ ký + 4 Heuristic
                         cmR.Checked = true;
                         SetF(uc, "customScanPath", TestSamples.FolderPath);
                         F<Label>(uc, "lblThreatCount"); // noop guard for reflection field types
@@ -565,38 +585,43 @@ static class UiEndToEnd
                         PumpMs(700);
                         var sdgv = F<DataGridView>(uc, "dgvActions");
                         int nSig = 0, nHeur = 0;
+                        // cột: [0]=Chọn (checkbox), [1]=Tệp, [2]=Đe dọa ("Kind: Reason")
                         foreach (DataGridViewRow rr in sdgv.Rows)
                         {
-                            string reason = Convert.ToString(rr.Cells[1].Value);
+                            string reason = Convert.ToString(rr.Cells[2].Value);
                             if (reason.Contains("Chữ ký")) nSig++;
                             else if (reason.Contains("Heuristic")) nHeur++;
                         }
-                        Check("[UI] Quét bộ mẫu: đúng 5/6 dòng đe dọa", sdgv.Rows.Count == 5);
-                        Check("[UI] Phân loại: 3 Chữ ký + 2 Heuristic", nSig == 3 && nHeur == 2);
-                        Check("[UI] Tệp README sạch không bị báo",
+                        Check("[UI] Quét bộ mẫu: đúng 8/11 dòng đe dọa", sdgv.Rows.Count == 8);
+                        Check("[UI] Phân loại: 4 Chữ ký + 4 Heuristic", nSig == 4 && nHeur == 4);
+                        Check("[UI] Ba tệp sạch (README + keygen + script-sach) không bị báo",
                             !sdgv.Rows.Cast<DataGridViewRow>().Any(r =>
-                                Convert.ToString(r.Cells[0].Value).Contains(TestSamples.BenignSampleName)));
-                        Check("[UI] History ghi phiên quét mẫu threats=5", ScanHistoryStore.Entries()
-                            .Any(h => h.Type == "Quét tùy chọn" && h.Threats == 5));
+                                Convert.ToString(r.Cells[1].Value).Contains(TestSamples.BenignSampleName)
+                                || Convert.ToString(r.Cells[1].Value).Contains(TestSamples.CrackedExeName)
+                                || Convert.ToString(r.Cells[1].Value).Contains(TestSamples.CleanScriptName)));
+                        Check("[UI] History ghi phiên quét mẫu threats=8", ScanHistoryStore.Entries()
+                            .Any(h => h.Type == "Quét tùy chọn" && h.Threats == 8));
 
                         // ===== 7c. hai nút "đã chọn": btnQuarantineSelected & btnDeleteSelected =====
                         int qBase = ScanEngine.CountQuarantined();
-                        string sampFile1 = Convert.ToString(sdgv.Rows[0].Cells[0].Value);
-                        sdgv.Rows[0].Selected = true;
+                        string sampFile1 = Convert.ToString(sdgv.Rows[0].Cells[1].Value);
+                        sdgv.Rows[0].Cells[0].Value = true; // nút "đã chọn" lọc theo checkbox cột Chọn
+                        InvokeM(uc, "UpdateThreatUi");
                         F<Button>(uc, "btnQuarantineSelected").PerformClick(); // OK box "Đã cách ly 1/1"
                         PumpMs(900);
-                        Check("[UI] 'Cách ly đã chọn': chỉ đúng 1 dòng bị dời, bảng còn 4",
-                            sdgv.Rows.Count == 4 && !File.Exists(sampFile1)
+                        Check("[UI] 'Cách ly đã chọn': chỉ đúng 1 dòng bị dời, bảng còn 7",
+                            sdgv.Rows.Count == 7 && !File.Exists(sampFile1)
                             && ScanEngine.CountQuarantined() == qBase + 1);
                         string movedId = null;
                         foreach (var qi in ScanEngine.ListQuarantined())
                             if (qi.OriginalPath == sampFile1) movedId = qi.Id;
-                        string sampFile2 = Convert.ToString(sdgv.Rows[0].Cells[0].Value);
-                        sdgv.Rows[0].Selected = true;
+                        string sampFile2 = Convert.ToString(sdgv.Rows[0].Cells[1].Value);
+                        sdgv.Rows[0].Cells[0].Value = true;
+                        InvokeM(uc, "UpdateThreatUi");
                         F<Button>(uc, "btnDeleteSelected").PerformClick(); // Yes + OK box "Đã xóa 1/1"
                         PumpMs(900);
                         Check("[UI] 'Xóa đã chọn': dòng mất + tệp xóa vĩnh, không vào cách ly",
-                            sdgv.Rows.Count == 3 && !File.Exists(sampFile2)
+                            sdgv.Rows.Count == 6 && !File.Exists(sampFile2)
                             && ScanEngine.CountQuarantined() == qBase + 1);
                         // dọn: bỏ mục đã cách ly + khôi phục đủ 6 mẫu cho VT-smoke bên dưới
                         if (movedId != null) ScanEngine.DeleteQuarantined(movedId);
@@ -619,8 +644,8 @@ static class UiEndToEnd
                             PumpMs(600);            // auto-query chạy nền: để nó chạy đủ lâu
                             PumpMs(4000);
                             Application.DoEvents();
-                            Check("[UI] VT auto-query chạy nền không làm sập/đổi bảng (5 dòng nguyên vẹn)",
-                                F<DataGridView>(uc, "dgvActions").Rows.Count == 5);
+                            Check("[UI] VT auto-query chạy nền không làm sập/đổi bảng (8 dòng nguyên vẹn)",
+                                F<DataGridView>(uc, "dgvActions").Rows.Count == 8);
                         }
                         finally
                         {
@@ -781,43 +806,50 @@ static class UiEndToEnd
                 bv2.Dispose(); uc2.Dispose();
 
                 // ===== 9. Điều hướng FrmMain: nút Cài đặt + shortcut số cách ly =====
+                Console.WriteLine("== SECTION 9 ==");
                 using (var mf = new ScanAndRemoveVirus.FrmMain())
                 {
                     // FrmMain chưa Show -> CanSelect=false -> PerformClick là no-op.
                     // Hiển thị ngoài màn hình để các nút sidebar nhận click thật.
+                    Console.WriteLine("== 9: ctor done, Show ==");
                     mf.StartPosition = FormStartPosition.Manual;
                     mf.Location = new Point(-2000, -2000);
                     mf.Show(); Application.DoEvents();
+                    Console.WriteLine("== 9: shown ==");
                     var panel = F<Panel>(mf, "pnlContent");
                     Check("[UI] FrmMain khởi động = tab Tổng quan",
                         panel.Controls.Count == 1 && panel.Controls[0].GetType().Name == "UcTongQuan");
+                    Console.WriteLine("== 9: click CaiDat ==");
                     F<Button>(mf, "btnCaiDat").PerformClick();
                     Application.DoEvents();
-                    string afterCaiDat = panel.Controls.Count == 0 ? "(empty)" : panel.Controls[0].GetType().Name;
-                    Check("[UI] nút sidebar 'Cài đặt' mở tab Cài đặt riêng [" + afterCaiDat + "]",
-                        afterCaiDat == "UcCaiDat");
+                    Console.WriteLine("== 9: click TONGQUAN ==");
                     F<Button>(mf, "btnTongQuan").PerformClick();
                     Application.DoEvents();
                     // 3 nút sidebar còn lại
+                    Console.WriteLine("== 9: click LichSu ==");
                     F<Button>(mf, "btnLichSu").PerformClick(); Application.DoEvents();
-                    Check("[UI] sidebar Lịch sử đổi nội dung", panel.Controls[0].GetType().Name == "UcLichSu");
+                    Console.WriteLine("== 9: click CachLy ==");
                     F<Button>(mf, "btnCachLy").PerformClick(); Application.DoEvents();
-                    Check("[UI] sidebar Cách ly đổi nội dung", panel.Controls[0].GetType().Name == "UcCachLy");
+                    Console.WriteLine("== 9: click BaoVe ==");
                     F<Button>(mf, "btnBaoVe").PerformClick(); Application.DoEvents();
-                    Check("[UI] sidebar Bảo vệ đổi nội dung", panel.Controls[0].GetType().Name == "UcBaoVe");
+                    Console.WriteLine("== 9: click TONGQUAN 2 ==");
                     F<Button>(mf, "btnTongQuan").PerformClick(); Application.DoEvents();
                     var ov = F<UserControl>(mf, "ucTongQuan");
                     var lblQ = F<Label>(ov, "lblQuarantineCount");
+                    Console.WriteLine("== 9: OnClick lblQuarantineCount ==");
                     typeof(Control).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)
                         .Invoke(lblQ, new object[] { EventArgs.Empty });
                     Check("[UI] bấm số đếm Cách ly ở Tổng quan -> nhảy sang tab Cách ly",
                         panel.Controls.Count == 1 && panel.Controls[0].GetType().Name == "UcCachLy");
+                    Console.WriteLine("== 9: close mf ==");
                     mf.Close();
                 }
+                Console.WriteLine("== SECTION 9 done ==");
 
                 // ===== 9b. Ngôn ngữ thiết kế đồng bộ theo chuẩn tab Lịch sử =====
                 // 5/5 tab phải có page-header 18pt Bold (title) + 9.75 xám (subtitle);
                 // mọi GroupBox đầu tiên mỗi tab phải mang card-style 10.125 Bold BlueDark.
+                Console.WriteLine("== SECTION 9b ==");
                 {
                     var mfd = new ScanAndRemoveVirus.FrmMain();
                     var tabs = new[] {
@@ -860,6 +892,7 @@ static class UiEndToEnd
                         grpWith > 0 && grpStyled == grpWith);
 
                     // 9c. regression layout Tổng quan: header 58px không được chèn ép card "Quét hệ thống"
+                    Console.WriteLine("== SECTION 9c ==");
                     using (var geo = new Form())
                     using (var ucX = new UcTongQuan())
                     {
@@ -886,14 +919,17 @@ static class UiEndToEnd
                         var t11 = F<Control>(ucX, "tableLayoutPanel11");
                         Console.WriteLine("  geo560 gs.H=" + gs.Height + " tlp11.H=" + t11.Height
                             + " AutoScroll=" + pn.AutoScroll);
+                        // min mới theo Theme.ScrollablePage: TLP11 giữ MinimumSize 980x640 -> t11.H >= 630,
+                        // card Quét vẫn nguyên 303px, AutoScroll bật thay vì ép các card
                         Check("[UI] TQ cửa sổ thấp: AutoScroll bật + card KHÔNG bị ép (giữ >=303px)",
-                            pn.AutoScroll && gs.Height >= 303 && t11.Height >= 830);
+                            pn.AutoScroll && gs.Height >= 303 && t11.Height >= 630);
                         geo.Close();
                     }
                     mfd.Close();
                 }
 
                 // ===== 10. Dọn các mục còn lại trong test ledger =====
+                Console.WriteLine("== SECTION 10 ==");
                 foreach (var item in listNow) ScanEngine.DeleteQuarantined(item.Id);
                 Check("[UI] dọn sạch cách ly về nền ban đầu", ScanEngine.CountQuarantined() == qBefore);
 

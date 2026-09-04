@@ -111,6 +111,15 @@ namespace ScanAndRemoveVirus
             LoadContent(ucCachLy);
             ActiveSidebar(btnCachLy);
         }
+
+        // ==== RESPONSIVE ====
+        // Padding vùng nội dung co theo bề rộng cửa sổ (30px khi rộng, 12px khi hẹp)
+        private void FrmMain_Resize(object sender, EventArgs e)
+        {
+            int pad = Width < 1100 ? 12 : 30;
+            if (pnlContent.Padding.Left != pad)
+                pnlContent.Padding = new Padding(pad, 20, pad, 20);
+        }
     }
 
 }

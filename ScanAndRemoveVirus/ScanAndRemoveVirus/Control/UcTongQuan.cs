@@ -22,11 +22,34 @@ namespace ScanAndRemoveVirus.Control
         public UcTongQuan()
         {
             InitializeComponent();
+            // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
+            Theme.ScrollablePage(this, tableLayoutPanel11, 980, 640);
             // Ngôn ngữ thiết kế chuẩn như tab Lịch sử: header trang + card xanh brand
             Theme.StylePageHeader(lblOverviewTitle, lblOverviewSubtitle);
             Theme.StyleCard(grpScan, grpProtection, grpStatistics, grpThreats, grpScannedFiles,
                 grpLastScan, grpQuarantine, grpAction);
             Theme.StyleGrid(dgvActions);
+            // Cột "Chọn" (checkbox) dùng chung Theme: header ô vuông + commit tức thì
+            colPickAction.HeaderCell = new Theme.SelectAllHeaderCell(() => Theme.PickState(dgvActions, colPickAction.Index));
+            dgvActions.CurrentCellDirtyStateChanged += delegate
+            {
+                if (dgvActions.IsCurrentCellDirty)
+                    dgvActions.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            };
+            dgvActions.CellValueChanged += (s, e) =>
+            {
+                if (e.ColumnIndex == colPickAction.Index) UpdateThreatUi();
+            };
+            dgvActions.ColumnHeaderMouseClick += (s, e) =>
+            {
+                if (e.ColumnIndex == colPickAction.Index)
+                {
+                    bool any = dgvActions.Rows.Cast<DataGridViewRow>()
+                        .Any(r => r.Cells[colPickAction.Index].Value is bool b && b);
+                    Theme.PickAll(dgvActions, colPickAction.Index, !any);
+                    UpdateThreatUi();
+                }
+            };
             panel1.Height = 40;   // nút Kiểm tra cập nhật về compact 40px chuẩn Lịch sử
             btnCheckUpdate.Margin = new Padding(0, 2, 0, 2);
             Theme.StyleButton(btnScanNow, Theme.BtnRole.Primary);
@@ -50,7 +73,6 @@ namespace ScanAndRemoveVirus.Control
             btnQuarantineSelected.Click += BtnQuarantineSelected_Click;
             btnDeleteSelected.Click += BtnDeleteSelected_Click;
             btnQuarantineAll.Click += BtnQuarantineAll_Click;
-            btnDeleteAll.Click += BtnDeleteAll_Click;
             btnVirusTotal.Click += BtnVirusTotal_Click;
             Theme.StyleButton(btnVirusTotal, Theme.BtnRole.Action);
             ApplyActionChips();
@@ -246,23 +268,33 @@ namespace ScanAndRemoveVirus.Control
         {
             dgvActions.Rows.Clear();
             foreach (ThreatFound threat in result.Threats)
-                dgvActions.Rows.Add(threat.FilePath,
+                dgvActions.Rows.Add(false, threat.FilePath,
                     string.IsNullOrEmpty(threat.Kind) ? threat.Reason : threat.Kind + ": " + threat.Reason);
             UpdateThreatUi();
+        }
+
+        // Các dòng được TÍCH ở cột Chọn (dùng cho nút "…đã chọn")
+        private List<DataGridViewRow> TickedRows()
+        {
+            return dgvActions.Rows.Cast<DataGridViewRow>()
+                .Where(r => r.Cells[colPickAction.Index].Value is bool b && b)
+                .ToList();
         }
 
         private void UpdateThreatUi()
         {
             bool hasRows = dgvActions.Rows.Count > 0;
+            bool hasPick = TickedRows().Count > 0;
             lblThreatCount.Text = dgvActions.Rows.Count.ToString();
             lblThreatCount.ForeColor = hasRows ? Theme.Red : Theme.Green;
             lblThreatText.Text = hasRows ? "Cần xử lý" : "Không phát hiện mối đe dọa";
             lblThreatText.ForeColor = hasRows ? Theme.Red : Theme.Green;
-            btnQuarantineSelected.Enabled = hasRows;
-            btnDeleteSelected.Enabled = hasRows;
+            btnQuarantineSelected.Enabled = hasRows && hasPick;
+            btnDeleteSelected.Enabled = hasRows && hasPick;
+
             btnQuarantineAll.Enabled = hasRows;
-            btnDeleteAll.Enabled = hasRows;
             btnVirusTotal.Enabled = hasRows;
+            Theme.InvalidatePickHeader(dgvActions);
             ApplyActionChips();
         }
 
@@ -272,13 +304,11 @@ namespace ScanAndRemoveVirus.Control
                         Theme.StyleButton(btnQuarantineSelected, Theme.BtnRole.Action);
             Theme.StyleButton(btnQuarantineAll, Theme.BtnRole.Action);
             Theme.StyleButton(btnDeleteSelected, Theme.BtnRole.Danger);
-            Theme.StyleButton(btnDeleteAll, Theme.BtnRole.Danger);
         }
 
         private void BtnQuarantineSelected_Click(object sender, EventArgs e)
         {
-            if (dgvActions.SelectedRows.Count == 0) return;
-            QuarantineRows(dgvActions.SelectedRows.Cast<DataGridViewRow>().ToList());
+            QuarantineRows(TickedRows());
         }
 
         private void BtnQuarantineAll_Click(object sender, EventArgs e)
@@ -292,8 +322,8 @@ namespace ScanAndRemoveVirus.Control
             int done = 0;
             foreach (DataGridViewRow row in rows)
             {
-                string path = row.Cells[0].Value as string;
-                string reason = row.Cells[1].Value as string; // lưu lý do/loại phát hiện vào sổ cách ly
+                string path = row.Cells[colActionFile.Index].Value as string;
+                string reason = row.Cells[colActionThreat.Index].Value as string; // lưu lý do/loại phát hiện vào sổ cách ly
                 if (string.IsNullOrEmpty(path) || !File.Exists(path)
                     || ScanEngine.Quarantine(path, reason))
                 {
@@ -309,13 +339,7 @@ namespace ScanAndRemoveVirus.Control
 
         private void BtnDeleteSelected_Click(object sender, EventArgs e)
         {
-            if (dgvActions.SelectedRows.Count == 0) return;
-            DeleteRows(dgvActions.SelectedRows.Cast<DataGridViewRow>().ToList());
-        }
-
-        private void BtnDeleteAll_Click(object sender, EventArgs e)
-        {
-            DeleteRows(dgvActions.Rows.Cast<DataGridViewRow>().ToList());
+            DeleteRows(TickedRows());
         }
 
         private void DeleteRows(List<DataGridViewRow> rows)
@@ -329,7 +353,7 @@ namespace ScanAndRemoveVirus.Control
             int done = 0;
             foreach (DataGridViewRow row in rows)
             {
-                string path = row.Cells[0].Value as string;
+                string path = row.Cells[colActionFile.Index].Value as string;
                 try
                 {
                     if (string.IsNullOrEmpty(path)) { dgvActions.Rows.Remove(row); continue; }
@@ -351,7 +375,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (isScanning || dgvActions.SelectedRows.Count == 0) return;
             DataGridViewRow row = dgvActions.SelectedRows[0];
-            string path = row.Cells[0].Value as string;
+            string path = row.Cells[colActionFile.Index].Value as string;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
                 MessageBox.Show("Tệp không còn ở vị trí cũ nên không tính được hash.",
@@ -392,7 +416,7 @@ namespace ScanAndRemoveVirus.Control
                 lblScanProgress.Text = "VirusTotal: " + report.Summary();
                 lblScanProgress.ForeColor = report.IsMalicious ? Theme.Red : Theme.Green;
                 if (report.Error == null)
-                    row.Cells[1].Value = string.Format("VirusTotal [{0}]: {1}{2}",
+                    row.Cells[colActionThreat.Index].Value = string.Format("VirusTotal [{0}]: {1}{2}",
                         verdict, report.Summary(), hash != null ? "  —  SHA256 " + hash.Substring(0, 16) + "…" : "");
                 MessageBox.Show(report.Summary(), "VirusTotal: " + verdict,
                     MessageBoxButtons.OK,
@@ -456,14 +480,21 @@ namespace ScanAndRemoveVirus.Control
                         BeginInvoke((MethodInvoker)(() =>
                         {
                             foreach (DataGridViewRow r in dgvActions.Rows)
-                                if (Equals(r.Cells[0].Value, t.FilePath))
-                                    r.Cells[1].Value = label;
+                                if (Equals(r.Cells[colActionFile.Index].Value, t.FilePath))
+                                    r.Cells[colActionThreat.Index].Value = label;
                         }));
                     }
                     catch (ObjectDisposedException) { return; }
                     catch (InvalidOperationException) { return; }
                 }
             });
+        }
+
+        // Mở lại tab -> refresh thống kê (quét/cách ly có thể xảy ra ở tab khác hoặc phiên trước)
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Visible) { ApplyQuarantineCount(); ApplyLastScanFromHistory(); }
         }
 
         private void LoadProtectionStatus()
@@ -500,6 +531,8 @@ namespace ScanAndRemoveVirus.Control
             {
                 lblLastScanDate.Text = e.Time.ToString("dd/MM/yyyy  HH:mm");
                 lblLastScanType.Text = e.Type;
+                // "Tệp đã quét" cũng khôi phục theo phiên gần nhất (0 lúc mới mở app là dữ liệu mock)
+                lblScannedCount.Text = e.Files.ToString("N0");
             }
         }
 

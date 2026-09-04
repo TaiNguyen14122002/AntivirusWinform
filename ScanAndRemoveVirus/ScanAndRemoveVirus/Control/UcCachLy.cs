@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ScanAndRemoveVirus.Services;
 
@@ -12,25 +13,46 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
             BackColor = Theme.PageBg;
+            // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
+            Theme.ScrollablePage(this, tableLayoutPanel1, 980, 620);
             Theme.StylePageHeader(lblQuarantineTitle, lblQuarantineSubtitle);
             Theme.StyleCard(grpQuarentineList, grpQuarantineInfo);
             // compact chuẩn Lịch sử: nút 40px thay vì band 49-61px
             btnRestore.Margin = btnRestoreAll.Margin = btnDeletePermanent.Margin =
-                btnDeleteAll.Margin = btnRefreshQuarantine.Margin = new Padding(2, 8, 2, 8);
+                btnRefreshQuarantine.Margin = new Padding(2, 8, 2, 8);
             lblTotalFilesTitle.Font = Theme.PageSubFont;
             lblTotalFilesTitle.ForeColor = Theme.TextGray;
             lblTotalFilesValue.Font = Theme.TitleFont;
             lblTotalFilesValue.ForeColor = Theme.BlueDark;
             Theme.StyleGrid(dgvQuarantine);
+            // Cột "Chọn" (checkbox) dùng chung: header ô vuông + commit tức thì
+            colPick.HeaderCell = new Theme.SelectAllHeaderCell(() => Theme.PickState(dgvQuarantine, colPick.Index));
+            dgvQuarantine.CurrentCellDirtyStateChanged += delegate
+            {
+                if (dgvQuarantine.IsCurrentCellDirty)
+                    dgvQuarantine.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            };
+            dgvQuarantine.CellValueChanged += (s, e) =>
+            {
+                if (e.ColumnIndex == colPick.Index) SyncButtons();
+            };
+            dgvQuarantine.ColumnHeaderMouseClick += (s, e) =>
+            {
+                if (e.ColumnIndex == colPick.Index)
+                {
+                    bool any = dgvQuarantine.Rows.Cast<DataGridViewRow>()
+                        .Any(r => r.Cells[colPick.Index].Value is bool b && b);
+                    Theme.PickAll(dgvQuarantine, colPick.Index, !any);
+                    SyncButtons();
+                }
+            };
             Theme.StyleNeutralButtons(btnRefreshQuarantine);
             btnRestore.Click += delegate { RestoreSelected(); };
             btnDeletePermanent.Click += delegate { DeleteSelected(); };
             btnRestoreAll.Click += delegate { RestoreAll(); };
-            btnDeleteAll.Click += delegate { DeleteAll(); };
             Theme.StyleButton(btnRestore, Theme.BtnRole.Action);
             Theme.StyleButton(btnRestoreAll, Theme.BtnRole.Action);
             Theme.StyleButton(btnDeletePermanent, Theme.BtnRole.Danger);
-            Theme.StyleButton(btnDeleteAll, Theme.BtnRole.Danger);
             btnRefreshQuarantine.Click += delegate { RefreshData(); };
             dgvQuarantine.CellFormatting += Grid_CellFormatting;
             ScanEngine.QuarantineChanged += OnQuarantineChanged;
@@ -72,6 +94,7 @@ namespace ScanAndRemoveVirus.Control
             foreach (ScanEngine.QuarantinedItem item in items)
             {
                 int r = dgvQuarantine.Rows.Add(
+                    false,
                     item.Name,
                     item.OriginalPath,
                     string.IsNullOrEmpty(item.Threat) ? "Không rõ" : item.Threat,
@@ -80,14 +103,31 @@ namespace ScanAndRemoveVirus.Control
                 dgvQuarantine.Rows[r].Tag = item;
             }
             lblTotalFilesValue.Text = items.Count.ToString();
+            SyncButtons();
+        }
+
+        private IEnumerable<DataGridViewRow> TickedRows()
+        {
+            return dgvQuarantine.Rows.Cast<DataGridViewRow>()
+                .Where(r => r.Cells[colPick.Index].Value is bool b && b);
+        }
+
+        private void SyncButtons()
+        {
+            bool hasPick = TickedRows().Any();
+            bool hasRows = dgvQuarantine.Rows.Count > 0;
+            btnRestore.Enabled = hasRows && hasPick;
+            btnDeletePermanent.Enabled = hasRows && hasPick;
+            btnRestoreAll.Enabled = hasRows;
+            Theme.InvalidatePickHeader(dgvQuarantine);
         }
 
         private void RestoreSelected()
         {
-            var ids = CollectIds(dgvQuarantine.SelectedRows);
+            var ids = CollectIds(TickedRows());
             if (ids.Count == 0)
             {
-                MessageBox.Show("Hãy chọn dòng cần khôi phục (bấm vào dòng trong danh sách).",
+                MessageBox.Show("Hãy tích ô Chọn ở dòng cần khôi phục.",
                     "Khôi phục", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -116,10 +156,10 @@ namespace ScanAndRemoveVirus.Control
 
         private void DeleteSelected()
         {
-            var ids = CollectIds(dgvQuarantine.SelectedRows);
+            var ids = CollectIds(TickedRows());
             if (ids.Count == 0)
             {
-                MessageBox.Show("Hãy chọn dòng cần xóa vĩnh viễn.", "Xóa",
+                MessageBox.Show("Hãy tích ô Chọn ở dòng cần xóa vĩnh viễn.", "Xóa",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -127,7 +167,7 @@ namespace ScanAndRemoveVirus.Control
                 "Xóa vĩnh viễn " + ids.Count + " tệp đã cách ly? Không thể hoàn tác.",
                 "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (answer != DialogResult.Yes) return;
-            foreach (string id in ids) ScanEngine.DeleteQuarantined(id);
+            foreach (string id in ids) ScanEngine.DeleteQuarantined(id, true);
         }
 
         private void RestoreAll()
@@ -140,17 +180,6 @@ namespace ScanAndRemoveVirus.Control
             if (answer != DialogResult.Yes) return;
             if (!ConfirmRestore(ids)) return;
             foreach (string id in ids) ScanEngine.RestoreQuarantined(id);
-        }
-
-        private void DeleteAll()
-        {
-            var ids = CollectIds(dgvQuarantine.Rows);
-            if (ids.Count == 0) return;
-            var answer = MessageBox.Show(
-                "XÓA VĨNH VIỄN toàn bộ " + ids.Count + " tệp đã cách ly? Không thể hoàn tác.",
-                "Xóa tất cả", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (answer != DialogResult.Yes) return;
-            foreach (string id in ids) ScanEngine.DeleteQuarantined(id);
         }
 
         // Bắt buộc tách id ra danh sách riêng: mỗi lần Restore/Delete bắn QuarantineChanged ->

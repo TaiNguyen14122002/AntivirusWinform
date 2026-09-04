@@ -17,6 +17,8 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
             BackColor = Theme.PageBg;
+            // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
+            Theme.ScrollablePage(this, tableLayoutPanel1, 980, 620);
             Theme.StyleGrid(dgvHistory);
             colPick.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             dgvHistory.CurrentCellDirtyStateChanged += delegate
@@ -45,10 +47,10 @@ namespace ScanAndRemoveVirus.Control
             btnViewDetail.Click += delegate { OpenDetail(); };
 
             // HeaderText/ToolTipText của cột ĐƯỢC LƯU TRONG HeaderCell -> thay cell phải gán lại
-            colPick.HeaderCell = new IconHeaderCell(this, true);
+            colPick.HeaderCell = new Theme.SelectAllHeaderCell(() => PickState());
             colPick.HeaderText = "";
             colPick.ToolTipText = "Nhấp để chọn / bỏ chọn tất cả";
-            colTime.HeaderCell = new IconHeaderCell(this, false);
+            colTime.HeaderCell = new IconHeaderCell(this);
             colTime.HeaderText = "Thời gian";
             colTime.ToolTipText = "Nhấp để đổi chiều sắp xếp theo thời gian";
             LoadRealData();
@@ -61,7 +63,7 @@ namespace ScanAndRemoveVirus.Control
         }
 
         // Cột Kết quả: An toàn xanh / Phát hiện đỏ / Thành công xanh dương;
-        // dòng được TICK chọn nền xanh nhạt để phân biệt với dòng đang highlight
+        // dòng tick chọn KHÔNG nhuộm nền xanh — trạng thái thể hiện qua ô checkbox cột "Chọn"
         private void Grid_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.RowIndex < 0 || e.Value == null) return;
@@ -77,33 +79,18 @@ namespace ScanAndRemoveVirus.Control
                     e.CellStyle.SelectionForeColor = Theme.Red;
                 }
             }
-            else if (e.ColumnIndex == colTime.Index
-                     && dgvHistory.Rows[e.RowIndex].Cells[colPick.Index].Value is bool b && b)
-            {
-                e.CellStyle.BackColor = Theme.BlueTint;
-                e.CellStyle.SelectionBackColor = Theme.BlueTint;
-                e.CellStyle.Font = Theme.BoldFont;
-            }
         }
 
         // ==== HEADER ICONS (Segoe MDL2 Assets) ====
-        static readonly Font GlyphFont = new Font("Segoe MDL2 Assets", 11F, FontStyle.Regular, GraphicsUnit.Point);
+        // Cot Chon dung Theme.SelectAllHeaderCell dung chung; chi con mui ten sort la rieng tab nay
         static readonly Font GlyphSmall = new Font("Segoe MDL2 Assets", 9.75F, FontStyle.Bold, GraphicsUnit.Point);
-        const string BoxEmpty = "";      // CheckBox rỗng
-        const string BoxChecked = "";    // CheckBox đã bật hết
-        const string BoxPartial = "";    // bật một phần (indeterminate)
         const string ArrowUp = "";       // ChevronUp: đang cũ -> mới
         const string ArrowDown = "";     // ChevronDown: đang mới -> cũ
 
         private sealed class IconHeaderCell : DataGridViewColumnHeaderCell
         {
             readonly UcLichSu owner;
-            readonly bool pickMode;
-            public IconHeaderCell(UcLichSu owner, bool pickMode)
-            {
-                this.owner = owner;
-                this.pickMode = pickMode;
-            }
+            public IconHeaderCell(UcLichSu owner) { this.owner = owner; }
 
             protected override void Paint(Graphics g, Rectangle clipBounds, Rectangle cellBounds,
                 int rowIndex, DataGridViewElementStates cellState, object formattedValue, object value,
@@ -114,15 +101,6 @@ namespace ScanAndRemoveVirus.Control
                     errorText, cellStyle, advancedBorderStyle,
                     paintParts & ~(DataGridViewPaintParts.ContentForeground | DataGridViewPaintParts.Focus));
                 var hs = owner.dgvHistory.ColumnHeadersDefaultCellStyle;
-                if (pickMode)
-                {
-                    int st = owner.PickState();
-                    string gly = st == 2 ? BoxChecked : st == 1 ? BoxPartial : BoxEmpty;
-                    TextRenderer.DrawText(g, gly, GlyphFont, cellBounds,
-                        st == 0 ? Theme.TextGray : Theme.Blue,
-                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
-                }
-                else
                 {
                     string headerText = OwningColumn.HeaderText ?? "";
                     int h = cellBounds.Height;
@@ -346,3 +324,4 @@ namespace ScanAndRemoveVirus.Control
         }
     }
 }
+

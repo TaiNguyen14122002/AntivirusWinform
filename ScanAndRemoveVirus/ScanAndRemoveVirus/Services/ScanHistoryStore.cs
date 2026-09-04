@@ -20,7 +20,7 @@ namespace ScanAndRemoveVirus.Services
         }
     }
 
-    // Lịch sử quét thật, lưu File: %AppData%\ScanAndRemoveVirus\scanhistory.log
+    // Lịch sử quét thật, lưu File: <solution>\AppData\scanhistory.log (xem DataDir)
     // Dòng: time|type|scope|files|threats|seconds (bỏ trường chứa '|')
     public static class ScanHistoryStore
     {

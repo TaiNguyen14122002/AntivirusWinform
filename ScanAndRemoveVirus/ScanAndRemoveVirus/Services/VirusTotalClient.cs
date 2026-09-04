@@ -39,7 +39,8 @@ namespace ScanAndRemoveVirus.Services
     /// "Gửi mẫu ẩn danh" (chkSendSamples) trong phần Cài đặt.
     /// Free tier: 4 request/phút, 500/ngày, upload ≤32MB -> chỉ dùng cho tệp người dùng
     /// chủ động tra hoặc heuristic nghi vấn (quota 2 upload/phiên), không tra đại trà.
-    /// API key: đặt trong %AppData%\ScanAndRemoveVirus\vtapikey.txt
+    /// API key: đặt trong <solution>\AppData\vtapikey.txt (xem DataDir) —
+    /// hoặc ngay cạnh .csproj, ưu tiên trước (xem ApiKeyPath)
     /// </summary>
     public static class VirusTotalClient
     {

@@ -228,10 +228,27 @@ namespace ScanAndRemoveVirus.Services
         /// <summary>Xóa vĩnh viễn tệp đang cách ly.</summary>
         public static bool DeleteQuarantined(string id)
         {
+            return DeleteQuarantined(id, true);
+        }
+
+        /// <summary>
+        /// Xóa tệp đang cách ly: permanent = true thì xóa vĩnh viễn khỏi đĩa;
+        /// permanent = false thì đưa vào THÙNG RÁC (có thể khôi phục lại được).
+        /// </summary>
+        public static bool DeleteQuarantined(string id, bool permanent)
+        {
             string stored = Path.Combine(QuarantineDir, id);
             try
             {
-                if (File.Exists(stored)) File.Delete(stored);
+                if (File.Exists(stored))
+                {
+                    if (permanent)
+                        File.Delete(stored);
+                    else
+                        Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(stored,
+                            Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                            Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+                }
                 QuarantineLedger.Remove(id);
                 Action h = QuarantineChanged;
                 if (h != null) h();

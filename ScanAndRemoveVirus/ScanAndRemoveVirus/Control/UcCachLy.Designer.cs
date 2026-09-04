@@ -37,6 +37,7 @@
             this.grpQuarentineList = new System.Windows.Forms.GroupBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dgvQuarantine = new System.Windows.Forms.DataGridView();
+            this.colPick = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
@@ -49,7 +50,6 @@
             this.btnRestore = new System.Windows.Forms.Button();
             this.btnRestoreAll = new System.Windows.Forms.Button();
             this.btnDeletePermanent = new System.Windows.Forms.Button();
-            this.btnDeleteAll = new System.Windows.Forms.Button();
             this.tableLayoutPanel8 = new System.Windows.Forms.TableLayoutPanel();
             this.btnRefreshQuarantine = new System.Windows.Forms.Button();
             this.tableLayoutPanel9 = new System.Windows.Forms.TableLayoutPanel();
@@ -190,13 +190,9 @@
             // 
             // dgvQuarantine
             // 
-            this.dgvQuarantine.AllowUserToAddRows = false;
-            this.dgvQuarantine.AllowUserToDeleteRows = false;
-            this.dgvQuarantine.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvQuarantine.BackgroundColor = System.Drawing.Color.White;
-            this.dgvQuarantine.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvQuarantine.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            // Hình thức + hành vi chung của table do Theme.StyleGrid đảm nhiệm (code-behind)
             this.dgvQuarantine.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colPick,
             this.colFileName,
             this.colOriginaPath,
             this.colThreatName,
@@ -206,13 +202,19 @@
             this.dgvQuarantine.Location = new System.Drawing.Point(10, 10);
             this.dgvQuarantine.Margin = new System.Windows.Forms.Padding(10);
             this.dgvQuarantine.Name = "dgvQuarantine";
-            this.dgvQuarantine.ReadOnly = true;
-            this.dgvQuarantine.RowHeadersVisible = false;
-            this.dgvQuarantine.RowHeadersWidth = 82;
-            this.dgvQuarantine.RowTemplate.Height = 33;
-            this.dgvQuarantine.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvQuarantine.Size = new System.Drawing.Size(1110, 413);
             this.dgvQuarantine.TabIndex = 4;
+            // 
+            // colPick
+            // 
+            this.colPick.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.colPick.HeaderText = "";
+            this.colPick.Name = "colPick";
+            this.colPick.ReadOnly = false;
+            this.colPick.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.colPick.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colPick.ToolTipText = "Nhấp để chọn / bỏ chọn tất cả";
+            this.colPick.Width = 48;
             // 
             // tableLayoutPanel5
             // 
@@ -257,15 +259,13 @@
             // 
             // tableLayoutPanel7
             // 
-            this.tableLayoutPanel7.ColumnCount = 4;
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 23.52941F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 29.41176F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 23.52941F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 23.52941F));
+            this.tableLayoutPanel7.ColumnCount = 3;
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 31.42857F));
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34.28571F));
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34.28571F));
             this.tableLayoutPanel7.Controls.Add(this.btnRestore, 0, 0);
             this.tableLayoutPanel7.Controls.Add(this.btnRestoreAll, 1, 0);
             this.tableLayoutPanel7.Controls.Add(this.btnDeletePermanent, 2, 0);
-            this.tableLayoutPanel7.Controls.Add(this.btnDeleteAll, 3, 0);
             this.tableLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel7.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel7.Name = "tableLayoutPanel7";
@@ -276,6 +276,7 @@
             // 
             // colFileName
             // 
+            this.colFileName.FillWeight = 16F;
             this.colFileName.HeaderText = "Tên tệp";
             this.colFileName.MinimumWidth = 10;
             this.colFileName.Name = "colFileName";
@@ -283,6 +284,7 @@
             // 
             // colOriginaPath
             // 
+            this.colOriginaPath.FillWeight = 32F;
             this.colOriginaPath.HeaderText = "Đường dẫn gốc";
             this.colOriginaPath.MinimumWidth = 10;
             this.colOriginaPath.Name = "colOriginaPath";
@@ -290,6 +292,7 @@
             // 
             // colThreatName
             // 
+            this.colThreatName.FillWeight = 20F;
             this.colThreatName.HeaderText = "Mối đe dọa";
             this.colThreatName.MinimumWidth = 10;
             this.colThreatName.Name = "colThreatName";
@@ -297,13 +300,17 @@
             // 
             // colDetectedTime
             // 
+            this.colDetectedTime.FillWeight = 18F;
             this.colDetectedTime.HeaderText = "Thời gian phát hiện";
+            this.colDetectedTime.MinimumWidth = 10;
             this.colDetectedTime.Name = "colDetectedTime";
             this.colDetectedTime.ReadOnly = true;
             // 
             // colFileSize
             // 
+            this.colFileSize.FillWeight = 14F;
             this.colFileSize.HeaderText = "Kích thước";
+            this.colFileSize.MinimumWidth = 10;
             this.colFileSize.Name = "colFileSize";
             this.colFileSize.ReadOnly = true;
             // 
@@ -340,17 +347,8 @@
             this.btnDeletePermanent.Text = "Xóa vĩnh viễn";
             this.btnDeletePermanent.UseVisualStyleBackColor = true;
             // 
-            // btnDeleteAll
-            // 
-            this.btnDeleteAll.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnDeleteAll.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnDeleteAll.Location = new System.Drawing.Point(516, 3);
-            this.btnDeleteAll.Name = "btnDeleteAll";
-            this.btnDeleteAll.Size = new System.Drawing.Size(153, 49);
-            this.btnDeleteAll.TabIndex = 3;
-            this.btnDeleteAll.Text = "Xóa tất cả";
-            this.btnDeleteAll.UseVisualStyleBackColor = true;
-            // 
+            // btnDeleteAll đã bỏ: xóa theo lựa chọn là đủ, tránh mất toàn bộ khu cách ly vì 1 cú click
+            //
             // tableLayoutPanel8
             // 
             this.tableLayoutPanel8.ColumnCount = 3;
@@ -456,7 +454,7 @@
             this.lblInfo1.Name = "lblInfo1";
             this.lblInfo1.Size = new System.Drawing.Size(1150, 36);
             this.lblInfo1.TabIndex = 0;
-            this.lblInfo1.Text = "- Tệp trong cách ly sẽ được lưu an toàn và không thể gây hại cho hệ thống.";
+            this.lblInfo1.Text = "- \"Khôi phục\" thả tệp về vị trí cũ (còn khôi phục được); \"Xóa vĩnh viễn\" xóa hẳn tệp đã chọn khỏi đĩa.";
             this.lblInfo1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label1
@@ -511,6 +509,7 @@
         private System.Windows.Forms.GroupBox grpQuarentineList;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.DataGridView dgvQuarantine;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colPick;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel5;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;
@@ -518,7 +517,6 @@
         private System.Windows.Forms.Button btnRestore;
         private System.Windows.Forms.Button btnRestoreAll;
         private System.Windows.Forms.Button btnDeletePermanent;
-        private System.Windows.Forms.Button btnDeleteAll;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFileName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colOriginaPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn colThreatName;

@@ -22,6 +22,8 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
             BackColor = Theme.PageBg;
+            // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
+            Theme.ScrollablePage(this, tableLayoutPanel1, 980, 680);
             Theme.StylePageHeader(lblSettingsTitle, lblSettingsSubtitle);
             Theme.StyleCard(grpGeneral, grpGuards, grpVt, grpData);
             Theme.StyleButton(btnSaveSettings, Theme.BtnRole.Primary);
@@ -159,9 +161,9 @@ namespace ScanAndRemoveVirus.Control
                 List<string> files = TestSamples.Create();
                 MessageBox.Show(
                     "Đã tạo " + files.Count + " tệp mẫu VÔ HẠI tại:\n" + TestSamples.FolderPath
-                    + "\n\n• 3 tệp khớp kỹ thuật 1 (chữ ký prefix / hash SHA256 / tên 'eicar')"
-                    + "\n• 2 tệp khớp kỹ thuật 2 (đuôi kép .pdf.exe / PowerShell độc)"
-                    + "\n• 1 tệp sạch đối chứng (KHÔNG được báo)"
+                    + "\n\n• 4 tệp khớp kỹ thuật 1 (chữ ký prefix ×2 gồm cả .js / hash SHA256 / tên 'eicar')"
+                    + "\n• 4 tệp khớp kỹ thuật 2 (đuôi kép / PowerShell độc / VBS downloader / exe ẩn mồi câu)"
+                    + "\n• 3 tệp sạch đối chứng (mồi câu dưới ngưỡng, script lành, README — KHÔNG được báo)"
                     + "\n\nThử ngay: Tổng quan → Quét tùy chọn → Chọn thư mục → mở XVirus-Samples → Quét ngay.",
                     "Bộ tệp mẫu kiểm thử", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

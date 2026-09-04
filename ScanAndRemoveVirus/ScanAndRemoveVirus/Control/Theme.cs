@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -68,7 +69,9 @@ namespace ScanAndRemoveVirus.Control
             }
         }
 
-        // Header xanh nhạt chữ xanh đậm brand + dòng xen kẽ nhạt: áp cho mọi DataGridView
+        // ==== COMMON CHO TOÀN BỘ TABLE (một nguồn duy nhất cho mọi DataGridView) ====
+        // Header xanh nhạt chữ xanh đậm brand + dòng xen kẽ nhạt + hành vi fill/full-row:
+        // mọi bảng trong app PHẢI đi qua hàm này — designer chỉ giữ bố cục và cột.
         public static void StyleGrid(DataGridView g)
         {
             g.EnableHeadersVisualStyles = false;
@@ -81,20 +84,96 @@ namespace ScanAndRemoveVirus.Control
             g.ColumnHeadersHeight = 40;
             g.BackgroundColor = PageBg;
             g.BorderStyle = BorderStyle.None;
+            g.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            g.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            g.RowHeadersVisible = false;
+            g.AllowUserToAddRows = false;
+            g.AllowUserToDeleteRows = false;
+            g.AllowUserToResizeRows = false;
+            g.AllowUserToOrderColumns = false;
             g.RowTemplate.DefaultCellStyle.ForeColor = TextDark;
             g.RowTemplate.Height = 34;
-            g.AllowUserToResizeRows = false;
+            // các hàng đã nạp trước khi StyleGrid chạy cũng phải theo đúng chiều cao chung
+            foreach (DataGridViewRow row in g.Rows)
+                row.Height = 34;
             AlternatingRows(g);
             g.GridColor = Line;
-            g.DefaultCellStyle.SelectionBackColor = BlueSoft;
+            // BỎ hiệu ứng chọn dòng: bấm vào dòng không đổi màu nền/chữ (chọn vẫn hoạt động ngầm)
+            g.DefaultCellStyle.SelectionBackColor = PageBg;
             g.DefaultCellStyle.SelectionForeColor = TextDark;
+            // và xóa cả KHUNG FOCUS nét đứt quanh ô vừa bấm — artifact highlight cuối cùng
+            g.CellPainting += StripFocusRing;
+        }
+
+        // Vẽ lại ô bình thường nhưng bỏ phần Focus (khung nét đứt trên ô current cell)
+        static void StripFocusRing(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if ((e.PaintParts & DataGridViewPaintParts.Focus) == 0) return;
+            e.Paint(e.ClipBounds, e.PaintParts & ~DataGridViewPaintParts.Focus);
+            e.Handled = true;
+        }
+
+        // ==== CỘT "CHỌN" (CHECKBOX) DÙNG CHUNG CHO MỌI TABLE ====
+        // Header ô vuông + tick hàng loạt, giống chuẩn tab Lịch sử: các bảng Hành động,
+        // Cách ly, Lịch sử đều dùng chung một nguồn duy nhất tại đây.
+        public static readonly Font PickGlyphFont = new Font("Segoe MDL2 Assets", 11F, FontStyle.Regular, GraphicsUnit.Point);
+        const string PickBoxEmpty = "\uE739";    // CheckBox rỗng
+        const string PickBoxChecked = "\uE73A";  // CheckBox đã bật hết
+        const string PickBoxPartial = "\uE73D";  // bật một phần (indeterminate)
+
+        // Trạng thái tick của bảng: 0 = không dòng nào, 1 = một phần, 2 = tất cả
+        public static int PickState(DataGridView g, int pickCol)
+        {
+            int n = g.Rows.Count;
+            if (n == 0) return 0;
+            int p = 0;
+            foreach (DataGridViewRow r in g.Rows)
+                if (r.Cells[pickCol].Value is bool b && b) p++;
+            return p == 0 ? 0 : (p == n ? 2 : 1);
+        }
+
+        // Tick / bỏ tick TOÀN BỘ dòng + vẽ lại header icon
+        public static void PickAll(DataGridView g, int pickCol, bool on)
+        {
+            foreach (DataGridViewRow r in g.Rows) r.Cells[pickCol].Value = on;
+            InvalidatePickHeader(g);
+        }
+
+        // Vẽ lại vùng header để icon ô vuông cập nhật theo trạng thái tick
+        public static void InvalidatePickHeader(DataGridView g)
+        {
+            g.Invalidate(new Rectangle(0, 0, g.Width, g.ColumnHeadersHeight));
+        }
+
+        // Header ô vuông: vẽ glyph theo trạng thái tick (click header do từng bảng tự xử lý)
+        public sealed class SelectAllHeaderCell : DataGridViewColumnHeaderCell
+        {
+            readonly Func<int> state;
+            public SelectAllHeaderCell(Func<int> state) { this.state = state; }
+
+            protected override void Paint(Graphics g, Rectangle clipBounds, Rectangle cellBounds,
+                int rowIndex, DataGridViewElementStates cellState, object formattedValue, object value,
+                string errorText, DataGridViewCellStyle cellStyle,
+                DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
+            {
+                base.Paint(g, clipBounds, cellBounds, rowIndex, cellState, formattedValue, value,
+                    errorText, cellStyle, advancedBorderStyle,
+                    paintParts & ~(DataGridViewPaintParts.ContentForeground | DataGridViewPaintParts.Focus));
+                int st = state();
+                TextRenderer.DrawText(g, st == 2 ? PickBoxChecked : st == 1 ? PickBoxPartial : PickBoxEmpty,
+                    PickGlyphFont, cellBounds, st == 0 ? TextGray : Blue,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            }
         }
 
         static void AlternatingRows(DataGridView g)
         {
-            // tô xen kẽ theo màu nền hiện hành của dòng mặc định
-            g.AlternatingRowsDefaultCellStyle.BackColor =
-                Color.FromArgb(250, 251, 252);
+            // tô xen kẽ theo màu nền hiện hành của dòng mặc định;
+            // dòng được CHỌN cũng giữ nguyên nền xen kẽ -> bấm không đổi màu gì
+            Color tint = Color.FromArgb(250, 251, 252);
+            g.AlternatingRowsDefaultCellStyle.BackColor = tint;
+            g.AlternatingRowsDefaultCellStyle.SelectionBackColor = tint;
+            g.AlternatingRowsDefaultCellStyle.SelectionForeColor = TextDark;
         }
 
         // ==== HỆ THỐNG NÚT THỐNG NHẤT ====
@@ -190,6 +269,14 @@ namespace ScanAndRemoveVirus.Control
                 default:
                     return null;
             }
+        }
+
+        // ==== RESPONSIVE ====
+        // Trang co giãn theo cửa sổ; khi nhỏ hơn kích thước tối thiểu thì CUỘN thay vì cắt nội dung
+        public static void ScrollablePage(UserControl page, System.Windows.Forms.Control root, int minWidth, int minHeight)
+        {
+            page.AutoScroll = true;
+            root.MinimumSize = new Size(minWidth, minHeight);
         }
     }
 }

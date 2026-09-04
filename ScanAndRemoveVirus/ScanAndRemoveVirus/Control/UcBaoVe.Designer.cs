@@ -181,12 +181,7 @@
             // 
             // dgvProtecctionFeatures
             // 
-            this.dgvProtecctionFeatures.AllowUserToAddRows = false;
-            this.dgvProtecctionFeatures.AllowUserToDeleteRows = false;
-            this.dgvProtecctionFeatures.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvProtecctionFeatures.BackgroundColor = System.Drawing.Color.White;
-            this.dgvProtecctionFeatures.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvProtecctionFeatures.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            // Hình thức + hành vi chung của table do Theme.StyleGrid đảm nhiệm (code-behind)
             this.dgvProtecctionFeatures.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFeature,
             this.colDescription,
@@ -197,10 +192,6 @@
             this.dgvProtecctionFeatures.Margin = new System.Windows.Forms.Padding(10);
             this.dgvProtecctionFeatures.Name = "dgvProtecctionFeatures";
             this.dgvProtecctionFeatures.ReadOnly = true;
-            this.dgvProtecctionFeatures.RowHeadersVisible = false;
-            this.dgvProtecctionFeatures.RowHeadersWidth = 82;
-            this.dgvProtecctionFeatures.RowTemplate.Height = 33;
-            this.dgvProtecctionFeatures.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvProtecctionFeatures.Size = new System.Drawing.Size(1142, 311);
             this.dgvProtecctionFeatures.TabIndex = 2;
             // 

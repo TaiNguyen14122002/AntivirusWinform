@@ -22,7 +22,7 @@ namespace ScanAndRemoveVirus.Services
     }
 
     /// <summary>
-    /// Cài đặt ứng dụng: %AppData%\ScanAndRemoveVirus\settings.ini
+    /// Cài đặt ứng dụng: <solution>\AppData\settings.ini (xem DataDir)
     /// Riêng "Chạy cùng Windows" được áp dụng THẬT vào khóa Run của HKCU (không cần admin).
     /// </summary>
     public static class AppSettings
