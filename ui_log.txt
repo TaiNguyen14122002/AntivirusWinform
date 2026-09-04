@@ -1,0 +1,108 @@
+PASS: [UI] b?ng H…nh d?ng nh?n 2 de d?a
+PASS: [UI] c?t de d?a ghi ro lo?i
+PASS: [UI] th?ng kˆ: s? lu?ng = 2
+PASS: [UI] th?ng kˆ: t?p da qu‚t = 2
+PASS: [UI] progress ho…n t?t
+PASS: [UI] history ghi phiˆn qu‚t
+PASS: [UI] c ch ly h?t -> b?ng tr?ng
+PASS: [UI] t?p s?ch ch? cu
+PASS: [UI] d?m c ch ly tang d£ng 2 v… label c?p nh?t
+PASS: [UI] qu‚t l?i b?t t?p m?i (1 d•ng)
+PASS: [UI] X¢a da ch?n: x c nh?n Yes -> t?p b? x¢a vinh vi?n
+PASS: [UI] x¢a vinh vi?n kh“ng v…o khu c ch ly
+PASS: [UI] radio: b?t Full t? t?t c i kh c
+PASS: [UI] radio: b?t Custom t? t?t Full
+PASS: [UI] SetCustomPath: t? ch?n Custom + hi?n du?ng d?n + b?t picker
+PASS: [UI] n£t d?i th…nh 'H?y qu‚t' khi dang qu‚t
+PASS: [UI] b?m H?y -> phiˆn d?ng, nhan b o da h?y, n£t v? 'Qu‚t ngay'
+PASS: [UI] scan t?p don cho VT-probe: 1 d•ng
+PASS: [UI] Tra VirusTotal: ch?y h?t lu?ng, c?p nh?t nhan
+PASS: [UI] Tra VirusTotal: c?t de d?a ho?c c?p nh?t VT ho?c gi? ly do g?c khi l?i m?ng/401
+PASS: [UI] n£t c?p nh?t: nhan DB d?i 'Da c?p nh?t'
+PASS: [UI] history ghi s? ki?n c?p nh?t CSDL
+PASS: [UI] tab C ch ly li?t kˆ 2 t?p test
+PASS: [UI] d•ng C ch ly c¢ ly do t? b?ng H…nh d?ng
+PASS: [UI] Restore dua 2 t?p v? du?ng d?n g?c
+PASS: [UI] label t?ng tab C ch ly gi?m c•n 0 t?p test
+PASS: [UI] d?m c ch ly tab T?ng quan d?ng b?
+PASS: [UI] c ch ly 2 t?p n?n cho test n£t
+PASS: [UI] refresh th?y 2 m?c m?i c ch ly
+PASS: [UI] btnDeletePermanent: 1 m?c b? x¢a, s? gi?m c•n 1
+PASS: [UI] btnRestoreAll: t?p e2 v? l?i v? tr¡ cu
+PASS: [UI] btnDeletePermanent x2: s?ch danh m?c test, t?p bi?n m?t
+PASS: [UI] L?ch s? c¢ phiˆn qu‚t t—y ch?n + de d?a=2
+PASS: [UI] filter ch?-m?i-de-d?a: m?i d•ng Threats>0
+PASS: [UI] filter C?p nh?t: c¢ d•ng 'C?p nh?t CSDL'
+PASS: [UI] btnViewDetail m? h?p chi ti?t xong v?n c•n b?ng
+PASS: [UI] btnRefreshHistory n?p l?i d? li?u
+PASS: [UI] 6b: d•ng test xu?t hi?n sau refresh
+PASS: [UI] 6b: btnDeleteHistory disabled khi chua tick
+PASS: [UI] 6b: tick b?t n£t X¢a + label 'Da ch?n 1 d•ng'
+PASS: [UI] 6b: btnDeleteHistory x¢a d£ng d•ng da tick
+PASS: [UI] 6b: lu?i sau x¢a kh“ng c•n d•ng test
+PASS: [UI] 6b: m?c d?nh m?i-tru?c (moi above cu)
+PASS: [UI] 6b: header Th?i gian -> cu lˆn d?u
+PASS: [UI] 6b: b?m l?n 2 -> tr? l?i m?i tru?c
+PASS: [UI] 6b: header Ch?n l… icon (HeaderText r?ng, c¢ tooltip)
+PASS: [UI] 6b: click header checkbox -> ch?n T?T C? d•ng
+PASS: [UI] 6b: click l?n 2 -> b? ch?n to…n b?, n£t X¢a t?t l?i
+PASS: [UI] 6b: multi-delete x¢a s?ch 2 d•ng da tick
+PASS: [UI] tab B?o v? c¢ 2 h…ng di?u khi?n th?t
+PASS: [UI] b?t BVTGT -> IsRunning + “ B?t
+PASS: [UI] c“ng t?c T? d?ng c ch ly l?t state
+PASS: [UI] t?t BVTGT -> IsRunning false + “ T?t
+PASS: [UI] tab B?o v?: d? 10 h…ng, c¢ c c h…ng guard
+PASS: [UI] h…ng 'B?o v? USB' b?t guard th?t
+PASS: [UI] h…ng 'B?o v? USB' t?t guard th?t
+PASS: [UI] h…ng 'C?nh b o' l?t FeatureFlags th?t
+PASS: [UI] b?t l?i c?nh b o
+PASS: [UI] h…ng 'H…nh vi' (WMI) l?t 2 chi?u
+PASS: [UI] btnSamples t?o 11 t?p m?u ? thu m?c Samples
+PASS: [UI] Quick scan th?t: n£t th…nh 'H?y qu‚t'
+PASS: [UI] Quick scan k?t th£c an to…n (h?y ho?c ho…n t?t)
+PASS: [UI] Qu‚t b? m?u: d£ng 8/11 d•ng de d?a
+PASS: [UI] Phƒn lo?i: 4 Ch? ky + 4 Heuristic
+PASS: [UI] Ba t?p s?ch (README + keygen + script-sach) kh“ng b? b o
+PASS: [UI] History ghi phiˆn qu‚t m?u threats=8
+PASS: [UI] 'C ch ly da ch?n': ch? d£ng 1 d•ng b? d?i, b?ng c•n 7
+PASS: [UI] 'X¢a da ch?n': d•ng m?t + t?p x¢a vinh, kh“ng v…o c ch ly
+PASS: [UI] VT auto-query ch?y n?n kh“ng l…m s?p/d?i b?ng (8 d•ng nguyˆn v?n)
+PASS: [UI] 'L?n qu‚t g?n nh?t' kh“i ph?c t? l?ch s?, kh“ng ph?i mock
+PASS: [UI] tab B?o v?: phiˆn b?n CSDL kh“ng c•n mock '1.0.0.2025'
+PASS: [UI] tab B?o v?: t?ng t?p qu‚t l… s? th?t (kh“ng c•n '125.430')
+PASS: [UI] tab B?o v?: nhan tr?ng th i kh?p RT state th?t
+PASS: [UI] chk + btn 'Luu c…i d?t' ghi v…o settings.ini
+PASS: [UI] C…i d?t: checkbox flag live-apply
+PASS: [UI] C…i d?t: chk USB b?t/t?t guard th?t
+PASS: [UI] C…i d?t: “ nh?p API key VirusTotal da ?n
+PASS: [UI] C…i d?t: key t? t?p -> IsConfigured + status xanh
+PASS: [UI] C…i d?t: g? key -> status h? ph ch
+PASS: [UI] C…i d?t: Kh“i ph?c m?c d?nh d£ng b? c?
+PASS: [UI] C…i d?t: X¢a cache ch?y h?t, file cache s?ch
+PASS: [UI] C…i d?t: 3 nhan info d£ng ngu?n th?t
+== SECTION 9 ==
+== 9: ctor done, Show ==
+== 9: shown ==
+PASS: [UI] FrmMain kh?i d?ng = tab T?ng quan
+== 9: click CaiDat ==
+== 9: click TONGQUAN ==
+== 9: click LichSu ==
+== 9: click CachLy ==
+== 9: click BaoVe ==
+== 9: click TONGQUAN 2 ==
+== 9: OnClick lblQuarantineCount ==
+PASS: [UI] b?m s? d?m C ch ly ? T?ng quan -> nh?y sang tab C ch ly
+== 9: close mf ==
+== SECTION 9 done ==
+== SECTION 9b ==
+PASS: [UI] 5/5 tab c¢ page-header chu?n L?ch s? (18B + subtitle x m)
+PASS: [UI] m?i card GroupBox d?u tab d?u card-style 10.125Bold BlueDark (4/4)
+== SECTION 9c ==
+  geo850 gs.H=306 tlp12.H=312 ga.Bottom=935 client.H=980 tlp11.H=940
+PASS: [UI] TQ c?a s? d? cao: card Qu‚t d? 303px, H…ng d?ng n?m tr?n trong khung
+  geo560 gs.H=306 tlp11.H=640 AutoScroll=True
+PASS: [UI] TQ c?a s? th?p: AutoScroll b?t + card KHONG b? ‚p (gi? >=303px)
+== SECTION 10 ==
+PASS: [UI] d?n s?ch c ch ly v? n?n ban d?u
+== UI E2E ALL PASSED ==
+EXIT=0

@@ -51,13 +51,13 @@ ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\ScanAndRemoveVirus.exe
 Thanh bên trái có 5 nút: **Tổng quan · Bảo vệ · Lịch sử · Cách ly · Cài đặt**.
 Mỗi nút mở đúng một tab riêng (`UcTongQuan`, `UcBaoVe`, `UcLichSu`, `UcCachLy`, `UcCaiDat`). Bấm số **"Cách ly"** ở thẻ Thống kê (tab Tổng quan) cũng nhảy thẳng sang tab Cách ly.
 
-> 💡 **Không có virus thật để test?** Bộ 11 tệp mock **VÔ HẠI đã nằm sẵn trong repo** tại `ScanAndRemoveVirus\Samples\`.
+> 💡 **Không có virus thật để test?** Bộ 11 tệp mock **VÔ HẠI đã nằm sẵn trong repo** tại `TestSamples\`.
 > Cần tạo mới/restore? Mở tab **Cài đặt** → bấm **"Tạo tệp mẫu 3 kỹ thuật"** (idempotent, tự đặt lại attribute Hidden cho mẫu exe ẩn).
 > Gồm **8 đe dọa**:
 > • KT1 (Chữ ký) ×4 — prefix `XVIRUS-TEST-SIGNATURE::` trong `mau-ky-hieu.txt` **và ở byte 0 của `hook-tien-ich.js`** (chứng minh soi nội dung không phân biệt đuôi), hash SHA256 `mau-hash-sha256.txt`, tên chứa `eicar` (`demo_eicar_named.dat`)
 > • KT2 (Heuristic) ×4 — đuôi kép `thong-bao-hoa-don-invoice.pdf.exe`, PowerShell đa marker `update-flash.ps1`, VBS downloader `downloader-tien-ich.vbs` (iex + DownloadString + FromBase64String = 90/100), **exe ẩn + mồi câu** `thong-bao-crack-hidden.exe` (Hidden +40, "crack" +30 = 70/100)
 > • **3 tệp sạch đối chứng** (không được phép báo): `keygen-pro.exe` (mồi câu đơn lẻ 30/100 — DƯỚI ngưỡng 60), `script-sach.ps1` (script lành không marker), `README-mau.txt`.
-> Quét thư mục đó (Quét tùy chọn → Chọn thư mục → `Samples`) → app phải trả về **đúng 8** đe dọa: 4 Chữ ký + 4 Heuristic.
+> Quét thư mục đó (Quét tùy chọn → Chọn thư mục → `TestSamples`) → app phải trả về **đúng 8** đe dọa: 4 Chữ ký + 4 Heuristic.
 
 ### 1. Tổng quan — `UcTongQuan`
 
@@ -103,7 +103,7 @@ Nút: **Xem chi tiết** (hộp thoại đầy đủ thông tin dòng đang ch�
 
 ### 4. Cách ly — `UcCachLy`
 
-Danh sách **thật** các tệp đang bị giữ trong `ScanAndRemoveVirus\AppData\Quarantine\` (trong solution) — kèm cột *đường dẫn gốc, mối đe dọa (lý do + loại), thời gian, kích thước*:
+Danh sách **thật** các tệp đang bị giữ trong `AppData\Quarantine\` (ngay gốc repo) — kèm cột *đường dẫn gốc, mối đe dọa (lý do + loại), thời gian, kích thước*:
 
 * **Khôi phục / Khôi phục tất cả** — trả tệp về **đúng đường dẫn cũ**; nếu vị trí đã có file trùng tên, tự đặt hậu tố ` (1)` — không bao giờ ghi đè mất dữ liệu.
 * **Xóa vĩnh viễn** — xóa hẳn các tệp **đã tích Chọn**, hành động không hoàn tác, có hộp xác nhận Yes/No.
@@ -119,7 +119,7 @@ Tab riêng (nút **Cài đặt** trên sidebar):
 * ☑ *Tự động khởi động cùng Windows* — **thật 100%**: ghi/xóa `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần admin).
 * ☑ *Tự động cập nhật* · ☑ *Gửi mẫu ẩn danh* · ☑ *Hiển thị thông báo* — lưu vào `settings.ini`; **đồng bộ hai chiều** với các hàng "Tự động cập nhật"/"Cảnh báo mối đe dọa" của tab Bảo vệ.
 * **"Lưu thiết lập"** — ghi file + áp dụng autostart ngay; registry từ chối thì checkbox tự nhả về đúng thực tế + cảnh báo.
-* **"Tạo tệp mẫu 3 kỹ thuật"** — phục hồi 6 tệp vô hại trong `ScanAndRemoveVirus\Samples\` của repo (idempotent); nếu app chạy ngoài repo sẽ tạo ở `Desktop\XVirus-Samples`.
+* **"Tạo tệp mẫu 3 kỹ thuật"** — phục hồi 6 tệp vô hại trong `TestSamples\` của repo (idempotent); nếu app chạy ngoài repo sẽ tạo ở `Desktop\XVirus-Samples`.
 
 > ⚠️ Lưu ý khi tự chạy test: guard hành vi WMI coi "exe chạy từ %TEMP%" là dropper. Nếu app THẬT đang bật guard mà bạn compile + chạy binary test vào TEMP, nó sẽ cách ly chính file test. Tạm tắt guard (hoặc để harness test tự tắt như `UiEndToEnd.cs`).
 
@@ -140,7 +140,7 @@ Tab riêng (nút **Cài đặt** trên sidebar):
 2. Đăng nhập → avatar góc phải → **Profile** → mục **API key** → *Reveal key* → sao chép (64 ký tự hex).
 3. Trong app: ở khu **Hành động**, chọn 1 dòng đe dọa → bấm **"Tra VirusTotal"**.
    * **Lần đầu** (chưa có key) sẽ hiện hộp thoại *"API key VirusTotal"* → **dán key → Lưu**.
-   * Key nằm trong project tại `ScanAndRemoveVirus\ScanAndRemoveVirus\vtapikey.txt` — **được commit có chủ đích** để cả nhóm dùng chung quota free-tier của một key VT (rủi ro: ai cũng thấy được key; nếu bị đốt quota hết sạch → Profile → API key → *regenerate* rồi commit bản mới). Chạy app ngoài repo: fallback `AppData\vtapikey.txt` của thư mục dữ liệu.   * Có thể tự tạo file trên với nội dung = key nếu không muốn dùng hộp thoại.
+   * Key nằm tại gốc repo `vtapikey.txt` (cạnh .csproj) — **được commit có chủ đích** để cả nhóm dùng chung quota free-tier của một key VT (rủi ro: ai cũng thấy được key; nếu bị đốt quota hết sạch → Profile → API key → *regenerate* rồi commit bản mới). Chạy app ngoài repo: fallback `AppData\vtapikey.txt` của thư mục dữ liệu.   * Có thể tự tạo file trên với nội dung = key nếu không muốn dùng hộp thoại.
 
 ### App gọi API như thế nào?
 
@@ -196,7 +196,9 @@ Chọn dòng đe dọa → bấm "Tra VirusTotal"
 ## 🏗 Kiến trúc & dữ liệu
 
 ```
-ScanAndRemoveVirus/
+AntivirusWinform/                 # gốc repo = gốc project (mở ScanAndRemoveVirus.slnx là chạy)
+├── ScanAndRemoveVirus.slnx       # solution — trỏ thẳng .csproj cùng cấp
+├── ScanAndRemoveVirus.csproj     # .NET Framework 4.7.2, WinForms
 ├── Program.cs                    # điểm vào ứng dụng
 ├── FrmMain.cs (+Designer)        # cửa sổ chính: sidebar điều hướng, nút Cài đặt, API MoTabCachLy()
 ├── Services/                     # TẦNG NGHIỆP VỤ — không phụ thuộc UI, test độc lập bằng csc
@@ -216,12 +218,12 @@ ScanAndRemoveVirus/
 │   ├── UcLichSu.cs (+Designer)   #   3 tab lọc + chi tiết + xuất CSV
 │   ├── UcCachLy.cs (+Designer)   #   danh sách + restore/delete/chọn/tất cả/refresh
 │   └── UcCaiDat.cs (+Designer)   #   tab Cài đặt: 4 checkbox + lưu thiết lập + tạo tệp mẫu
-├── form/                         # 3 form cũ chưa sử dụng (Form1, FrmBaoVe, FrmCachLy)
+├── TestSamples/                  # bộ mẫu test (EICAR + mock, commit có chủ đích)
 ├── AntivirusDB.sql               # schema CSDL chữ ký thật (VirusSignatures) — chờ kết nối
 └── Tests/                        # harness csc (xem mục Kiểm thử)
 ```
 
-**Dữ liệu runtime** — tất cả trong `ScanAndRemoveVirus\AppData\` (trong solution, `.gitignore` rồi; chạy ngoài repo mới fallback về `%AppData%\ScanAndRemoveVirus`):
+**Dữ liệu runtime** — tất cả trong `AppData\` ngay gốc repo (`.gitignore` rồi; chạy ngoài repo mới fallback về `%AppData%\ScanAndRemoveVirus`):
 
 | File | Nội dung | Xóa thì sao |
 |---|---|---|
@@ -240,7 +242,7 @@ ScanAndRemoveVirus/
 Hai harness **không** nằm trong build app — biên dịch trực tiếp mã nguồn bằng `csc` có sẵn trong Windows:
 
 ```powershell
-cd ScanAndRemoveVirus
+# chạy từ gốc repo
 $csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\Roslyn\csc.exe" | Select-Object -First 1  # Roslyn: nguồn dùng C#7
 
 # 1) Engine — 86 check: 3 kỹ thuật + cache + cách ly/ledger/restore xung đột,
@@ -248,12 +250,12 @@ $csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe
 #    VT parse offline + vector SHA256 NIST, AppSettings + registry (tự backup/restore),
 #    Guard thật: USB-simulate, Download-MOTW (ADS), StartUp, Restore-guard, WMI HÀNH VI LIVE
 & $csc /nologo /out:eng.exe /r:System.Windows.Forms.dll /r:System.Drawing.dll `
-  /r:System.Net.Http.dll /r:System.Management.dll `
-  ScanAndRemoveVirus\Services\ScanEngine.cs   ScanAndRemoveVirus\Services\RealTimeProtection.cs `
-  ScanAndRemoveVirus\Services\QuarantineLedger.cs ScanAndRemoveVirus\Services\ScanHistoryStore.cs `
-  ScanAndRemoveVirus\Services\VirusTotalClient.cs ScanAndRemoveVirus\Services\AppSettings.cs `
-  ScanAndRemoveVirus\Services\FeatureFlags.cs ScanAndRemoveVirus\Services\GuardService.cs `
-  ScanAndRemoveVirus\Services\TestSamples.cs ScanAndRemoveVirus\Services\DataDir.cs `
+  /r:System.Net.Http.dll /r:System.Management.dll /r:Microsoft.VisualBasic.dll `
+  Services\ScanEngine.cs   Services\RealTimeProtection.cs `
+  Services\QuarantineLedger.cs Services\ScanHistoryStore.cs `
+  Services\VirusTotalClient.cs Services\AppSettings.cs `
+  Services\FeatureFlags.cs Services\GuardService.cs `
+  Services\TestSamples.cs Services\DataDir.cs `
   Tests\ScanEngineTest.cs
 .\eng.exe        # kỳ vọng: == ALL TESTS PASSED ==   (~40s nếu WMI live hoạt động)
 
@@ -280,6 +282,5 @@ Toàn bộ chạy trong ~1–2 phút; kết quả hiện `PASS/FAIL` từng chec
 - [ ] Luồng **upload VT có kiểm soát**: `POST /files/upload_url` + poll `GET /analyses/{id}` cho tệp nghi vấn chưa có trên cloud — size-gate 32MB, xác nhận riêng tư *từng tệp*, hiện thanh chờ phân tích.
 - [ ] Guard hành vi hiện **phát hiện + ghi log + cách ly tệp của tiến trình**; nâng cấp thành chặn/kill tiến trình đang chạy (cân nhắc vì dễ làm phiền phần mềm lành).
 - [ ] Kết nối SQL Server thay các file log trong `AppData\` (lịch sử/cách ly/cache/tem).
-- [ ] Dọn: 3 form cũ trong `form/`; untrack `bin/`, `obj/`, `.vs/` khỏi git.
 
 > ✅ Đã hoàn thành so với bản trước: **cả 10 hàng tab Bảo vệ là cơ chế thật** (USB auto-scan, tải-xuống-MOTW, WMI hành vi, StartUp guard, auto-isolate, auto-update, VT tự động), autostart ghi registry thật, lịch sử/cách ly/cài đặt đều là dữ liệu thật.
