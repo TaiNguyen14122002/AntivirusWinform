@@ -153,7 +153,7 @@ namespace ScanAndRemoveVirus.Control
             lblSavedAt.Text = "Đã khôi phục mặc định lúc " + DateTime.Now.ToString("HH:mm:ss");
         }
 
-        // Bào "virus mock" chính chủ — 6 tệp VÔ HẠI phủ đúng 3 kỹ thuật để test toàn trình
+        // Bào "virus mock" chính chủ — 11 tệp VÔ HẠI phủ đúng 3 kỹ thuật để test toàn trình
         private void BtnSamples_Click(object sender, EventArgs e)
         {
             try
@@ -164,7 +164,7 @@ namespace ScanAndRemoveVirus.Control
                     + "\n\n• 4 tệp khớp kỹ thuật 1 (chữ ký prefix ×2 gồm cả .js / hash SHA256 / tên 'eicar')"
                     + "\n• 4 tệp khớp kỹ thuật 2 (đuôi kép / PowerShell độc / VBS downloader / exe ẩn mồi câu)"
                     + "\n• 3 tệp sạch đối chứng (mồi câu dưới ngưỡng, script lành, README — KHÔNG được báo)"
-                    + "\n\nThử ngay: Tổng quan → Quét tùy chọn → Chọn thư mục → mở XVirus-Samples → Quét ngay.",
+                    + "\n\nThử ngay: Tổng quan → Quét tùy chọn → Chọn thư mục → mở TestSamples → Quét ngay.",
                     "Bộ tệp mẫu kiểm thử", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)

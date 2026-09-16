@@ -69,6 +69,13 @@ namespace ScanAndRemoveVirus.Control
             btnPickFile.Click += BtnPickFile_Click;
             btnPickFolder.Click += BtnPickFolder_Click;
             UpdateCustomPickUi();
+            // Fix stat card fonts to match Theme standard (Designer defaults to MSS)
+            var statFont = Theme.CardTitleFont;
+            var valFont = new Font("Segoe UI", 18F, FontStyle.Bold);
+            foreach (var gb in new[] { grpThreats, grpScannedFiles, grpLastScan, grpQuarantine })
+                gb.Font = statFont;
+            foreach (var lbl in new[] { lblThreatCount, lblScannedCount, lblLastScanDate, lblQuarantineCount })
+                lbl.Font = valFont;
             LoadProtectionStatus();
             btnQuarantineSelected.Click += BtnQuarantineSelected_Click;
             btnDeleteSelected.Click += BtnDeleteSelected_Click;
