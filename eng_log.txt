@@ -1,0 +1,96 @@
+Da quet 3 tep trong 0.1s
+PASS: qu‚t d? 3 t?p
+PASS: ph t hi?n d£ng 2 m?i de d?a
+PASS: b?t du?c dirty.txt (ch? ky)
+PASS: b?t du?c deep_eicar.bin (tˆn t?p)
+PASS: kh“ng b o nh?m clean.txt
+PASS: c ch ly dirty.txt th…nh c“ng
+PASS: t?p da r?i thu m?c g?c
+PASS: t?p n?m trong khu c ch ly
+PASS: qu‚t l?i ch? c•n 2 t?p
+PASS: c•n d£ng 1 m?i de d?a (deep_eicar.bin)
+PASS: c ch ly n?t deep_eicar.bin
+PASS: sau khi c ch ly h?t -> s?ch
+PASS: callback ti?n trnh du?c g?i
+PASS: h?y qu‚t n‚m OperationCanceledException
+PASS: stress: 8 l?n scan+cutoff gi?a ch?ng kh“ng gi?t process
+PASS: stress: qu‚t tr?n v?n v?n d? 3300 t?p
+PASS: stress: b?t d? 300 de d?a ch? ky trong stress
+PASS: roots qu‚t nhanh kh c r?ng
+PASS: roots qu‚t to…n b? g?m C:\
+PASS: [KT1] SHA256 kh?p ch? ky Malsim.Sample.Hash
+PASS: [KT1] n?i dung kh c -> kh“ng b o_hash
+PASS: [KT1] ch? ky byte d?u v?n ho?t d?ng
+PASS: [KT2] du“i k‚p gi? m?o PDF + tˆn m?i cƒu -> Heuristic
+PASS: [KT2] script PowerShell d?c -> Heuristic
+PASS: [KT2] t?p l…nh t¡nh thu?ng -> kh“ng b o nh?m
+PASS: [KT2] PDF b‚ -> kh“ng b o nh?m
+PASS: [KT3] Start -> IsRunning
+PASS: [KT3] t?p m?i th? v…o v—ng gi m s t -> c?nh b o t?c th
+PASS: [KT3] t?p s?ch -> kh“ng b o d?ng
+PASS: [KT3] Stop -> kh“ng c•n ch?y
+PASS: [KT3] ph t hi?n RT du?c ghi v…o l?ch s?
+PASS: [KT3] AutoQuarantine b?t -> watcher t? c ch ly t?p
+PASS: [KT3] b?n ghi s? c¢ ly do t? watcher
+PASS: [Config] save/load round-trip flags
+PASS: [Config] ApplyAutoStart(true) ghi HKCU\...\Run
+PASS: [Config] ApplyAutoStart(false) g? kh?i Run
+PASS: [Ledger] Quarantine + out id
+PASS: [Ledger] ListQuarantined c¢ b?n ghi + d£ng metadata
+PASS: [Ledger] Restore th…nh c“ng
+PASS: [Ledger] t?p v? l?i v? tr¡ cu
+PASS: [Ledger] b?n ghi b? g? sau restore
+PASS: [Ledger] kh“ng dŠ t?p g?c: t?o b?n (1)
+PASS: [Ledger] s?ch danh m?c test ledger
+PASS: [History] thˆm + d?c du?c
+PASS: [History] ph?n t? d?u l… m?i nh?t
+PASS: [History] entry c¢ de d?a -> K?t qu? 'Ph t hi?n'
+PASS: [History] Export CSV c¢ n?i dung
+PASS: [History] Mark/TryGet tem c?p nh?t CSDL
+PASS: [History] LatestOfType('Qu‚t') th?y phiˆn qu‚t v?a ghi
+PASS: [History] TotalFilesScanned > 0 sau c c test
+PASS: [History] TotalThreatsDetected > 0 sau c c test
+PASS: [VT] parse: 57 malicious, 70 engine
+PASS: [VT] 0 malicious -> kh“ng d?c
+PASS: [VT] 1 vendor don l? -> nghi ng?, chua k?t lu?n d?c
+PASS: [VT] JSON r c -> b o l?i ro r…ng
+PASS: [VT] ComputeFileSha256 d£ng vector 'abc'
+PASS: [VT] thi?u API key -> Error thƒn thi?n, kh“ng exception
+  INFO live VT EICAR: M?u chua c¢ trˆn VirusTotal (thu?ng l… v“ h?i)
+PASS: [VT] pipeline live tr? tr?ng th i h?p l?
+PASS: [Guard] DetectNewRemovable ch? ra ? m?i
+PASS: [Guard] h…nh vi: exe ch?y t? Temp b? ch?n
+PASS: [Guard] h…nh vi: powershell -enc b? ch?n
+PASS: [Guard] h…nh vi: winword d? cmd b? ch?n
+PASS: [Guard] h…nh vi: app thu?ng KHONG b o nh?m
+PASS: [Guard] nh?n di?n t?p t?i t? Internet (ZoneId=3)
+PASS: [Guard] Simulate USB -> ThreatDetected
+PASS: [Guard] Simulate USB ghi l?ch s? 'B?o v? USB'
+PASS: [Guard] Download MOTW: qu‚t c? du“i L? (.imgx) qua force-content
+PASS: [Guard] Download t?p s?ch -> im l?ng
+PASS: [Guard] StartUp: t?p d?c m?i roi v…o -> c?nh b o
+PASS: [Guard] RestoreWarningFor ph t hi?n t?p c ch ly c•n d?c
+PASS: [Guard] FeatureFlags luu/n?p l?i t? settings.ini
+PASS: [Guard] EnsureDailyAutoUpdate ch?y khi tem qu  24h
+PASS: [Guard] ...v… skip khi tem c•n m?i
+PASS: [Guard] WMI live: ph t hi?n ti?n trnh tung ra t? Temp
+PASS: [M?u] t?o d£ng 11 t?p, idempotent
+PASS: [M?u] qu‚t c? thu m?c -> DUNG 8 de d?a (3 t?p s?ch kh“ng b? b o)
+PASS: [M?u] KT1-prefix: mau-ky-hieu.txt
+PASS: [M?u] KT1-hash: mau-hash-sha256.txt (Malsim)
+PASS: [M?u] KT1-tˆn: demo_eicar_named.dat
+PASS: [M?u] KT1-prefix du“i .js: hook-tien-ich.js (byte 0)
+PASS: [M?u] KT2: hoa-don-invoice.pdf.exe -> Heuristic
+PASS: [M?u] KT2: update-flash.ps1 -> Heuristic
+PASS: [M?u] KT2: downloader-tien-ich.vbs -> 3 marker script
+PASS: [M?u] KT2: exe ?n + m?i cƒu (70/100)
+PASS: [M?u] D?I CH?NG: keygen-pro.exe m?i cƒu 30/100 - KHONG b o
+PASS: [M?u] D?I CH?NG: script-sach.ps1 script l…nh - KHONG b o
+PASS: [M?u] README-mau.txt S?CH - kh“ng duong t¡nh gi?
+PASS: [VT] UploadAndAnalyze thi?u key -> b o l?i, kh“ng n?
+PASS: [VT] QueryHashOrUpload hash r?ng -> l?i ro
+PASS: [VT] ch?n t?p >32MB tru?c khi g?i m?ng
+PASS: [VT] Extract data-URL t? JSON
+PASS: [VT] Extract analysis-id t? JSON
+== ALL TESTS PASSED ==
+EXIT=0

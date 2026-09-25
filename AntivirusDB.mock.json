@@ -1,0 +1,2448 @@
+{
+  "_meta": {
+    "mode": "MOCK_ONLY",
+    "database": "AntivirusDB",
+    "schema": "AntivirusDB.schema.sql + AntivirusDB.extensions.sql",
+    "warning": "Toàn bộ dữ liệu là giả lập. Tên bảng/cột khớp SQL Server; không ghi JSON này vào database thật.",
+    "identity": "ID cố định trong fixture; SQL Server sinh IDENTITY khi ghi thật",
+    "dateTime": "ISO 8601, ánh xạ DATETIME2; NULL là JSON null",
+    "schemaVersion": 2
+  },
+  "tables": {
+    "Settings": [
+      {
+        "SettingID": 1,
+        "ProgramName": "ANTIVIRUS",
+        "ProgramVersion": "1.0.0.0",
+        "VirusDatabaseVersion": "1.0.0.2025",
+        "LastDatabaseUpdate": "2025-09-04T14:00:00",
+        "RealTimeProtection": true,
+        "FileProtection": true,
+        "USBProtection": true,
+        "WebProtection": true,
+        "DownloadProtection": true,
+        "RansomwareProtection": true,
+        "AutoStart": true,
+        "AutoUpdate": true,
+        "SubmitSamples": false,
+        "ShowNotifications": true,
+        "UpdatedAt": "2025-09-04T14:00:00"
+      }
+    ],
+    "VirusSignatures": [
+      {
+        "SignatureID": 1,
+        "MalwareName": "Trojan.GenericKD.123456",
+        "MalwareFamily": "Trojan",
+        "Category": "Malware",
+        "SignatureType": "Hash",
+        "MD5": "81c06ea2f153f87a1fea740691c8e9ed",
+        "SHA1": "40eb1c93d8846656e09f96256b30ed409e078e95",
+        "SHA256": "5bb18af4f99912c4a10cfc52800863ccd63713adcf3909c7ed4b197a19722e71",
+        "FileExtension": ".exe",
+        "Severity": "High",
+        "Description": "Chữ ký giả lập chỉ dùng để thử giao diện",
+        "RecommendedAction": "Quarantine",
+        "IsActive": true,
+        "CreatedAt": "2025-09-01T15:07:57",
+        "UpdatedAt": null
+      },
+      {
+        "SignatureID": 2,
+        "MalwareName": "Win32.PowerShell.Malware",
+        "MalwareFamily": "Win32",
+        "Category": "Malware",
+        "SignatureType": "Hash",
+        "MD5": "aa9b8e3af90d83c8d698793470de7c6e",
+        "SHA1": "68aeba20d4379033311d3ab8fce0a63fe9831bee",
+        "SHA256": "3421eb643b20cc6e95a23b73ba625f6d609c55f0c4666e8a267f6602cdc2b70a",
+        "FileExtension": ".ps1",
+        "Severity": "Medium",
+        "Description": "Chữ ký giả lập chỉ dùng để thử giao diện",
+        "RecommendedAction": "Quarantine",
+        "IsActive": true,
+        "CreatedAt": "2025-09-01T15:07:57",
+        "UpdatedAt": null
+      },
+      {
+        "SignatureID": 3,
+        "MalwareName": "EICAR-Test-File",
+        "MalwareFamily": "EICAR-Test-File",
+        "Category": "Test",
+        "SignatureType": "Hash",
+        "MD5": "3524f3560e91300af5aabba8836c3aec",
+        "SHA1": "84f8dd8a71fe2f752bbc207818f85f73ca9da33e",
+        "SHA256": "283b233ad7bbeaabfc1ffb1acdb14ed4a81e33e02eb923887a88b5caf696d9c3",
+        "FileExtension": ".zip",
+        "Severity": "Low",
+        "Description": "Chữ ký giả lập chỉ dùng để thử giao diện",
+        "RecommendedAction": "Quarantine",
+        "IsActive": true,
+        "CreatedAt": "2025-09-01T15:07:57",
+        "UpdatedAt": null
+      }
+    ],
+    "ScanHistory": [
+      {
+        "ScanID": 1,
+        "ScanType": "FullSystem",
+        "StartedAt": "2025-09-04T14:30:00",
+        "CompletedAt": "2025-09-04T14:35:12",
+        "ScanLocation": "C:\\",
+        "FilesScanned": 12480,
+        "ThreatCount": 3,
+        "ResultStatus": "Completed",
+        "ActivityTitle": "Quét toàn bộ hệ thống",
+        "ActivityDetails": "Phiên dữ liệu giả lập",
+        "ErrorMessage": null
+      }
+    ],
+    "ThreatDetections": [
+      {
+        "DetectionID": 1,
+        "ScanID": 1,
+        "SignatureID": 1,
+        "FileName": "setup.exe",
+        "OriginalPath": "C:\\Users\\Admin\\Downloads\\setup.exe",
+        "ThreatName": "Trojan.GenericKD.123456",
+        "DetectedAt": "2025-09-04T14:32:18",
+        "FileSizeBytes": 2567680,
+        "FileMD5": "81c06ea2f153f87a1fea740691c8e9ed",
+        "FileSHA1": "40eb1c93d8846656e09f96256b30ed409e078e95",
+        "FileSHA256": "5bb18af4f99912c4a10cfc52800863ccd63713adcf3909c7ed4b197a19722e71",
+        "ActionTaken": "Quarantined",
+        "Status": "Quarantined",
+        "QuarantinePath": null,
+        "RestoredAt": null,
+        "DeletedAt": null
+      },
+      {
+        "DetectionID": 2,
+        "ScanID": 1,
+        "SignatureID": 2,
+        "FileName": "malware.ps1",
+        "OriginalPath": "C:\\Users\\Admin\\Desktop\\malware.ps1",
+        "ThreatName": "Win32.PowerShell.Malware",
+        "DetectedAt": "2025-09-04T14:32:18",
+        "FileSizeBytes": 8192,
+        "FileMD5": "aa9b8e3af90d83c8d698793470de7c6e",
+        "FileSHA1": "68aeba20d4379033311d3ab8fce0a63fe9831bee",
+        "FileSHA256": "3421eb643b20cc6e95a23b73ba625f6d609c55f0c4666e8a267f6602cdc2b70a",
+        "ActionTaken": "None",
+        "Status": "Detected",
+        "QuarantinePath": null,
+        "RestoredAt": null,
+        "DeletedAt": null
+      },
+      {
+        "DetectionID": 3,
+        "ScanID": 1,
+        "SignatureID": 3,
+        "FileName": "virus_test.zip",
+        "OriginalPath": "D:\\Test\\virus_test.zip",
+        "ThreatName": "EICAR-Test-File",
+        "DetectedAt": "2025-09-04T14:32:18",
+        "FileSizeBytes": 1024,
+        "FileMD5": "3524f3560e91300af5aabba8836c3aec",
+        "FileSHA1": "84f8dd8a71fe2f752bbc207818f85f73ca9da33e",
+        "FileSHA256": "283b233ad7bbeaabfc1ffb1acdb14ed4a81e33e02eb923887a88b5caf696d9c3",
+        "ActionTaken": "None",
+        "Status": "Detected",
+        "QuarantinePath": null,
+        "RestoredAt": null,
+        "DeletedAt": null
+      }
+    ],
+    "DetectionFileMetadata": [
+      {
+        "DetectionID": 1,
+        "CreatedAt": "2025-09-04T14:30:10",
+        "ModifiedAt": "2025-09-04T14:32:18",
+        "AccessedAt": null,
+        "FileType": ".exe",
+        "MimeType": null,
+        "FileAttributes": "A",
+        "OwnerName": "DESKTOP-TAINGUYEN\\Admin",
+        "AccessPermissions": "RW-r--r--",
+        "ComputerName": "DESKTOP-TAINGUYEN",
+        "OperatingSystem": "Windows 11 Pro 64-bit (Build 26100)",
+        "UserName": "Admin",
+        "Compiler": "Mock: Microsoft Visual C++",
+        "PdbPath": null,
+        "SignatureStatus": "Unknown",
+        "SignerName": null,
+        "CollectedAt": "2025-09-04T14:35:12"
+      },
+      {
+        "DetectionID": 2,
+        "CreatedAt": "2025-09-04T14:30:10",
+        "ModifiedAt": "2025-09-04T14:32:18",
+        "AccessedAt": null,
+        "FileType": ".ps1",
+        "MimeType": null,
+        "FileAttributes": "A",
+        "OwnerName": "DESKTOP-TAINGUYEN\\Admin",
+        "AccessPermissions": "RW-r--r--",
+        "ComputerName": "DESKTOP-TAINGUYEN",
+        "OperatingSystem": "Windows 11 Pro 64-bit (Build 26100)",
+        "UserName": "Admin",
+        "Compiler": "NoData",
+        "PdbPath": null,
+        "SignatureStatus": "Unknown",
+        "SignerName": null,
+        "CollectedAt": "2025-09-04T14:35:12"
+      },
+      {
+        "DetectionID": 3,
+        "CreatedAt": "2025-09-04T14:30:10",
+        "ModifiedAt": "2025-09-04T14:32:18",
+        "AccessedAt": null,
+        "FileType": ".zip",
+        "MimeType": null,
+        "FileAttributes": "A",
+        "OwnerName": "DESKTOP-TAINGUYEN\\Admin",
+        "AccessPermissions": "RW-r--r--",
+        "ComputerName": "DESKTOP-TAINGUYEN",
+        "OperatingSystem": "Windows 11 Pro 64-bit (Build 26100)",
+        "UserName": "Admin",
+        "Compiler": "NoData",
+        "PdbPath": null,
+        "SignatureStatus": "Unknown",
+        "SignerName": null,
+        "CollectedAt": "2025-09-04T14:35:12"
+      }
+    ],
+    "VirusTotalReports": [
+      {
+        "ReportID": 1,
+        "DetectionID": 1,
+        "FileSHA256": "5bb18af4f99912c4a10cfc52800863ccd63713adcf3909c7ed4b197a19722e71",
+        "AnalyzedAt": "2025-09-04T14:35:12",
+        "RetrievedAt": "2025-09-04T14:35:12",
+        "MaliciousCount": 42,
+        "SuspiciousCount": 0,
+        "UndetectedCount": 30,
+        "HarmlessCount": 0,
+        "TimeoutCount": 0,
+        "FailureCount": 0,
+        "ReportUrl": "https://www.virustotal.com/gui/file/5bb18af4f99912c4a10cfc52800863ccd63713adcf3909c7ed4b197a19722e71"
+      },
+      {
+        "ReportID": 2,
+        "DetectionID": 2,
+        "FileSHA256": "3421eb643b20cc6e95a23b73ba625f6d609c55f0c4666e8a267f6602cdc2b70a",
+        "AnalyzedAt": "2025-09-04T14:35:12",
+        "RetrievedAt": "2025-09-04T14:35:12",
+        "MaliciousCount": 18,
+        "SuspiciousCount": 0,
+        "UndetectedCount": 54,
+        "HarmlessCount": 0,
+        "TimeoutCount": 0,
+        "FailureCount": 0,
+        "ReportUrl": "https://www.virustotal.com/gui/file/3421eb643b20cc6e95a23b73ba625f6d609c55f0c4666e8a267f6602cdc2b70a"
+      },
+      {
+        "ReportID": 3,
+        "DetectionID": 3,
+        "FileSHA256": "283b233ad7bbeaabfc1ffb1acdb14ed4a81e33e02eb923887a88b5caf696d9c3",
+        "AnalyzedAt": "2025-09-04T14:35:12",
+        "RetrievedAt": "2025-09-04T14:35:12",
+        "MaliciousCount": 0,
+        "SuspiciousCount": 0,
+        "UndetectedCount": 72,
+        "HarmlessCount": 0,
+        "TimeoutCount": 0,
+        "FailureCount": 0,
+        "ReportUrl": "https://www.virustotal.com/gui/file/283b233ad7bbeaabfc1ffb1acdb14ed4a81e33e02eb923887a88b5caf696d9c3"
+      }
+    ],
+    "VirusTotalEngines": [
+      {
+        "EngineID": 1001,
+        "ReportID": 1,
+        "EngineName": "Microsoft",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1002,
+        "ReportID": 1,
+        "EngineName": "Kaspersky",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1003,
+        "ReportID": 1,
+        "EngineName": "ESET",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1004,
+        "ReportID": 1,
+        "EngineName": "Bitdefender",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1005,
+        "ReportID": 1,
+        "EngineName": "Avast",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1006,
+        "ReportID": 1,
+        "EngineName": "Sophos",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1007,
+        "ReportID": 1,
+        "EngineName": "Trend Micro",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1008,
+        "ReportID": 1,
+        "EngineName": "Malwarebytes",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1009,
+        "ReportID": 1,
+        "EngineName": "McAfee",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1010,
+        "ReportID": 1,
+        "EngineName": "Fortinet",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1011,
+        "ReportID": 1,
+        "EngineName": "Avira",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1012,
+        "ReportID": 1,
+        "EngineName": "F-Secure",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1013,
+        "ReportID": 1,
+        "EngineName": "MockEngine-13",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1014,
+        "ReportID": 1,
+        "EngineName": "MockEngine-14",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1015,
+        "ReportID": 1,
+        "EngineName": "MockEngine-15",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1016,
+        "ReportID": 1,
+        "EngineName": "MockEngine-16",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1017,
+        "ReportID": 1,
+        "EngineName": "MockEngine-17",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1018,
+        "ReportID": 1,
+        "EngineName": "MockEngine-18",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1019,
+        "ReportID": 1,
+        "EngineName": "MockEngine-19",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1020,
+        "ReportID": 1,
+        "EngineName": "MockEngine-20",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1021,
+        "ReportID": 1,
+        "EngineName": "MockEngine-21",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1022,
+        "ReportID": 1,
+        "EngineName": "MockEngine-22",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1023,
+        "ReportID": 1,
+        "EngineName": "MockEngine-23",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1024,
+        "ReportID": 1,
+        "EngineName": "MockEngine-24",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1025,
+        "ReportID": 1,
+        "EngineName": "MockEngine-25",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1026,
+        "ReportID": 1,
+        "EngineName": "MockEngine-26",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1027,
+        "ReportID": 1,
+        "EngineName": "MockEngine-27",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1028,
+        "ReportID": 1,
+        "EngineName": "MockEngine-28",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1029,
+        "ReportID": 1,
+        "EngineName": "MockEngine-29",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1030,
+        "ReportID": 1,
+        "EngineName": "MockEngine-30",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1031,
+        "ReportID": 1,
+        "EngineName": "MockEngine-31",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1032,
+        "ReportID": 1,
+        "EngineName": "MockEngine-32",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1033,
+        "ReportID": 1,
+        "EngineName": "MockEngine-33",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1034,
+        "ReportID": 1,
+        "EngineName": "MockEngine-34",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1035,
+        "ReportID": 1,
+        "EngineName": "MockEngine-35",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1036,
+        "ReportID": 1,
+        "EngineName": "MockEngine-36",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1037,
+        "ReportID": 1,
+        "EngineName": "MockEngine-37",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1038,
+        "ReportID": 1,
+        "EngineName": "MockEngine-38",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1039,
+        "ReportID": 1,
+        "EngineName": "MockEngine-39",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1040,
+        "ReportID": 1,
+        "EngineName": "MockEngine-40",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1041,
+        "ReportID": 1,
+        "EngineName": "MockEngine-41",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1042,
+        "ReportID": 1,
+        "EngineName": "MockEngine-42",
+        "Category": "malicious",
+        "ResultName": "Trojan.GenericKD.123456",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1043,
+        "ReportID": 1,
+        "EngineName": "MockEngine-43",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1044,
+        "ReportID": 1,
+        "EngineName": "MockEngine-44",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1045,
+        "ReportID": 1,
+        "EngineName": "MockEngine-45",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1046,
+        "ReportID": 1,
+        "EngineName": "MockEngine-46",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1047,
+        "ReportID": 1,
+        "EngineName": "MockEngine-47",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1048,
+        "ReportID": 1,
+        "EngineName": "MockEngine-48",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1049,
+        "ReportID": 1,
+        "EngineName": "MockEngine-49",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1050,
+        "ReportID": 1,
+        "EngineName": "MockEngine-50",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1051,
+        "ReportID": 1,
+        "EngineName": "MockEngine-51",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1052,
+        "ReportID": 1,
+        "EngineName": "MockEngine-52",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1053,
+        "ReportID": 1,
+        "EngineName": "MockEngine-53",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1054,
+        "ReportID": 1,
+        "EngineName": "MockEngine-54",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1055,
+        "ReportID": 1,
+        "EngineName": "MockEngine-55",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1056,
+        "ReportID": 1,
+        "EngineName": "MockEngine-56",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1057,
+        "ReportID": 1,
+        "EngineName": "MockEngine-57",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1058,
+        "ReportID": 1,
+        "EngineName": "MockEngine-58",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1059,
+        "ReportID": 1,
+        "EngineName": "MockEngine-59",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1060,
+        "ReportID": 1,
+        "EngineName": "MockEngine-60",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1061,
+        "ReportID": 1,
+        "EngineName": "MockEngine-61",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1062,
+        "ReportID": 1,
+        "EngineName": "MockEngine-62",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1063,
+        "ReportID": 1,
+        "EngineName": "MockEngine-63",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1064,
+        "ReportID": 1,
+        "EngineName": "MockEngine-64",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1065,
+        "ReportID": 1,
+        "EngineName": "MockEngine-65",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1066,
+        "ReportID": 1,
+        "EngineName": "MockEngine-66",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1067,
+        "ReportID": 1,
+        "EngineName": "MockEngine-67",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1068,
+        "ReportID": 1,
+        "EngineName": "MockEngine-68",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1069,
+        "ReportID": 1,
+        "EngineName": "MockEngine-69",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1070,
+        "ReportID": 1,
+        "EngineName": "MockEngine-70",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1071,
+        "ReportID": 1,
+        "EngineName": "MockEngine-71",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 1072,
+        "ReportID": 1,
+        "EngineName": "MockEngine-72",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2001,
+        "ReportID": 2,
+        "EngineName": "Microsoft",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2002,
+        "ReportID": 2,
+        "EngineName": "Kaspersky",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2003,
+        "ReportID": 2,
+        "EngineName": "ESET",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2004,
+        "ReportID": 2,
+        "EngineName": "Bitdefender",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2005,
+        "ReportID": 2,
+        "EngineName": "Avast",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2006,
+        "ReportID": 2,
+        "EngineName": "Sophos",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2007,
+        "ReportID": 2,
+        "EngineName": "Trend Micro",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2008,
+        "ReportID": 2,
+        "EngineName": "Malwarebytes",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2009,
+        "ReportID": 2,
+        "EngineName": "McAfee",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2010,
+        "ReportID": 2,
+        "EngineName": "Fortinet",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2011,
+        "ReportID": 2,
+        "EngineName": "Avira",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2012,
+        "ReportID": 2,
+        "EngineName": "F-Secure",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2013,
+        "ReportID": 2,
+        "EngineName": "MockEngine-13",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2014,
+        "ReportID": 2,
+        "EngineName": "MockEngine-14",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2015,
+        "ReportID": 2,
+        "EngineName": "MockEngine-15",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2016,
+        "ReportID": 2,
+        "EngineName": "MockEngine-16",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2017,
+        "ReportID": 2,
+        "EngineName": "MockEngine-17",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2018,
+        "ReportID": 2,
+        "EngineName": "MockEngine-18",
+        "Category": "malicious",
+        "ResultName": "Win32.PowerShell.Malware",
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2019,
+        "ReportID": 2,
+        "EngineName": "MockEngine-19",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2020,
+        "ReportID": 2,
+        "EngineName": "MockEngine-20",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2021,
+        "ReportID": 2,
+        "EngineName": "MockEngine-21",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2022,
+        "ReportID": 2,
+        "EngineName": "MockEngine-22",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2023,
+        "ReportID": 2,
+        "EngineName": "MockEngine-23",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2024,
+        "ReportID": 2,
+        "EngineName": "MockEngine-24",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2025,
+        "ReportID": 2,
+        "EngineName": "MockEngine-25",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2026,
+        "ReportID": 2,
+        "EngineName": "MockEngine-26",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2027,
+        "ReportID": 2,
+        "EngineName": "MockEngine-27",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2028,
+        "ReportID": 2,
+        "EngineName": "MockEngine-28",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2029,
+        "ReportID": 2,
+        "EngineName": "MockEngine-29",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2030,
+        "ReportID": 2,
+        "EngineName": "MockEngine-30",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2031,
+        "ReportID": 2,
+        "EngineName": "MockEngine-31",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2032,
+        "ReportID": 2,
+        "EngineName": "MockEngine-32",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2033,
+        "ReportID": 2,
+        "EngineName": "MockEngine-33",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2034,
+        "ReportID": 2,
+        "EngineName": "MockEngine-34",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2035,
+        "ReportID": 2,
+        "EngineName": "MockEngine-35",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2036,
+        "ReportID": 2,
+        "EngineName": "MockEngine-36",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2037,
+        "ReportID": 2,
+        "EngineName": "MockEngine-37",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2038,
+        "ReportID": 2,
+        "EngineName": "MockEngine-38",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2039,
+        "ReportID": 2,
+        "EngineName": "MockEngine-39",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2040,
+        "ReportID": 2,
+        "EngineName": "MockEngine-40",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2041,
+        "ReportID": 2,
+        "EngineName": "MockEngine-41",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2042,
+        "ReportID": 2,
+        "EngineName": "MockEngine-42",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2043,
+        "ReportID": 2,
+        "EngineName": "MockEngine-43",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2044,
+        "ReportID": 2,
+        "EngineName": "MockEngine-44",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2045,
+        "ReportID": 2,
+        "EngineName": "MockEngine-45",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2046,
+        "ReportID": 2,
+        "EngineName": "MockEngine-46",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2047,
+        "ReportID": 2,
+        "EngineName": "MockEngine-47",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2048,
+        "ReportID": 2,
+        "EngineName": "MockEngine-48",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2049,
+        "ReportID": 2,
+        "EngineName": "MockEngine-49",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2050,
+        "ReportID": 2,
+        "EngineName": "MockEngine-50",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2051,
+        "ReportID": 2,
+        "EngineName": "MockEngine-51",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2052,
+        "ReportID": 2,
+        "EngineName": "MockEngine-52",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2053,
+        "ReportID": 2,
+        "EngineName": "MockEngine-53",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2054,
+        "ReportID": 2,
+        "EngineName": "MockEngine-54",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2055,
+        "ReportID": 2,
+        "EngineName": "MockEngine-55",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2056,
+        "ReportID": 2,
+        "EngineName": "MockEngine-56",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2057,
+        "ReportID": 2,
+        "EngineName": "MockEngine-57",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2058,
+        "ReportID": 2,
+        "EngineName": "MockEngine-58",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2059,
+        "ReportID": 2,
+        "EngineName": "MockEngine-59",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2060,
+        "ReportID": 2,
+        "EngineName": "MockEngine-60",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2061,
+        "ReportID": 2,
+        "EngineName": "MockEngine-61",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2062,
+        "ReportID": 2,
+        "EngineName": "MockEngine-62",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2063,
+        "ReportID": 2,
+        "EngineName": "MockEngine-63",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2064,
+        "ReportID": 2,
+        "EngineName": "MockEngine-64",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2065,
+        "ReportID": 2,
+        "EngineName": "MockEngine-65",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2066,
+        "ReportID": 2,
+        "EngineName": "MockEngine-66",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2067,
+        "ReportID": 2,
+        "EngineName": "MockEngine-67",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2068,
+        "ReportID": 2,
+        "EngineName": "MockEngine-68",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2069,
+        "ReportID": 2,
+        "EngineName": "MockEngine-69",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2070,
+        "ReportID": 2,
+        "EngineName": "MockEngine-70",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2071,
+        "ReportID": 2,
+        "EngineName": "MockEngine-71",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 2072,
+        "ReportID": 2,
+        "EngineName": "MockEngine-72",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3001,
+        "ReportID": 3,
+        "EngineName": "Microsoft",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3002,
+        "ReportID": 3,
+        "EngineName": "Kaspersky",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3003,
+        "ReportID": 3,
+        "EngineName": "ESET",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3004,
+        "ReportID": 3,
+        "EngineName": "Bitdefender",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3005,
+        "ReportID": 3,
+        "EngineName": "Avast",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3006,
+        "ReportID": 3,
+        "EngineName": "Sophos",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3007,
+        "ReportID": 3,
+        "EngineName": "Trend Micro",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3008,
+        "ReportID": 3,
+        "EngineName": "Malwarebytes",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3009,
+        "ReportID": 3,
+        "EngineName": "McAfee",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3010,
+        "ReportID": 3,
+        "EngineName": "Fortinet",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3011,
+        "ReportID": 3,
+        "EngineName": "Avira",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3012,
+        "ReportID": 3,
+        "EngineName": "F-Secure",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3013,
+        "ReportID": 3,
+        "EngineName": "MockEngine-13",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3014,
+        "ReportID": 3,
+        "EngineName": "MockEngine-14",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3015,
+        "ReportID": 3,
+        "EngineName": "MockEngine-15",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3016,
+        "ReportID": 3,
+        "EngineName": "MockEngine-16",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3017,
+        "ReportID": 3,
+        "EngineName": "MockEngine-17",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3018,
+        "ReportID": 3,
+        "EngineName": "MockEngine-18",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3019,
+        "ReportID": 3,
+        "EngineName": "MockEngine-19",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3020,
+        "ReportID": 3,
+        "EngineName": "MockEngine-20",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3021,
+        "ReportID": 3,
+        "EngineName": "MockEngine-21",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3022,
+        "ReportID": 3,
+        "EngineName": "MockEngine-22",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3023,
+        "ReportID": 3,
+        "EngineName": "MockEngine-23",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3024,
+        "ReportID": 3,
+        "EngineName": "MockEngine-24",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3025,
+        "ReportID": 3,
+        "EngineName": "MockEngine-25",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3026,
+        "ReportID": 3,
+        "EngineName": "MockEngine-26",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3027,
+        "ReportID": 3,
+        "EngineName": "MockEngine-27",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3028,
+        "ReportID": 3,
+        "EngineName": "MockEngine-28",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3029,
+        "ReportID": 3,
+        "EngineName": "MockEngine-29",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3030,
+        "ReportID": 3,
+        "EngineName": "MockEngine-30",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3031,
+        "ReportID": 3,
+        "EngineName": "MockEngine-31",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3032,
+        "ReportID": 3,
+        "EngineName": "MockEngine-32",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3033,
+        "ReportID": 3,
+        "EngineName": "MockEngine-33",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3034,
+        "ReportID": 3,
+        "EngineName": "MockEngine-34",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3035,
+        "ReportID": 3,
+        "EngineName": "MockEngine-35",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3036,
+        "ReportID": 3,
+        "EngineName": "MockEngine-36",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3037,
+        "ReportID": 3,
+        "EngineName": "MockEngine-37",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3038,
+        "ReportID": 3,
+        "EngineName": "MockEngine-38",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3039,
+        "ReportID": 3,
+        "EngineName": "MockEngine-39",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3040,
+        "ReportID": 3,
+        "EngineName": "MockEngine-40",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3041,
+        "ReportID": 3,
+        "EngineName": "MockEngine-41",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3042,
+        "ReportID": 3,
+        "EngineName": "MockEngine-42",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3043,
+        "ReportID": 3,
+        "EngineName": "MockEngine-43",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3044,
+        "ReportID": 3,
+        "EngineName": "MockEngine-44",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3045,
+        "ReportID": 3,
+        "EngineName": "MockEngine-45",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3046,
+        "ReportID": 3,
+        "EngineName": "MockEngine-46",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3047,
+        "ReportID": 3,
+        "EngineName": "MockEngine-47",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3048,
+        "ReportID": 3,
+        "EngineName": "MockEngine-48",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3049,
+        "ReportID": 3,
+        "EngineName": "MockEngine-49",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3050,
+        "ReportID": 3,
+        "EngineName": "MockEngine-50",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3051,
+        "ReportID": 3,
+        "EngineName": "MockEngine-51",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3052,
+        "ReportID": 3,
+        "EngineName": "MockEngine-52",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3053,
+        "ReportID": 3,
+        "EngineName": "MockEngine-53",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3054,
+        "ReportID": 3,
+        "EngineName": "MockEngine-54",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3055,
+        "ReportID": 3,
+        "EngineName": "MockEngine-55",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3056,
+        "ReportID": 3,
+        "EngineName": "MockEngine-56",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3057,
+        "ReportID": 3,
+        "EngineName": "MockEngine-57",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3058,
+        "ReportID": 3,
+        "EngineName": "MockEngine-58",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3059,
+        "ReportID": 3,
+        "EngineName": "MockEngine-59",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3060,
+        "ReportID": 3,
+        "EngineName": "MockEngine-60",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3061,
+        "ReportID": 3,
+        "EngineName": "MockEngine-61",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3062,
+        "ReportID": 3,
+        "EngineName": "MockEngine-62",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3063,
+        "ReportID": 3,
+        "EngineName": "MockEngine-63",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3064,
+        "ReportID": 3,
+        "EngineName": "MockEngine-64",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3065,
+        "ReportID": 3,
+        "EngineName": "MockEngine-65",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3066,
+        "ReportID": 3,
+        "EngineName": "MockEngine-66",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3067,
+        "ReportID": 3,
+        "EngineName": "MockEngine-67",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3068,
+        "ReportID": 3,
+        "EngineName": "MockEngine-68",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3069,
+        "ReportID": 3,
+        "EngineName": "MockEngine-69",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3070,
+        "ReportID": 3,
+        "EngineName": "MockEngine-70",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3071,
+        "ReportID": 3,
+        "EngineName": "MockEngine-71",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      },
+      {
+        "EngineID": 3072,
+        "ReportID": 3,
+        "EngineName": "MockEngine-72",
+        "Category": "undetected",
+        "ResultName": null,
+        "EngineVersion": "MOCK-1.0",
+        "EngineUpdate": "2025-09-04"
+      }
+    ],
+    "DetectionBehaviorEvents": [
+      {
+        "EventID": 1001,
+        "DetectionID": 1,
+        "OccurredAt": "2025-09-04T14:32:18",
+        "EventType": "ProcessCreate",
+        "Title": "Tạo tiến trình mới",
+        "Description": "setup.exe -> powershell.exe",
+        "Severity": "High",
+        "ProcessName": "setup.exe",
+        "ProcessId": 4328,
+        "ParentProcessId": null,
+        "CommandLine": "\"C:\\Users\\Admin\\Downloads\\setup.exe\" /S",
+        "TargetPath": null,
+        "RegistryKey": null,
+        "RemoteAddress": null,
+        "RemotePort": null
+      },
+      {
+        "EventID": 1002,
+        "DetectionID": 1,
+        "OccurredAt": "2025-09-04T14:32:19",
+        "EventType": "RegistryWrite",
+        "Title": "Sửa đổi Registry",
+        "Description": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "Severity": "Medium",
+        "ProcessName": "setup.exe",
+        "ProcessId": 4328,
+        "ParentProcessId": null,
+        "CommandLine": "\"C:\\Users\\Admin\\Downloads\\setup.exe\" /S",
+        "TargetPath": null,
+        "RegistryKey": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "RemoteAddress": null,
+        "RemotePort": null
+      },
+      {
+        "EventID": 1003,
+        "DetectionID": 1,
+        "OccurredAt": "2025-09-04T14:32:20",
+        "EventType": "FileCreate",
+        "Title": "Tạo tệp",
+        "Description": "%TEMP%\\temp.dll",
+        "Severity": "Medium",
+        "ProcessName": "setup.exe",
+        "ProcessId": 4328,
+        "ParentProcessId": null,
+        "CommandLine": "\"C:\\Users\\Admin\\Downloads\\setup.exe\" /S",
+        "TargetPath": "%TEMP%\\temp.dll",
+        "RegistryKey": null,
+        "RemoteAddress": null,
+        "RemotePort": null
+      },
+      {
+        "EventID": 1004,
+        "DetectionID": 1,
+        "OccurredAt": "2025-09-04T14:32:21",
+        "EventType": "NetworkConnect",
+        "Title": "Kết nối mạng",
+        "Description": "185.199.111.153:443",
+        "Severity": "High",
+        "ProcessName": "setup.exe",
+        "ProcessId": 4328,
+        "ParentProcessId": null,
+        "CommandLine": "\"C:\\Users\\Admin\\Downloads\\setup.exe\" /S",
+        "TargetPath": null,
+        "RegistryKey": null,
+        "RemoteAddress": "185.199.111.153",
+        "RemotePort": 443
+      },
+      {
+        "EventID": 1005,
+        "DetectionID": 1,
+        "OccurredAt": "2025-09-04T14:32:22",
+        "EventType": "SecurityPolicyChange",
+        "Title": "Thay đổi chính sách bảo vệ",
+        "Description": "Mô phỏng thay đổi chính sách bảo vệ",
+        "Severity": "High",
+        "ProcessName": "setup.exe",
+        "ProcessId": 4328,
+        "ParentProcessId": null,
+        "CommandLine": "\"C:\\Users\\Admin\\Downloads\\setup.exe\" /S",
+        "TargetPath": null,
+        "RegistryKey": null,
+        "RemoteAddress": null,
+        "RemotePort": null
+      },
+      {
+        "EventID": 2001,
+        "DetectionID": 2,
+        "OccurredAt": "2025-09-04T14:33:01",
+        "EventType": "ScriptIndicator",
+        "Title": "ScriptIndicator",
+        "Description": "Phát hiện chuỗi PowerShell nghi vấn trong mẫu giả lập",
+        "Severity": "Medium",
+        "ProcessName": "malware.ps1",
+        "ProcessId": null,
+        "ParentProcessId": null,
+        "CommandLine": null,
+        "TargetPath": null,
+        "RegistryKey": null,
+        "RemoteAddress": null,
+        "RemotePort": null
+      }
+    ],
+    "DetectionStrings": [
+      {
+        "StringID": 1001,
+        "DetectionID": 1,
+        "StringValue": "powershell.exe",
+        "StringType": "Process",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 127904,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1002,
+        "DetectionID": 1,
+        "StringValue": "-nop -w hidden",
+        "StringType": "CommandLine",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 127928,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1003,
+        "DetectionID": 1,
+        "StringValue": "http://185.199.111.153",
+        "StringType": "URL",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 127952,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1004,
+        "DetectionID": 1,
+        "StringValue": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "StringType": "Registry",
+        "Assessment": "Warning",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 127976,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1005,
+        "DetectionID": 1,
+        "StringValue": "Invoke-WebRequest",
+        "StringType": "PowerShell",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 128000,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1006,
+        "DetectionID": 1,
+        "StringValue": "Start-Process",
+        "StringType": "PowerShell",
+        "Assessment": "Warning",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 128024,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1007,
+        "DetectionID": 1,
+        "StringValue": "C:\\Users\\Public\\",
+        "StringType": "Path",
+        "Assessment": "Normal",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 128048,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1008,
+        "DetectionID": 1,
+        "StringValue": ".exe",
+        "StringType": "Extension",
+        "Assessment": "Normal",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 128072,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1009,
+        "DetectionID": 1,
+        "StringValue": "CreateRemoteThread",
+        "StringType": "API",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 128096,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 1010,
+        "DetectionID": 1,
+        "StringValue": "VirtualAlloc",
+        "StringType": "API",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 128120,
+        "ContextBefore": "Dữ liệu mô phỏng, không lấy từ tệp thật",
+        "ContextAfter": null
+      },
+      {
+        "StringID": 2001,
+        "DetectionID": 2,
+        "StringValue": "Invoke-Expression",
+        "StringType": "PowerShell",
+        "Assessment": "Suspicious",
+        "Reason": "Dữ liệu giả lập; chưa đánh giá từ tệp thật",
+        "ByteOffset": 32,
+        "ContextBefore": "Chuỗi mẫu",
+        "ContextAfter": null
+      }
+    ],
+    "DetectionNetworkEvents": [
+      {
+        "NetworkEventID": 1,
+        "DetectionID": 1,
+        "BehaviorEventID": 1004,
+        "ObservedAt": "2025-09-04T14:32:18",
+        "RemoteIP": "185.199.111.153",
+        "DomainName": "cdn.example-malicious.com",
+        "RemotePort": 443,
+        "Protocol": "TCP",
+        "Country": "Unknown",
+        "AsnNumber": null,
+        "AsnOrganization": null
+      }
+    ]
+  }
+}
