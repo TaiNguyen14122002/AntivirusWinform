@@ -1,0 +1,1872 @@
+{
+  "_notice": "DỮ LIỆU GIẢ LẬP CHỈ DÙNG KIỂM THỬ UI. Không phải kết quả quét hay VirusTotal thực. Hash được sinh từ tên mẫu, không đại diện nội dung tệp.",
+  "schemaVersion": 1,
+  "scan": {
+    "scanId": 1,
+    "scanType": "FullSystem",
+    "startedAt": "2025-09-04T14:30:00",
+    "completedAt": "2025-09-04T14:35:12",
+    "filesScanned": 12480,
+    "threatCount": 3,
+    "resultStatus": "Completed"
+  },
+  "detections": [
+    {
+      "detectionId": 1,
+      "scanId": 1,
+      "signatureId": 1,
+      "file": {
+        "name": "setup.exe",
+        "path": "C:\\Users\\Admin\\Downloads\\setup.exe",
+        "sizeBytes": 2567680,
+        "type": ".exe",
+        "createdAt": "2025-09-04T14:30:10",
+        "modifiedAt": "2025-09-04T14:32:18",
+        "md5": "81c06ea2f153f87a1fea740691c8e9ed",
+        "sha1": "40eb1c93d8846656e09f96256b30ed409e078e95",
+        "sha256": "5bb18af4f99912c4a10cfc52800863ccd63713adcf3909c7ed4b197a19722e71"
+      },
+      "threat": {
+        "name": "Trojan.GenericKD.123456",
+        "severity": "High",
+        "status": "Quarantined",
+        "actionTaken": "Quarantined"
+      },
+      "virusTotal": {
+        "state": "MockResult",
+        "malicious": 42,
+        "undetected": 30,
+        "total": 72,
+        "lastAnalysisAt": "2025-09-04T14:35:12",
+        "reportUrl": "https://www.virustotal.com/gui/file/5bb18af4f99912c4a10cfc52800863ccd63713adcf3909c7ed4b197a19722e71",
+        "engines": [
+          {
+            "engine": "Microsoft",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Kaspersky",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "ESET",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Bitdefender",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Avast",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Sophos",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Trend Micro",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Malwarebytes",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "McAfee",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Fortinet",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Avira",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "F-Secure",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-13",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-14",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-15",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-16",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-17",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-18",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-19",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-20",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-21",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-22",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-23",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-24",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-25",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-26",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-27",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-28",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-29",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-30",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-31",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-32",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-33",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-34",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-35",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-36",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-37",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-38",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-39",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-40",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-41",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-42",
+            "category": "malicious",
+            "result": "Trojan.GenericKD.123456",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-43",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-44",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-45",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-46",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-47",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-48",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-49",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-50",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-51",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-52",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-53",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-54",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-55",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-56",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-57",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-58",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-59",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-60",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-61",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-62",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-63",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-64",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-65",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-66",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-67",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-68",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-69",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-70",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-71",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-72",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          }
+        ]
+      },
+      "behavior": {
+        "state": "MockResult",
+        "events": [
+          {
+            "at": "14:32:18",
+            "type": "ProcessCreate",
+            "detail": "setup.exe -> powershell.exe",
+            "level": "High"
+          },
+          {
+            "at": "14:32:19",
+            "type": "RegistryWrite",
+            "detail": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            "level": "Medium"
+          },
+          {
+            "at": "14:32:20",
+            "type": "FileCreate",
+            "detail": "%TEMP%\\temp.dll",
+            "level": "Medium"
+          },
+          {
+            "at": "14:32:21",
+            "type": "NetworkConnect",
+            "detail": "185.199.111.153:443",
+            "level": "High"
+          },
+          {
+            "at": "14:32:22",
+            "type": "SecurityPolicyChange",
+            "detail": "Mô phỏng thay đổi chính sách bảo vệ",
+            "level": "High"
+          }
+        ],
+        "process": {
+          "name": "setup.exe",
+          "pid": 4328,
+          "commandLine": "\"C:\\Users\\Admin\\Downloads\\setup.exe\" /S"
+        }
+      },
+      "strings": {
+        "state": "MockResult",
+        "total": 10,
+        "entries": [
+          {
+            "value": "powershell.exe",
+            "kind": "Process",
+            "assessment": "Suspicious",
+            "offset": "0x1f3a0",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "-nop -w hidden",
+            "kind": "CommandLine",
+            "assessment": "Suspicious",
+            "offset": "0x1f3b8",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "http://185.199.111.153",
+            "kind": "URL",
+            "assessment": "Suspicious",
+            "offset": "0x1f3d0",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            "kind": "Registry",
+            "assessment": "Warning",
+            "offset": "0x1f3e8",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "Invoke-WebRequest",
+            "kind": "PowerShell",
+            "assessment": "Suspicious",
+            "offset": "0x1f400",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "Start-Process",
+            "kind": "PowerShell",
+            "assessment": "Warning",
+            "offset": "0x1f418",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "C:\\Users\\Public\\",
+            "kind": "Path",
+            "assessment": "Normal",
+            "offset": "0x1f430",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": ".exe",
+            "kind": "Extension",
+            "assessment": "Normal",
+            "offset": "0x1f448",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "CreateRemoteThread",
+            "kind": "API",
+            "assessment": "Suspicious",
+            "offset": "0x1f460",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          },
+          {
+            "value": "VirtualAlloc",
+            "kind": "API",
+            "assessment": "Suspicious",
+            "offset": "0x1f478",
+            "context": "Dữ liệu mô phỏng, không lấy từ tệp thật"
+          }
+        ]
+      },
+      "additional": {
+        "system": {
+          "computerName": "DESKTOP-TAINGUYEN",
+          "os": "Windows 11 Pro 64-bit (Build 26100)",
+          "user": "Admin",
+          "detectedAt": "2025-09-04T14:32:18",
+          "scanner": "Antivirus v1.0.0",
+          "scanType": "FullSystem",
+          "fileStatus": "Quarantined"
+        },
+        "properties": {
+          "attributes": "A",
+          "owner": "DESKTOP-TAINGUYEN\\Admin",
+          "permissions": "RW-r--r--"
+        },
+        "network": {
+          "state": "MockResult",
+          "ip": "185.199.111.153",
+          "domain": "cdn.example-malicious.com",
+          "port": 443,
+          "protocol": "TCP",
+          "country": "Unknown",
+          "asn": null
+        },
+        "identification": {
+          "pdbPath": "NoData",
+          "compiler": "Mock: Microsoft Visual C++",
+          "digitalSignature": "Unknown"
+        }
+      }
+    },
+    {
+      "detectionId": 2,
+      "scanId": 1,
+      "signatureId": 2,
+      "file": {
+        "name": "malware.ps1",
+        "path": "C:\\Users\\Admin\\Desktop\\malware.ps1",
+        "sizeBytes": 8192,
+        "type": ".ps1",
+        "createdAt": "2025-09-04T14:30:10",
+        "modifiedAt": "2025-09-04T14:32:18",
+        "md5": "aa9b8e3af90d83c8d698793470de7c6e",
+        "sha1": "68aeba20d4379033311d3ab8fce0a63fe9831bee",
+        "sha256": "3421eb643b20cc6e95a23b73ba625f6d609c55f0c4666e8a267f6602cdc2b70a"
+      },
+      "threat": {
+        "name": "Win32.PowerShell.Malware",
+        "severity": "Medium",
+        "status": "Detected",
+        "actionTaken": "None"
+      },
+      "virusTotal": {
+        "state": "MockResult",
+        "malicious": 18,
+        "undetected": 54,
+        "total": 72,
+        "lastAnalysisAt": "2025-09-04T14:35:12",
+        "reportUrl": "https://www.virustotal.com/gui/file/3421eb643b20cc6e95a23b73ba625f6d609c55f0c4666e8a267f6602cdc2b70a",
+        "engines": [
+          {
+            "engine": "Microsoft",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Kaspersky",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "ESET",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Bitdefender",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Avast",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Sophos",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Trend Micro",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Malwarebytes",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "McAfee",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Fortinet",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Avira",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "F-Secure",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-13",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-14",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-15",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-16",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-17",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-18",
+            "category": "malicious",
+            "result": "Win32.PowerShell.Malware",
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-19",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-20",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-21",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-22",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-23",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-24",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-25",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-26",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-27",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-28",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-29",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-30",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-31",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-32",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-33",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-34",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-35",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-36",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-37",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-38",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-39",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-40",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-41",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-42",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-43",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-44",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-45",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-46",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-47",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-48",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-49",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-50",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-51",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-52",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-53",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-54",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-55",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-56",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-57",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-58",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-59",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-60",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-61",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-62",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-63",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-64",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-65",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-66",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-67",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-68",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-69",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-70",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-71",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-72",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          }
+        ]
+      },
+      "behavior": {
+        "state": "MockResult",
+        "events": [
+          {
+            "at": "14:33:01",
+            "type": "ScriptIndicator",
+            "detail": "Phát hiện chuỗi PowerShell nghi vấn trong mẫu giả lập",
+            "level": "Medium"
+          }
+        ],
+        "process": {
+          "name": "malware.ps1",
+          "pid": null,
+          "commandLine": null
+        }
+      },
+      "strings": {
+        "state": "MockResult",
+        "total": 1,
+        "entries": [
+          {
+            "value": "Invoke-Expression",
+            "kind": "PowerShell",
+            "assessment": "Suspicious",
+            "offset": "0x20",
+            "context": "Chuỗi mẫu"
+          }
+        ]
+      },
+      "additional": {
+        "system": {
+          "computerName": "DESKTOP-TAINGUYEN",
+          "os": "Windows 11 Pro 64-bit (Build 26100)",
+          "user": "Admin",
+          "detectedAt": "2025-09-04T14:32:18",
+          "scanner": "Antivirus v1.0.0",
+          "scanType": "FullSystem",
+          "fileStatus": "Detected"
+        },
+        "properties": {
+          "attributes": "A",
+          "owner": "DESKTOP-TAINGUYEN\\Admin",
+          "permissions": "RW-r--r--"
+        },
+        "network": {
+          "state": "NoData",
+          "ip": null,
+          "domain": null,
+          "port": null,
+          "protocol": null,
+          "country": "Unknown",
+          "asn": null
+        },
+        "identification": {
+          "pdbPath": "NoData",
+          "compiler": "NoData",
+          "digitalSignature": "Unknown"
+        }
+      }
+    },
+    {
+      "detectionId": 3,
+      "scanId": 1,
+      "signatureId": 3,
+      "file": {
+        "name": "virus_test.zip",
+        "path": "D:\\Test\\virus_test.zip",
+        "sizeBytes": 1024,
+        "type": ".zip",
+        "createdAt": "2025-09-04T14:30:10",
+        "modifiedAt": "2025-09-04T14:32:18",
+        "md5": "3524f3560e91300af5aabba8836c3aec",
+        "sha1": "84f8dd8a71fe2f752bbc207818f85f73ca9da33e",
+        "sha256": "283b233ad7bbeaabfc1ffb1acdb14ed4a81e33e02eb923887a88b5caf696d9c3"
+      },
+      "threat": {
+        "name": "EICAR-Test-File",
+        "severity": "Low",
+        "status": "Detected",
+        "actionTaken": "None"
+      },
+      "virusTotal": {
+        "state": "MockResult",
+        "malicious": 0,
+        "undetected": 72,
+        "total": 72,
+        "lastAnalysisAt": "2025-09-04T14:35:12",
+        "reportUrl": "https://www.virustotal.com/gui/file/283b233ad7bbeaabfc1ffb1acdb14ed4a81e33e02eb923887a88b5caf696d9c3",
+        "engines": [
+          {
+            "engine": "Microsoft",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Kaspersky",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "ESET",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Bitdefender",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Avast",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Sophos",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Trend Micro",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Malwarebytes",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "McAfee",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Fortinet",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "Avira",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "F-Secure",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-13",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-14",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-15",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-16",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-17",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-18",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-19",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-20",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-21",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-22",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-23",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-24",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-25",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-26",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-27",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-28",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-29",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-30",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-31",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-32",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-33",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-34",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-35",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-36",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-37",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-38",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-39",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-40",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-41",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-42",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-43",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-44",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-45",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-46",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-47",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-48",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-49",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-50",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-51",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-52",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-53",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-54",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-55",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-56",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-57",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-58",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-59",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-60",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-61",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-62",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-63",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-64",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-65",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-66",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-67",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-68",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-69",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-70",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-71",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          },
+          {
+            "engine": "MockEngine-72",
+            "category": "undetected",
+            "result": null,
+            "engine_version": "MOCK-1.0",
+            "engine_update": "2025-09-04"
+          }
+        ]
+      },
+      "behavior": {
+        "state": "NoData",
+        "events": [],
+        "process": {
+          "name": "virus_test.zip",
+          "pid": null,
+          "commandLine": null
+        }
+      },
+      "strings": {
+        "state": "NoData",
+        "total": 0,
+        "entries": []
+      },
+      "additional": {
+        "system": {
+          "computerName": "DESKTOP-TAINGUYEN",
+          "os": "Windows 11 Pro 64-bit (Build 26100)",
+          "user": "Admin",
+          "detectedAt": "2025-09-04T14:32:18",
+          "scanner": "Antivirus v1.0.0",
+          "scanType": "FullSystem",
+          "fileStatus": "Detected"
+        },
+        "properties": {
+          "attributes": "A",
+          "owner": "DESKTOP-TAINGUYEN\\Admin",
+          "permissions": "RW-r--r--"
+        },
+        "network": {
+          "state": "NoData",
+          "ip": null,
+          "domain": null,
+          "port": null,
+          "protocol": null,
+          "country": "Unknown",
+          "asn": null
+        },
+        "identification": {
+          "pdbPath": "NoData",
+          "compiler": "NoData",
+          "digitalSignature": "Unknown"
+        }
+      }
+    }
+  ]
+}

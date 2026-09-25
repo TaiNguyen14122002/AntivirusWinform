@@ -67,11 +67,19 @@ namespace ScanAndRemoveVirus
 
         }
 
-        //API cho các UserControl điều hướng (vd: bấm số đếm cách ly ở tab Tổng quan)
+        // API điều hướng mở thẳng tab Cách ly (ngang hàng MoTabLichSu) — từ 25/09/2026 thẻ số
+        // "Đang cách ly" ở tab Tổng quan đã bỏ nên hiện sidebar vẫn dùng btnCachLy_Click
         public void MoTabCachLy()
         {
             LoadContent(ucCachLy);
             ActiveSidebar(btnCachLy);
+        }
+
+        //API cho các UserControl điều hướng (vd: link "Mở tab Lịch sử" ở thẻ Hoạt động gần đây)
+        public void MoTabLichSu()
+        {
+            LoadContent(ucLichSu);
+            ActiveSidebar(btnLichSu);
         }
         
 

@@ -1,0 +1,82 @@
+<!--
+  Tests\UiEndToEnd.compile-check.csproj — CỔNG CHẶN LỖI CÚ PHÁP (dùng được cả trên macOS/Linux).
+
+  Vì sao cần file này?
+    Harness `Tests\UiEndToEnd.cs` KHÔNG nằm trong `ScanAndRemoveVirus.csproj` (trên Windows nó được
+    biên dịch rời bằng `csc` của Roslyn — xem README mục "Kiểm thử tự động"). Vì vậy khi sửa mã app
+    hoặc sửa chính harness, một lỗi cú pháp/API trong harness sẽ KHÔNG bị `dotnet build` của app phát
+    hiện. Project này biên dịch ĐÚNG bộ file mà `csc` biên dịch (tất cả mã app + `Tests\UiEndToEnd.cs`),
+    nên bắt được lỗi ngay từ macOS/Linux.
+
+  Cách dùng (macOS/Linux — cần reference assemblies .NET Framework 4.7.2, xem README):
+    dotnet build Tests/UiEndToEnd.compile-check.csproj -p:TargetFrameworkRootPath=/tmp/ref/ra/build/
+  Trên Windows (Visual Studio/MSBuild) chỉ cần:
+    dotnet build Tests/UiEndToEnd.compile-check.csproj
+
+  LƯU Ý: đây chỉ là *biên dịch* — KHÔNG chạy test (WinForms/WinExe chỉ chạy trên Windows).
+  File này KHÔNG được nhắc trong `ScanAndRemoveVirus.csproj`/`.slnx` nên Visual Studio không thấy nó.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>ui_test_check</AssemblyName>
+    <RootNamespace>ScanAndRemoveVirus</RootNamespace>
+    <StartupObject>UiEndToEnd</StartupObject>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualBasic" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcBaoVe.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcBaoVe.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcCachLy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcCachLy.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcCaiDat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcCaiDat.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcLichSu.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcLichSu.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/LoadingSpinner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/Theme.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UiIcons.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/VtDonut.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcTongQuan.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcTongQuan.ChiTiet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcTongQuan.QuetNangCao.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UcTongQuan.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../FrmMain.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../FrmMain.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Program.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Properties/Resources.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Properties/Settings.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/DataDir.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/DirectorySizeCalculator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/ScanEngine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/RealTimeProtection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/QuarantineLedger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/ScanHistoryStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/VirusTotalClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/AppSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/FeatureFlags.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/GuardService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Services/TestSamples.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)/UiEndToEnd.cs" />
+  </ItemGroup>
+</Project>

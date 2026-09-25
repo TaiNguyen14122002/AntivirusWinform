@@ -74,7 +74,28 @@
       <DependentUpon>UcLichSu.cs</DependentUpon>
     </Compile>
     <Compile Include="Control\Theme.cs" />
+    <Compile Include="Control\UiIcons.cs" />
+    <Compile Include="Control\LoadingSpinner.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\VtDonut.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Control\UcTongQuan.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <!-- (25/09/2026) UcTongQuan.ChiTiet.cs + UcTongQuan.QuetNangCao.cs chi la CODE thuan (khong co
+         InitializeComponent; khai bao "partial class UcTongQuan" khong co base). Vi vay:
+           - KHONG dat <SubType>UserControl</SubType>: neu dat, double-click se mo WinForms Designer
+             cho file nay va bao loi "The base class 'System.Void' cannot be designed".
+           - KHONG dat <DependentUpon>: de Designer chi gop dung nhom
+             Control\UcTongQuan.cs + Control\UcTongQuan.Designer.cs + UcTongQuan.resx
+             (giong 4 UserControl/UcBaoVe, UcCachLy, UcLichSu, UcCaiDat dang chay tot).
+         Designer cua trang chi mo tu Control\UcTongQuan.cs. -->
+    <Compile Include="Control\UcTongQuan.ChiTiet.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Control\UcTongQuan.QuetNangCao.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Control\UcTongQuan.Designer.cs">
@@ -88,6 +109,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Services\DataDir.cs" />
+    <Compile Include="Services\DirectorySizeCalculator.cs" />
     <Compile Include="Services\ScanEngine.cs" />
     <Compile Include="Services\RealTimeProtection.cs" />
     <Compile Include="Services\QuarantineLedger.cs" />

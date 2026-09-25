@@ -28,6 +28,14 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color RedTint = Color.FromArgb(254, 243, 243);
         public static readonly Color Amber = Color.FromArgb(217, 119, 6);
 
+        // ---- Token bổ sung cho UcTongQuan (SPEC-UcTongQuan.md §2) ----
+        public static readonly Color GreenSoft = Color.FromArgb(209, 240, 215);   // viền chip xanh
+        public static readonly Color GreenTint = Color.FromArgb(240, 253, 244);  // nền chip xanh nhạt
+        public static readonly Color AmberSoft = Color.FromArgb(250, 231, 199);   // viền chip hổ phách
+        public static readonly Color AmberTint = Color.FromArgb(255, 250, 240);  // nền chip hổ phách
+        public static readonly Color WarningMedium = Color.FromArgb(245, 166, 35); // badge "Trung bình"
+        public static readonly Color WarningLow = Color.FromArgb(241, 196, 15);    // badge "Thấp"
+
         // ---- Trung tính ----
         public static readonly Color TextDark = Color.FromArgb(31, 41, 55);
         public static readonly Color TextMid = Color.FromArgb(55, 65, 81);
@@ -45,6 +53,144 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Font PageSubFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);
         public static readonly Font CardTitleFont = new Font("Segoe UI", 10.125F, FontStyle.Bold);
         public static readonly Font HintFont = new Font("Segoe UI", 8.25F, FontStyle.Italic);
+        // Cỡ chữ dùng cho các màn Tổng quan mới (hero, số liệu lớn, khoá tab)
+        public static readonly Font HeroTitleFont = new Font("Segoe UI", 15.75F, FontStyle.Bold);
+        public static readonly Font StatValueFont = new Font("Segoe UI", 18F, FontStyle.Bold);
+        public static readonly Font BadgeFont = new Font("Segoe UI", 8.25F, FontStyle.Bold);
+        public static readonly Font SmallFont = new Font("Segoe UI", 8.25F, FontStyle.Regular);
+
+        /// <summary>Mức độ đe dọa — suy ra từ loại phát hiện (SPEC-UcTongQuan.md §6.3).</summary>
+        public enum ThreatLevel { High, Medium, Low }
+
+        /// <summary>Nhãn hiển thị của badge mức độ: Cao / Trung bình / Thấp.</summary>
+        public static string LevelText(ThreatLevel level)
+        {
+            switch (level)
+            {
+                case ThreatLevel.High: return "Cao";
+                case ThreatLevel.Medium: return "Trung bình";
+                default: return "Thấp";
+            }
+        }
+
+        /// <summary>Cặp màu (nền, chữ/viền) của badge mức độ — một nguồn duy nhất.</summary>
+        public static void LevelColors(ThreatLevel level, out Color soft, out Color strong)
+        {
+            switch (level)
+            {
+                case ThreatLevel.High: soft = RedTint; strong = RedText; break;
+                case ThreatLevel.Medium: soft = AmberTint; strong = WarningMedium; break;
+                default: soft = ChipGray; strong = Amber; break;
+            }
+        }
+
+        /// <summary>Tô ô "Mức độ" trong bảng theo enum ThreatLevel.</summary>
+        public static void PaintBadgeCell(DataGridViewCellFormattingEventArgs e, ThreatLevel level)
+        {
+            Color soft, strong;
+            LevelColors(level, out soft, out strong);
+            e.CellStyle.BackColor = soft;
+            e.CellStyle.ForeColor = strong;
+            e.CellStyle.Font = BadgeFont;
+            e.CellStyle.SelectionBackColor = soft;
+            e.CellStyle.SelectionForeColor = strong;
+            e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+        }
+
+        /// <summary>Label dạng "pill" (badge) theo mức độ đe dọa.</summary>
+        public static void StyleBadge(Label lbl, ThreatLevel level)
+        {
+            Color soft, strong;
+            LevelColors(level, out soft, out strong);
+            lbl.AutoSize = false;
+            lbl.Font = BadgeFont;
+            lbl.BackColor = soft;
+            lbl.ForeColor = strong;
+            lbl.TextAlign = ContentAlignment.MiddleCenter;
+            lbl.Text = LevelText(level);
+        }
+
+        /// <summary>Thẻ chọn chế độ quét (radio dạng card) — viền/nền đổi theo trạng thái chọn.</summary>
+        public static void StyleRadioCard(RadioButton card, bool selected)
+        {
+            card.FlatStyle = FlatStyle.Flat;
+            card.UseVisualStyleBackColor = false;
+            card.Appearance = Appearance.Button;
+            card.TextAlign = ContentAlignment.MiddleLeft;
+            card.Font = ButtonFont;
+            card.Cursor = Cursors.Hand;
+            card.BackColor = selected ? BlueTint : PageBg;
+            card.ForeColor = selected ? BlueDark : TextMid;
+            card.FlatAppearance.BorderSize = selected ? 2 : 1;
+            card.FlatAppearance.BorderColor = selected ? Blue : Line;
+            card.FlatAppearance.CheckedBackColor = BlueTint;
+            card.FlatAppearance.MouseOverBackColor = BlueTint;
+            card.Padding = new Padding(10, 0, 6, 0);
+        }
+
+        /// <summary>Hộp "lưu ý / info-box" (nền xanh nhạt + viền xanh) quanh 1 Label nội dung.</summary>
+        public static void StyleInfoBox(Panel host, Label text)
+        {
+            host.BackColor = BlueTint;
+            host.Padding = new Padding(10, 8, 10, 8);
+            host.Paint += delegate(object s, PaintEventArgs e)
+            {
+                using (var pen = new Pen(BlueSoft))
+                    e.Graphics.DrawRectangle(pen, 0, 0, host.Width - 1, host.Height - 1);
+            };
+            if (text == null) return;
+            text.BackColor = BlueTint;
+            text.ForeColor = TextMid;
+            text.Font = SmallFont;
+        }
+
+        /// <summary>
+        /// (25/09/2026, lần 9) **Dải loading quét** ở tab Tổng quan: nền xanh rất nhạt + viền xanh
+        /// mảnh (kiểu info-box), chữ trạng thái xanh đậm/xám và vòng xoay đồng màu thương hiệu.
+        /// Ở đây cùng với các `Style*` khác để màu sắc chỉ có MỘT nguồn (không set rải trong Designer).
+        /// </summary>
+        public static void StyleLoadingStrip(Panel strip, LoadingSpinner spinner, Label title, Label detail, Button cancel)
+        {
+            if (strip != null)
+            {
+                strip.BackColor = BlueTint;
+                strip.Paint += delegate(object s, PaintEventArgs e)
+                {
+                    using (var pen = new Pen(BlueSoft))
+                        e.Graphics.DrawRectangle(pen, 0, 0, strip.Width - 1, strip.Height - 1);
+                };
+            }
+            if (spinner != null)
+            {
+                spinner.BackColor = BlueTint;
+                spinner.MauVong = BlueSoft;
+                spinner.MauQuay = Blue;
+            }
+            if (title != null)
+            {
+                title.BackColor = BlueTint;
+                title.ForeColor = BlueDark;
+                title.Font = BoldFont;
+            }
+            if (detail != null)
+            {
+                detail.BackColor = BlueTint;
+                detail.ForeColor = TextGray;
+                detail.Font = SmallFont;
+            }
+            if (cancel != null) StyleButton(cancel, BtnRole.Cancel);
+        }
+
+        /// <summary>LinkLabel đồng bộ tông xanh brand và luôn có con trỏ bàn tay.</summary>
+        public static void StyleLinkLabel(LinkLabel lnk)
+        {
+            lnk.LinkColor = Blue;
+            lnk.ActiveLinkColor = BlueDark;
+            lnk.VisitedLinkColor = Blue;
+            lnk.LinkBehavior = LinkBehavior.HoverUnderline;
+            lnk.Cursor = Cursors.Hand;
+            lnk.Font = BoldFont;
+        }
 
         // Trang chuẩn hóa: tiêu đề 18B TextDark + phụ đề xám (mọi tab theo tab Lịch sử)
         public static void StylePageHeader(Label title, Label subtitle)
@@ -179,7 +325,7 @@ namespace ScanAndRemoveVirus.Control
         // ==== HỆ THỐNG NÚT THỐNG NHẤT ====
         // Mọi nút trong app dùng chung hình hài (font, border, cursor);
         // chỉ khác nhau theo VAI TRÒ semantics.
-        public enum BtnRole { Primary, Cancel, Action, Neutral, Danger }
+        public enum BtnRole { Primary, Secondary, Cancel, Action, Neutral, Danger }
         public static readonly Font ButtonFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
 
         public static void StyleButton(Button b, BtnRole role)
@@ -210,6 +356,8 @@ namespace ScanAndRemoveVirus.Control
             {
                 case BtnRole.Primary: // CTA chính: nền xanh brand, chữ trắng
                     bg = hover ? Color.FromArgb(9, 74, 186) : Blue; fg = Color.White; border = bg; break;
+                case BtnRole.Secondary: // CTA phụ: nền trắng, viền + chữ xanh brand
+                    bg = hover ? BlueTint : PageBg; fg = BlueDark; border = hover ? Blue : BlueSoft; break;
                 case BtnRole.Cancel: // hành động dừng/hủy: nền đỏ, chữ trắng
                     bg = hover ? Color.FromArgb(196, 32, 32) : Red; fg = Color.White; border = bg; break;
                 case BtnRole.Action: // thao tác khẳng định (cách ly/khôi phục): chip xanh nhạt

@@ -4,9 +4,10 @@
 //   & $csc /out:ui_test.exe /main:UiEndToEnd /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Net.Http.dll /r:System.Management.dll /r:Microsoft.VisualBasic.dll
 //     Services\ScanEngine.cs Services\RealTimeProtection.cs Services\QuarantineLedger.cs Services\ScanHistoryStore.cs
 //     Services\VirusTotalClient.cs Services\AppSettings.cs Services\FeatureFlags.cs Services\GuardService.cs
-//     Services\TestSamples.cs Services\DataDir.cs
-//     Control\Theme.cs
+//     Services\TestSamples.cs Services\DataDir.cs Services\DirectorySizeCalculator.cs
+//     Control\Theme.cs Control\UiIcons.cs Control\VtDonut.cs Control\LoadingSpinner.cs
 //     Control\UcTongQuan.cs Control\UcTongQuan.Designer.cs
+//                       Control\UcTongQuan.ChiTiet.cs Control\UcTongQuan.QuetNangCao.cs
 //     Control\UcCachLy.cs  Control\UcCachLy.Designer.cs
 //     Control\UcLichSu.cs  Control\UcLichSu.Designer.cs
 //     Control\UcBaoVe.cs   Control\UcBaoVe.Designer.cs
@@ -90,6 +91,11 @@ static class UiEndToEnd
     {
         o.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(o, val);
     }
+    // Kiểm tra một field KHÔNG còn tồn tại (dùng cho control đã bị gỡ khỏi giao diện)
+    static bool NoField(object o, string name)
+    {
+        return o.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic) == null;
+    }
     // Đặt giá trị checkbox thẳng vào cell KHÔNG bắn CellValueChanged -> nút hành động
     // vẫn Disabled (SyncButtons/UpdateThreatUi không chạy). Gọi method sync thủ công.
     static void InvokeM(object o, string name)
@@ -167,8 +173,7 @@ static class UiEndToEnd
                 // ===== 1. Tổng quan: quét tùy chọn 1 thư mục có 2 đe dọa =====
                 File.WriteAllText(Path.Combine(root, "drop.txt"), ScanEngine.TestSignature + "ui-e2e-payload!!");
                 File.WriteAllText(Path.Combine(root, "qr_eicar.dat"), "hello");
-                var rdoCustom = F<RadioButton>(uc, "rdoCustomScan");
-                rdoCustom.Checked = true;
+                // (25/09/2026) Thẻ "Tuỳ chọn quét nhanh" đã bị bỏ: "Quét ngay" + SetCustomPath = quét 1 vị trí
                 SetF(uc, "customScanPath", root);
                 PumpTarget = uc;
                 F<Button>(uc, "btnScanNow").PerformClick();
@@ -191,9 +196,9 @@ static class UiEndToEnd
                 Check("[UI] cách ly hết -> bảng trống", dgv.Rows.Count == 0);
                 Check("[UI] tệp sạch chỗ cũ", !File.Exists(Path.Combine(root, "drop.txt"))
                     && !File.Exists(Path.Combine(root, "qr_eicar.dat")));
-                Check("[UI] đếm cách ly tăng đúng 2 và label cập nhật",
-                    ScanEngine.CountQuarantined() == qBefore + 2
-                    && F<Label>(uc, "lblQuarantineCount").Text == (qBefore + 2).ToString());
+                // (25/09/2026) Thẻ "4. Đang cách ly" đã bị bỏ khỏi Tổng quan -> kiểm tra qua sổ cách ly thật
+                Check("[UI] cách ly tất cả: sổ cách ly tăng đúng 2",
+                    ScanEngine.CountQuarantined() == qBefore + 2);
 
                 // ===== 3. Cách khác: xóa vĩnh viễn từ nút UI =====
                 File.WriteAllText(Path.Combine(root, "kill1.txt"), ScanEngine.TestSignature + "delete-me-please!!");
@@ -210,20 +215,51 @@ static class UiEndToEnd
                 Check("[UI] xóa vĩnh viễn không vào khu cách ly",
                     ScanEngine.CountQuarantined() == qBefore + 2);
 
-                // ===== 3b. Radio loại trừ lẫn nhau + logic sau dialog chọn đường dẫn =====
-                var qkR = F<RadioButton>(uc, "rdoQuickScan");
-                var flR = F<RadioButton>(uc, "rdoFullScan");
-                var cmR = F<RadioButton>(uc, "rdoCustomScan");
-                flR.Checked = true;
-                Check("[UI] radio: bật Full tự tắt cái khác", !qkR.Checked && !cmR.Checked && flR.Checked);
-                cmR.Checked = true;
-                Check("[UI] radio: bật Custom tự tắt Full", !qkR.Checked && !flR.Checked && cmR.Checked);
-                // Nút Chọn tệp/Chọn thư mục mở dialog HỆ THỐNG (không auto được) -> test logic sau dialog:
+                // ===== 3b. Thẻ "Tuỳ chọn quét nhanh" đã bị bỏ (25/09/2026) =====
+                Check("[UI] TQ đã bỏ thẻ quét nhanh: không còn grpScan/rdo*/lblCustomPath/btn chọn tệp",
+                    NoField(uc, "grpScan") && NoField(uc, "rdoQuickScan") && NoField(uc, "rdoFullScan")
+                    && NoField(uc, "rdoCustomScan") && NoField(uc, "lblCustomPath")
+                    && NoField(uc, "btnPickFile") && NoField(uc, "btnPickFolder"));
+                Check("[UI] tableLayoutPanel12 còn 6 hàng (bỏ hàng trống 44px + hàng thẻ quét nhanh)",
+                    F<TableLayoutPanel>(uc, "tableLayoutPanel12").RowStyles.Count == 6);
+                // (25/09/2026, lần 2) Bỏ thanh loading quét cũ + cả khối "cập nhật dữ liệu" + thẻ "4. Đang cách ly"
+                Check("[UI] TQ đã bỏ THANH loading quét cũ (pgbScan) — chỉ còn nhãn trạng thái quét",
+                    NoField(uc, "pgbScan"));
+                // (25/09/2026, lần 9) ...nhưng loading nay được DỰNG LẠI theo thiết kế mới: dải `pnlLoadingQuet` ở
+                // hàng 0 của tableLayoutPanel11 (KHÔNG phải ProgressBar cũ), gồm vòng xoay GDI+ + 2 nhãn + nút hủy.
+                Check("[UI] TQ có dải loading quét mới (lần 9): hàng 0 của tableLayoutPanel11 = 0px + ẩn khi rảnh",
+                    F<Panel>(uc, "pnlLoadingQuet") != null
+                    && F<LoadingSpinner>(uc, "spinnerDangQuet") != null
+                    && F<Button>(uc, "btnHuyQuetLoading").Text == "Hủy quét"
+                    && !F<Panel>(uc, "pnlLoadingQuet").Visible
+                    && F<TableLayoutPanel>(uc, "tableLayoutPanel11").RowStyles.Count == 2
+                    && Math.Abs(F<TableLayoutPanel>(uc, "tableLayoutPanel11").RowStyles[0].Height) < 0.5F
+                    && F<TableLayoutPanel>(uc, "tableLayoutPanel11").GetRow(F<Control>(uc, "pnlLoadingQuet")) == 0
+                    && F<TableLayoutPanel>(uc, "tableLayoutPanel11").GetRow(F<Control>(uc, "tableLayoutPanel12")) == 1
+                    && F<TableLayoutPanel>(uc, "tableLayoutPanel12").RowStyles.Count == 6);
+                Check("[UI] TQ đã bỏ khối cập nhật dữ liệu (chip CSDL/Cập nhật cuối + nút Kiểm tra cập nhật)",
+                    NoField(uc, "lblDatabaseTitle") && NoField(uc, "lblDatabaseValue")
+                    && NoField(uc, "lblLastUpdate") && NoField(uc, "lblLastUpdateTitle")
+                    && NoField(uc, "btnCheckUpdate"));
+                Check("[UI] TQ đã bỏ thẻ \"Đang cách ly\": hàng số liệu còn 3 thẻ",
+                    NoField(uc, "grpQuarantine") && NoField(uc, "lblQuarantineCount")
+                    && F<TableLayoutPanel>(uc, "pnlThongKe").ColumnCount == 3);
+                // (25/09/2026, lần 4) Bố cục lại: gỡ hàng header riêng (pnlOverviewHeader), đưa 2 nút quét
+                // xuống ngay dưới khối trạng thái (a) — hàng 4 của tlpAnToanText, "Quét ngay" ở bên trái
+                Check("[UI] TQ gọn bố cục: bỏ hàng header/dải trạng thái/chip; 2 nút quét nằm trong khối (a)",
+                    NoField(uc, "pnlOverviewHeader") && NoField(uc, "pnlScanStrip") && NoField(uc, "pnlChips")
+                    && F<TableLayoutPanel>(uc, "tlpAnToanText").RowStyles.Count == 4
+                    && ReferenceEquals(F<Control>(uc, "flowHeaderActions").Parent,
+                        F<Control>(uc, "tlpAnToanText"))
+                    && F<FlowLayoutPanel>(uc, "flowHeaderActions").Controls[0] == F<Control>(uc, "btnScanNow"));
+                // Nút Chọn tệp/Chọn thư mục mở dialog HỆ THỐNG (không auto được) -> chỉ còn logic sau dialog:
+                // SetCustomPath(path) => "Quét ngay" chuyển sang chế độ Quét tùy chọn đúng vị trí đó
                 typeof(UcTongQuan).GetMethod("SetCustomPath", BindingFlags.Instance | BindingFlags.NonPublic)
                     .Invoke(uc, new object[] { Path.Combine(root, "sau-dialog.txt") });
-                Check("[UI] SetCustomPath: tự chọn Custom + hiện đường dẫn + bật picker",
-                    cmR.Checked && F<Label>(uc, "lblCustomPath").Text == Path.Combine(root, "sau-dialog.txt")
-                    && F<Button>(uc, "btnPickFile").Enabled);
+                Check("[UI] SetCustomPath: đường dẫn tùy chọn -> chế độ quét là Quét tùy chọn",
+                    (ScanType)typeof(UcTongQuan)
+                        .GetMethod("GetSelectedScanType", BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Invoke(uc, null) == ScanType.Custom);
 
                 // ===== 3c. Hủy quét giữa chừng trên UI (engine đã stress x8, đây là luồng nút) =====
                 // Corpus đủ LỚN để phiên quét còn chạy khi bấm Hủy (máy rảnh quét ~0.3s/3300 tệp)
@@ -235,9 +271,22 @@ static class UiEndToEnd
                         File.WriteAllText(Path.Combine(dd, "c" + cf + ".log"), new string('y', 120));
                 }
                 SetF(uc, "customScanPath", cancelDir);
-                cmR.Checked = true;
                 F<Button>(uc, "btnScanNow").PerformClick();
+                // (25/09/2026, lần 9) Dải loading quét phải hiện NGAY trong cùng nhịp bấm: `ChayPhienQuet` gọi
+                // `SetScanning(true)` (=> HienThiDaiLoading) TRƯỚC `await Task.Run(...)` nên trạng thái đã đổi
+                // xong khi PerformClick trả về — không phải chờ Timer hay BeginInvoke nào.
+                var t11c = F<TableLayoutPanel>(uc, "tableLayoutPanel11");
+                Check("[UI] bấm \"Quét ngay\" -> dải loading hiện NGAY: hàng 0 giãn 0 -> 46px + vòng xoay chạy",
+                    F<Panel>(uc, "pnlLoadingQuet").Visible
+                    && Math.Abs(t11c.RowStyles[0].Height - 46F) < 0.5F
+                    && F<Label>(uc, "lblLoadingTieuDe").Text == "Đang quét…"
+                    && F<Label>(uc, "lblLoadingChiTiet").Text.Contains("Hủy quét")
+                    && F<Button>(uc, "btnHuyQuetLoading").Visible);
+                int gocTruoc = F<LoadingSpinner>(uc, "spinnerDangQuet").Goc;
                 PumpMs(350); // đang quét dở
+                int gocSau = F<LoadingSpinner>(uc, "spinnerDangQuet").Goc;
+                Check("[UI] vòng xoay loading QUAY thật trong lúc quét (góc đổi sau 350ms)",
+                    gocSau != gocTruoc);
                 Check("[UI] nút đổi thành 'Hủy quét' khi đang quét", F<Button>(uc, "btnScanNow").Text == "Hủy quét");
                 F<Button>(uc, "btnScanNow").PerformClick();
                 var cUntil = DateTime.Now.AddSeconds(25);
@@ -248,6 +297,13 @@ static class UiEndToEnd
                     !(bool)F<object>(uc, "isScanning")
                     && F<Label>(uc, "lblScanProgress").Text.Contains("hủy")
                     && F<Button>(uc, "btnScanNow").Text == "Quét ngay");
+                int gocDung1 = F<LoadingSpinner>(uc, "spinnerDangQuet").Goc;
+                PumpMs(300);
+                Check("[UI] hết phiên: dải loading ẩn, hàng 0 về 0px, vòng xoay DỪNG (không tốn Timer khi rảnh)",
+                    !F<Panel>(uc, "pnlLoadingQuet").Visible
+                    && Math.Abs(t11c.RowStyles[0].Height) < 0.5F
+                    && F<Label>(uc, "lblLoadingChiTiet").Text.Contains("hủy")
+                    && F<LoadingSpinner>(uc, "spinnerDangQuet").Goc == gocDung1);
 
                 // ===== 3d. Nút Tra VirusTotal (key giả -> đi hết luồng xử lý, 401 hay lỗi mạng đều được) =====
                 string vtKeyBak = File.Exists(VirusTotalClient.ApiKeyPath)
@@ -256,7 +312,6 @@ static class UiEndToEnd
                 {
                     File.WriteAllText(Path.Combine(root, "vtprobe.txt"), ScanEngine.TestSignature + "vt button flow!!");
                     SetF(uc, "customScanPath", Path.Combine(root, "vtprobe.txt"));
-                    cmR.Checked = true;
                     F<Button>(uc, "btnScanNow").PerformClick();
                     PumpTarget = uc;
                     Pump(delegate { });
@@ -281,16 +336,270 @@ static class UiEndToEnd
                     if (vtKeyBak == null) { try { File.Delete(VirusTotalClient.ApiKeyPath); } catch { } }
                     else File.WriteAllText(VirusTotalClient.ApiKeyPath, vtKeyBak);
                 }
-                qkR.Checked = true;
                 SetF(uc, "customScanPath", null);
 
-                // ===== 4. Kiểm tra cập nhật -> danh hiệu DB + entry history =====
-                F<Button>(uc, "btnCheckUpdate").PerformClick();
-                PumpMs(600);
-                Check("[UI] nút cập nhật: nhãn DB đổi 'Đã cập nhật'",
-                    F<Label>(uc, "lblDatabaseValue").Text == "Đã cập nhật");
-                Check("[UI] history ghi sự kiện cập nhật CSDL",
-                    ScanHistoryStore.Entries().Any(h => h.Type == "Cập nhật CSDL"));
+                // ===== 3e. Màn hình riêng (c)/(d): hàng 3 thẻ số liệu BIẾN MẤT — (c) lần 8, (d) lần 5 =====
+                // (c) "Chi tiết kết quả quét" và (d) "Quét nâng cao" đều KHÔNG phải Tổng quan: hàng 3 thẻ
+                // (Mối đe dọa / Tệp đã quét / Lần quét gần nhất) chỉ thuộc (a)/(b) -> mở (c)/(d) phải ẩn HẲN
+                // (hàng hạ về 0px) để nhường chiều cao cho bảng chi tiết / vùng chọn chế độ quét.
+                var viewTruoc = (TongQuanView)F<object>(uc, "currentView");
+                var tlp12 = F<TableLayoutPanel>(uc, "tableLayoutPanel12");
+                int hangThongKe = tlp12.GetRow(F<Control>(uc, "pnlThongKe"));
+                // -- (c): mở đúng đường đi của người dùng (nút "Xem chi tiết" / link "Xem tất cả")
+                uc.MoChiTietKetQua(0);
+                PumpMs(300);
+                Check("[UI] mở trang (c) Chi tiết kết quả quét: 3 thẻ số liệu biến mất (hàng về 0px)",
+                    F<Control>(uc, "pnlChiTietKetQua").Visible
+                    && !F<Control>(uc, "pnlThongKe").Visible
+                    && !F<GroupBox>(uc, "grpThreats").Visible
+                    && !F<GroupBox>(uc, "grpScannedFiles").Visible
+                    && !F<GroupBox>(uc, "grpLastScan").Visible
+                    && Math.Abs(tlp12.RowStyles[hangThongKe].Height) < 0.5F);
+                F<Button>(uc, "btnQuayLaiChiTiet").PerformClick();   // nút "← Quay lại" của trang (c)
+                PumpMs(300);
+                Check("[UI] rời trang (c) bằng \"← Quay lại\": 3 thẻ số liệu hiện lại đúng 104px (trạng thái (b))",
+                    !F<Control>(uc, "pnlChiTietKetQua").Visible
+                    && F<Control>(uc, "pnlPhatHienDeDoa").Visible
+                    && F<Control>(uc, "pnlThongKe").Visible
+                    && F<GroupBox>(uc, "grpThreats").Visible
+                    && Math.Abs(tlp12.RowStyles[hangThongKe].Height - 104F) < 0.5F);
+                // -- (d): dropdown "⚙ Quét nâng cao ▾" -> mở trang (d) chế độ quét toàn bộ hệ thống
+                uc.MoQuetNangCao(CheDoQuetNangCao.FullSystem);
+                PumpMs(250);
+                Check("[UI] sang trang Quét nâng cao: 3 thẻ số liệu (đe dọa/tệp đã quét/lần quét) biến mất",
+                    F<Control>(uc, "pnlQuetNangCao").Visible
+                    && !F<Control>(uc, "pnlThongKe").Visible
+                    && !F<GroupBox>(uc, "grpThreats").Visible
+                    && !F<GroupBox>(uc, "grpScannedFiles").Visible
+                    && !F<GroupBox>(uc, "grpLastScan").Visible
+                    && Math.Abs(tlp12.RowStyles[hangThongKe].Height) < 0.5F);
+                // ===== 3f. Trang (d): chuyển QUA LẠI giữa 4 lựa chọn chế độ (25/09/2026, lần 6) =====
+                // Cột trái có 4 thẻ (Toàn bộ hệ thống / Thư mục / Tệp / Tùy chỉnh). 4 thẻ nằm trong 4
+                // container riêng nên WinForms KHÔNG tự bỏ chọn thẻ cũ (radio chỉ loại trừ trong cùng
+                // parent) -> nếu không tự đồng bộ: bấm sang thẻ khác rồi bấm LẠI thẻ đầu thì thẻ đầu vẫn
+                // Checked = true, không có CheckedChanged => cột phải kẹt ở chế độ vừa chọn.
+                var theCheDo = F<RadioButton[]>(uc, "theCheDo");
+                var soTheDuocChon = new Func<int>(delegate
+                {
+                    int n = 0;
+                    foreach (RadioButton r in theCheDo) if (r.Checked) n++;
+                    return n;
+                });
+                int soODia = F<DataGridView>(uc, "dgvODia").Rows.Count;
+                bool batDauTruoc = F<Button>(uc, "btnBatDauQuet").Enabled;
+                Check("[UI] trang (d) vừa mở: đúng 1/4 thẻ chế độ được chọn (thẻ \"Quét toàn bộ hệ thống\")",
+                    theCheDo.Length == 4 && soTheDuocChon() == 1 && theCheDo[0].Checked
+                    && F<Panel>(uc, "pnlFullSystem").Visible);
+                theCheDo[1].PerformClick();                             // bấm thẻ "Quét thư mục"
+                PumpMs(150);
+                Check("[UI] bấm thẻ \"Quét thư mục\": thẻ cũ BỎ CHỌN + cột phải sang nội dung thư mục",
+                    soTheDuocChon() == 1 && theCheDo[1].Checked && !theCheDo[0].Checked
+                    && F<Panel>(uc, "pnlFolder").Visible && !F<Panel>(uc, "pnlFullSystem").Visible);
+                Check("[UI] nhãn tóm tắt đổi theo thẻ đang chọn: \"Đang chọn: Quét thư mục\"",
+                    F<Label>(uc, "lblCheDoTomTat").Text.Contains("Quét thư mục"));
+                theCheDo[3].PerformClick();                             // bấm thẻ "Quét tùy chỉnh"
+                PumpMs(150);
+                Check("[UI] bấm thẻ \"Quét tùy chỉnh\": vẫn đúng 1 thẻ được chọn + cột phải sang nội dung tùy chỉnh",
+                    soTheDuocChon() == 1 && theCheDo[3].Checked && !theCheDo[1].Checked
+                    && F<Panel>(uc, "pnlCustom").Visible);
+                theCheDo[2].PerformClick();                             // bấm thẻ "Quét tệp"
+                PumpMs(150);
+                Check("[UI] bấm thẻ \"Quét tệp\": vẫn đúng 1 thẻ được chọn + cột phải sang nội dung tệp",
+                    soTheDuocChon() == 1 && theCheDo[2].Checked && !theCheDo[3].Checked
+                    && F<Panel>(uc, "pnlFiles").Visible);
+                theCheDo[0].PerformClick();                             // QUAY LẠI thẻ đầu
+                PumpMs(150);
+                Check("[UI] quay lại thẻ \"Quét toàn bộ hệ thống\": 3 thẻ kia bỏ chọn + cột phải về đúng chế độ",
+                    soTheDuocChon() == 1 && theCheDo[0].Checked
+                    && !theCheDo[1].Checked && !theCheDo[2].Checked && !theCheDo[3].Checked
+                    && F<Panel>(uc, "pnlFullSystem").Visible && !F<Panel>(uc, "pnlFolder").Visible
+                    && !F<Panel>(uc, "pnlFiles").Visible && !F<Panel>(uc, "pnlCustom").Visible);
+                Check("[UI] nhãn tóm tắt về lại \"Đang chọn: Quét toàn bộ hệ thống\"",
+                    F<Label>(uc, "lblCheDoTomTat").Text.Contains("Quét toàn bộ hệ thống"));
+                Check("[UI] thẻ đang chọn có viền dày hơn thẻ chưa chọn (dấu hiệu nhận biết trên giao diện)",
+                    theCheDo[0].FlatAppearance.BorderSize > theCheDo[1].FlatAppearance.BorderSize);
+                Check("[UI] đi qua lại 4 thẻ: dữ liệu ổ đĩa + trạng thái nút \"Bắt đầu quét\" giữ nguyên",
+                    F<DataGridView>(uc, "dgvODia").Rows.Count == soODia
+                    && F<Button>(uc, "btnBatDauQuet").Enabled == batDauTruoc);
+                F<Button>(uc, "btnQuayLaiNangCao").PerformClick();   // nút "← Quay lại" của trang (d)
+                PumpMs(500);
+                Check("[UI] quay lại từ Quét nâng cao: 3 thẻ số liệu hiện lại, hàng về đúng 104px",
+                    !F<Control>(uc, "pnlQuetNangCao").Visible
+                    && F<Control>(uc, "pnlThongKe").Visible
+                    && F<GroupBox>(uc, "grpThreats").Visible && F<GroupBox>(uc, "grpLastScan").Visible
+                    && Math.Abs(tlp12.RowStyles[hangThongKe].Height - 104F) < 0.5F);
+                // Trả lại đúng màn hình cho các section sau (HienThi(viewTruoc, refresh:false))
+                typeof(UcTongQuan).GetMethod("HienThi", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(uc, new object[] { viewTruoc, false });
+                PumpMs(150);
+
+                // ===== 3g. Trang (d) RESPONSIVE: tự xếp lại bố cục theo bề rộng cửa sổ (25/09/2026, lần 7) =====
+                // Mở trang (d) trên một cửa sổ RIÊNG rồi thu hẹp dần (1400 -> 950 -> 650 -> 1400):
+                //   • >= 1000px: 2 cột — 4 thẻ xếp dọc bên trái, nội dung bên phải (thiết kế cũ);
+                //   • 800..999px: 4 thẻ về 1 hàng ngang trên đầu, nội dung chiếm trọn bề ngang bên dưới;
+                //   • < 800px  : 4 thẻ về lưới 2x2, nội dung vẫn ở dưới.
+                // Nhãn "Đang chọn: …" + nút "Bắt đầu quét" phải xuống hàng riêng khi hẹp (không bị cắt) và
+                // 4 thẻ chế độ phải GIỮ NGUYÊN control (không dựng lại) nên chế độ + dữ liệu còn nguyên.
+                Console.WriteLine("== SECTION 3g ==");
+                using (var geoR = new Form())
+                using (var ucR = new UcTongQuan())
+                {
+                    ucR.Dock = DockStyle.Fill;
+                    geoR.Controls.Add(ucR);
+                    geoR.StartPosition = FormStartPosition.Manual;
+                    geoR.Location = new Point(-2600, -2600);
+                    geoR.ClientSize = new Size(1400, 980);
+                    geoR.Show(); Application.DoEvents();
+                    var t11r = F<Control>(ucR, "tableLayoutPanel11");
+                    var pgr = F<Panel>(ucR, "pnlQuetNangCao");
+                    var than = F<TableLayoutPanel>(ucR, "tlpThanNangCao");
+                    var cotThe = F<TableLayoutPanel>(ucR, "pnlCheDoTrai");
+                    var headR = F<TableLayoutPanel>(ucR, "tlpHeaderNangCao");
+                    var chanR = F<TableLayoutPanel>(ucR, "tlpChanNangCao");
+                    var tomTatR = F<Label>(ucR, "lblCheDoTomTat");
+                    var nutQuet = F<Button>(ucR, "btnBatDauQuet");
+                    var phaiR = F<TableLayoutPanel>(ucR, "pnlNoiDungPhai");
+                    var oTheR = F<TableLayoutPanel[]>(ucR, "oTheCheDo");
+                    var theCheDoR = F<RadioButton[]>(ucR, "theCheDo");
+                    Check("[UI] TQ (a): bề rộng tối thiểu vùng trang vẫn 980px (ngưỡng cũ của (a)/(b)/(c))",
+                        t11r.MinimumSize.Width == 980 && t11r.MinimumSize.Height == 640);
+                    ucR.MoQuetNangCao(CheDoQuetNangCao.Files);   // chế độ "Quét tệp" -> kiểm tra giữ trạng thái
+                    PumpMs(200);
+                    Check("[UI] mở (d): hạ bề rộng tối thiểu (để tự xếp lại) nhưng giữ chiều cao tối thiểu 640",
+                        t11r.MinimumSize.Width <= 480 && t11r.MinimumSize.Height == 640);
+                    Console.WriteLine("  geoRong page.W=" + pgr.ClientSize.Width + " than.Cols=" + than.ColumnCount
+                        + " cotThe=" + cotThe.ColumnCount + "x" + cotThe.RowCount);
+                    Check("[UI] (d) vùng trang RỘNG (>=1000px): 2 cột — 4 thẻ dọc bên trái, nội dung bên phải",
+                        than.ColumnCount == 2 && than.GetColumn(cotThe) == 0 && than.GetColumn(phaiR) == 1
+                        && cotThe.ColumnCount == 1 && cotThe.RowCount == 5
+                        && cotThe.GetRow(oTheR[0]) == 0 && cotThe.GetRow(oTheR[3]) == 3
+                        && headR.RowCount == 1 && chanR.ColumnCount == 2 && chanR.GetRow(nutQuet) == 0);
+                    geoR.ClientSize = new Size(950, 980);        // VỪA: 800..999px
+                    PumpMs(200); ucR.PerformLayout(); Application.DoEvents();
+                    Console.WriteLine("  geoVua page.W=" + pgr.ClientSize.Width + " than.Rows=" + than.RowCount
+                        + " cotThe=" + cotThe.ColumnCount + "x" + cotThe.RowCount + " head.Rows=" + headR.RowCount);
+                    Check("[UI] (d) vùng trang VỪA (800..999px): 4 thẻ về 1 HÀNG ngang trên đầu, nội dung xuống dưới",
+                        than.ColumnCount == 1 && than.RowCount == 2
+                        && than.GetRow(cotThe) == 0 && than.GetRow(phaiR) == 1
+                        && cotThe.ColumnCount == 4 && cotThe.RowCount == 1
+                        && cotThe.GetColumn(oTheR[3]) == 3 && cotThe.GetRow(oTheR[0]) == 0
+                        && headR.RowCount == 2 && chanR.ColumnCount == 1 && chanR.RowCount == 2);
+                    Check("[UI] (d) hẹp: nhãn tóm tắt xuống hàng dưới (trải hết bề ngang) + nút \"Bắt đầu quét\" giãn hết",
+                        tomTatR.Dock == DockStyle.Fill && headR.GetRow(tomTatR) == 1 && headR.GetColumnSpan(tomTatR) == 3
+                        && nutQuet.Dock == DockStyle.Fill && chanR.GetRow(nutQuet) == 1);
+                    Check("[UI] (d) hẹp: nút + nội dung + nhãn đều nằm TRONG vùng trang (không bị cắt ngang)",
+                        nutQuet.Right <= chanR.ClientSize.Width + 1 && phaiR.Right <= than.ClientSize.Width + 1
+                        && tomTatR.Right <= headR.ClientSize.Width + 1 && than.Bottom <= pgr.ClientSize.Height + 1
+                        && F<Panel>(ucR, "pnlContent").ClientSize.Width >= t11r.Width - 1);
+                    geoR.ClientSize = new Size(650, 980);        // HẸP: < 800px
+                    PumpMs(200); ucR.PerformLayout(); Application.DoEvents();
+                    Console.WriteLine("  geoHep page.W=" + pgr.ClientSize.Width + " cotThe=" + cotThe.ColumnCount
+                        + "x" + cotThe.RowCount);
+                    Check("[UI] (d) vùng trang HẸP (<800px): 4 thẻ về LƯỚI 2x2, nội dung vẫn ở dưới",
+                        than.ColumnCount == 1 && than.GetRow(cotThe) == 0 && than.GetRow(phaiR) == 1
+                        && cotThe.ColumnCount == 2 && cotThe.RowCount == 2
+                        && cotThe.GetColumn(oTheR[1]) == 1 && cotThe.GetRow(oTheR[2]) == 1
+                        && cotThe.GetColumn(oTheR[3]) == 1 && cotThe.GetRow(oTheR[3]) == 1);
+                    Check("[UI] (d) hẹp nhất: thẻ cuối + nút vẫn nằm trong vùng trang (không cắt ngang/dọc)",
+                        oTheR[3].Right <= cotThe.ClientSize.Width + 1 && oTheR[3].Bottom <= cotThe.ClientSize.Height + 1
+                        && nutQuet.Right <= chanR.ClientSize.Width + 1 && than.Bottom <= pgr.ClientSize.Height + 1
+                        && pgr.ClientSize.Width >= 400);
+                    geoR.ClientSize = new Size(1400, 980);       // RỘNG LẠI
+                    PumpMs(200); ucR.PerformLayout(); Application.DoEvents();
+                    Check("[UI] (d) rộng lại: về 2 cột + chế độ \"Quét tệp\" và dữ liệu ổ đĩa GIỮ NGUYÊN (không dựng lại control)",
+                        than.ColumnCount == 2 && cotThe.ColumnCount == 1 && cotThe.RowCount == 5
+                        && headR.RowCount == 1 && nutQuet.Dock == DockStyle.Right && cotThe.Controls.Count == 4
+                        && ReferenceEquals(oTheR[0], F<TableLayoutPanel[]>(ucR, "oTheCheDo")[0])
+                        && ReferenceEquals(theCheDoR[0], F<RadioButton[]>(ucR, "theCheDo")[0])
+                        && theCheDoR[2].Checked && F<Panel>(ucR, "pnlFiles").Visible
+                        && F<DataGridView>(ucR, "dgvODia").Rows.Count > 0);
+                    F<Button>(ucR, "btnQuayLaiNangCao").PerformClick();
+                    PumpMs(200);
+                    Check("[UI] đóng (d): bề rộng tối thiểu về lại 980px + trang (d) đã ẩn",
+                        t11r.MinimumSize.Width == 980 && t11r.MinimumSize.Height == 640 && !pgr.Visible);
+                    geoR.Close();
+                }
+
+                // ===== 3h. Dải loading quét phục vụ MỌI nút quét (25/09/2026, lần 9) =====
+                // Yêu cầu thiết kế: "nhấn bất kỳ nút quét nào thì thấy loading xuất hiện". Cả 3 nút quét
+                // ("Quét ngay" ở (a)/(b), "Quét lại" ở (b), "Bắt đầu quét" ở (d)) đều chạy qua ChayPhienQuet
+                // -> SetScanning(true), nên chỉ cần 1 chỗ HienThiDaiLoading là mọi nút đều có loading. Ở (d)
+                // nút "Bắt đầu quét" bị khoá khi phiên chạy -> nút "Hủy quét" của dải loading là đường hủy duy nhất.
+                var t11h = F<TableLayoutPanel>(uc, "tableLayoutPanel11");
+                var daiH = F<Panel>(uc, "pnlLoadingQuet");
+                // 3c vừa quét dở ĐÚNG corpus này nên cache có thể khiến lượt 2 xong gần như tức thì -> xoá cache
+                // để phiên quét chắc chắn còn chạy khi ta bấm Hủy (giống giả định của 3c: ~0.3s/3300 tệp).
+                ScanEngine.ClearScanCache();
+                SetF(uc, "customScanPath", cancelDir);
+                F<Button>(uc, "btnScanNow").PerformClick();
+                PumpMs(400);
+                F<Button>(uc, "btnHuyQuetLoading").PerformClick();   // hủy bằng nút CỦA DẢI LOADING
+                var hUntil = DateTime.Now.AddSeconds(25);
+                while (DateTime.Now < hUntil && (bool)F<object>(uc, "isScanning"))
+                { Application.DoEvents(); Thread.Sleep(15); }
+                PumpMs(700);
+                Check("[UI] hủy bằng nút của dải loading: phiên dừng, dải ẩn, hàng 0 về 0px, nút về 'Quét ngay'",
+                    !(bool)F<object>(uc, "isScanning") && !daiH.Visible
+                    && Math.Abs(t11h.RowStyles[0].Height) < 0.5F
+                    && F<Label>(uc, "lblScanProgress").Text.Contains("hủy")
+                    && F<Button>(uc, "btnScanNow").Text == "Quét ngay");
+                SetF(uc, "customScanPath", null);
+
+                // -- Nút "Bắt đầu quét" của trang (d): dải loading cũng phải hiện (không chỉ ở (a)/(b))
+                // Lượt quét ngay trước cũng đã đi qua corpus này -> xoá cache lần nữa để phiên (d) chạy đủ lâu.
+                ScanEngine.ClearScanCache();
+                uc.MoQuetNangCao(CheDoQuetNangCao.Folder);
+                PumpMs(250);
+                bool themDuoc = (bool)typeof(UcTongQuan)
+                    .GetMethod("ThemThuMuc", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(uc, new object[] { cancelDir });
+                PumpMs(300);
+                var nutBatDauH = F<Button>(uc, "btnBatDauQuet");
+                Check("[UI] (d) chế độ Thư mục: thêm được 1 vị trí -> nút \"Bắt đầu quét\" bật, dải loading còn ẩn",
+                    themDuoc && nutBatDauH.Enabled && !daiH.Visible
+                    && Math.Abs(t11h.RowStyles[0].Height) < 0.5F);
+                nutBatDauH.PerformClick();
+                Check("[UI] bấm \"Bắt đầu quét\" ở (d) -> dải loading hiện NGAY + nút bị khoá (chống double click)",
+                    daiH.Visible && !nutBatDauH.Enabled
+                    && Math.Abs(t11h.RowStyles[0].Height - 46F) < 0.5F
+                    && F<Button>(uc, "btnHuyQuetLoading").Visible);
+                int gocDauH = F<LoadingSpinner>(uc, "spinnerDangQuet").Goc;
+                PumpMs(400);
+                Check("[UI] đang quét từ (d): vòng xoay vẫn quay (loading sống) + vẫn ở trang (d)",
+                    F<LoadingSpinner>(uc, "spinnerDangQuet").Goc != gocDauH
+                    && F<Control>(uc, "pnlQuetNangCao").Visible);
+                F<Button>(uc, "btnHuyQuetLoading").PerformClick();
+                var dUntil = DateTime.Now.AddSeconds(25);
+                while (DateTime.Now < dUntil && (bool)F<object>(uc, "isScanning"))
+                { Application.DoEvents(); Thread.Sleep(15); }
+                PumpMs(700);
+                Check("[UI] hủy phiên khởi động từ (d): dải loading ẩn, hàng 0 về 0px, nút \"Bắt đầu quét\" bật lại",
+                    !(bool)F<object>(uc, "isScanning") && !daiH.Visible
+                    && Math.Abs(t11h.RowStyles[0].Height) < 0.5F
+                    && F<Button>(uc, "btnBatDauQuet").Enabled
+                    && F<Control>(uc, "pnlQuetNangCao").Visible);
+                // Trả lại đúng màn hình cho các section sau
+                typeof(UcTongQuan).GetMethod("HienThi", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(uc, new object[] { viewTruoc, false });
+                PumpMs(200);
+
+                // ===== 4. Tự động cập nhật CSDL (nút "Kiểm tra cập nhật" đã bỏ khỏi Tổng quan 25/09/2026) =====
+                // Đường cập nhật còn lại là tự động theo hạn 24h (GuardService) -> đóng tem + ghi 1 dòng
+                // "Cập nhật CSDL" vào scanhistory.log; dòng đó phải hiện trong bảng "Hoạt động gần đây".
+                if (FeatureFlags.AutoUpdateEnabled)
+                {
+                    ScanHistoryStore.MarkSignatureUpdated(DateTime.Now.AddHours(-30)); // tem cũ -> chắc chắn chạy
+                    bool vuaChay = GuardService.EnsureDailyAutoUpdate();
+                    PumpMs(300);
+                    Check("[UI] tự động cập nhật 24h: đóng tem mới + ghi lịch sử 'Cập nhật CSDL'",
+                        vuaChay && ScanHistoryStore.Entries().Any(h => h.Type == "Cập nhật CSDL"));
+                    InvokeM(uc, "LoadActivity");
+                    Check("[UI] bảng Hoạt động gần đây có dòng 'Cập nhật ...' (không còn UI cập nhật thủ công)",
+                        F<DataGridView>(uc, "dgvActivity").Rows.Cast<DataGridViewRow>()
+                            .Any(r => Convert.ToString(r.Cells[1].Value).StartsWith("Cập nhật")));
+                }
+                else
+                    Console.WriteLine("  [bỏ qua] 'Tự động cập nhật' đang tắt trong .ini");
 
                 // ===== 5. Tab Cách ly: hiện đúng tệp, Restore trả tệp về =====
                 // Lưu ý: phải có handle (đặt vào form đang hiển thị) thì TabControlSelectedIndex
@@ -318,8 +627,9 @@ static class UiEndToEnd
                 Check("[UI] label tổng tab Cách ly giảm còn 0 tệp test",
                     !dgvQ(q).Rows.Cast<DataGridViewRow>()
                         .Any(r => Convert.ToString(r.Cells[2].Value).StartsWith(root)));
-                Check("[UI] đếm cách ly tab Tổng quan đồng bộ",
-                    F<Label>(uc, "lblQuarantineCount").Text == qBefore.ToString());
+                // (25/09/2026) Ô đếm cách ly ở Tổng quan đã bỏ -> kiểm tra đồng bộ qua sổ cách ly thật
+                Check("[UI] sổ cách ly đã trả hết 2 tệp test",
+                    !ScanEngine.ListQuarantined().Any(x => x.OriginalPath.StartsWith(root)));
                 var listNow = ScanEngine.ListQuarantined().Where(x => x.OriginalPath.StartsWith(root)).ToList();
 
                 // ===== 5b. Bốn nút còn lại của tab Cách ly =====
@@ -555,7 +865,6 @@ static class UiEndToEnd
                     try
                     {
                         // Smoke Quét nhanh THẬT trên UI với HỦY giữa chừng (vùng người dùng ~300k tệp)
-                        qkR.Checked = true;
                         SetF(uc, "customScanPath", null);
                         F<Button>(uc, "btnScanNow").PerformClick();
                         PumpMs(300);
@@ -575,7 +884,6 @@ static class UiEndToEnd
                             qtxt.Contains("hủy") || qtxt.StartsWith("Hoàn tất") || qtxt.Contains("lỗi"));
 
                         // Quét THƯ MỤC MẪU qua UI: đúng 8 dòng, 4 Chữ ký + 4 Heuristic
-                        cmR.Checked = true;
                         SetF(uc, "customScanPath", TestSamples.FolderPath);
                         F<Label>(uc, "lblThreatCount"); // noop guard for reflection field types
                         F<Button>(uc, "btnScanNow").PerformClick();
@@ -637,7 +945,6 @@ static class UiEndToEnd
                             FeatureFlags.VtAutoQuery = true;
                             Directory.CreateDirectory(Path.GetDirectoryName(VirusTotalClient.ApiKeyPath));
                             File.WriteAllText(VirusTotalClient.ApiKeyPath, "autoquery-flow-test-key");
-                            cmR.Checked = true;
                             F<Button>(uc, "btnScanNow").PerformClick();
                             Pump(delegate { });
                             PumpMs(600);            // auto-query chạy nền: để nó chạy đủ lâu
@@ -834,12 +1141,16 @@ static class UiEndToEnd
                     Console.WriteLine("== 9: click TONGQUAN 2 ==");
                     F<Button>(mf, "btnTongQuan").PerformClick(); Application.DoEvents();
                     var ov = F<UserControl>(mf, "ucTongQuan");
-                    var lblQ = F<Label>(ov, "lblQuarantineCount");
-                    Console.WriteLine("== 9: OnClick lblQuarantineCount ==");
-                    typeof(Control).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)
-                        .Invoke(lblQ, new object[] { EventArgs.Empty });
-                    Check("[UI] bấm số đếm Cách ly ở Tổng quan -> nhảy sang tab Cách ly",
-                        panel.Controls.Count == 1 && panel.Controls[0].GetType().Name == "UcCachLy");
+                    // (25/09/2026) Ô đếm cách ly đã bỏ -> kiểm tra liên kết "Mở tab Lịch sử" của thẻ Hoạt động gần đây
+                    var lnkLichSu = F<LinkLabel>(ov, "lnkXemLichSu");
+                    Console.WriteLine("== 9: lnkXemLichSu.OnLinkClicked -> MoTabLichSu ==");
+                    Check("[UI] thẻ Hoạt động gần đây có link 'Mở tab Lịch sử'",
+                        lnkLichSu.Visible && lnkLichSu.Text.StartsWith("Mở tab Lịch sử"));
+                    typeof(LinkLabel).GetMethod("OnLinkClicked", BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Invoke(lnkLichSu, new object[] { new LinkLabelLinkClickedEventArgs(new LinkLabel.Link()) });
+                    Application.DoEvents();
+                    Check("[UI] bấm link Lịch sử ở Tổng quan -> nhảy sang tab Lịch sử",
+                        panel.Controls.Count == 1 && panel.Controls[0].GetType().Name == "UcLichSu");
                     Console.WriteLine("== 9: close mf ==");
                     mf.Close();
                 }
@@ -890,7 +1201,7 @@ static class UiEndToEnd
                     Check("[UI] mọi card GroupBox đầu tab đều card-style 10.125Bold BlueDark (" + grpStyled + "/" + grpWith + ")",
                         grpWith > 0 && grpStyled == grpWith);
 
-                    // 9c. regression layout Tổng quan: header 58px không được chèn ép card "Quét hệ thống"
+                    // 9c. regression layout Tổng quan: 2 nút quét nằm trong khối (a), trang giãn theo cửa sổ
                     Console.WriteLine("== SECTION 9c ==");
                     using (var geo = new Form())
                     using (var ucX = new UcTongQuan())
@@ -899,29 +1210,58 @@ static class UiEndToEnd
                         geo.Controls.Add(ucX);
                         geo.StartPosition = FormStartPosition.Manual;
                         geo.Location = new Point(-2600, -2600);
-                        geo.ClientSize = new Size(1280, 980); // đủ cao cho toàn bộ min 832 -> không cần scroll
+                        geo.ClientSize = new Size(1280, 980); // cao hơn min 640 -> không cần scroll, hàng Percent giãn
                         geo.Show(); Application.DoEvents();
-                        var gs = F<GroupBox>(ucX, "grpScan");
-                        var ga = F<GroupBox>(ucX, "grpAction");
+                        var gs = F<GroupBox>(ucX, "grpActivity");   // thẻ "Hoạt động gần đây"
+                        var ga = F<GroupBox>(ucX, "grpAction");     // bảng đe dọa — chỉ hiện ở trạng thái (b)
                         var t12 = F<Control>(ucX, "tableLayoutPanel12");
                         var pn = F<Panel>(ucX, "pnlContent");
+                        var fh = F<Control>(ucX, "flowHeaderActions");  // 2 nút quét — nay nằm trong khối (a)
+                        int fhBottom = fh.Bottom;   // quy đổi đáy nút về toạ độ trang Tổng quan
+                        for (var pp = fh.Parent; pp != null && pp != ucX; pp = pp.Parent) fhBottom += pp.Top;
                         Console.WriteLine("  geo850 gs.H=" + gs.Height + " tlp12.H=" + t12.Height
-                            + " ga.Bottom=" + ga.Bottom + " client.H=" + ucX.ClientSize.Height
+                            + " ga.Visible=" + ga.Visible + " client.H=" + ucX.ClientSize.Height
                             + " tlp11.H=" + F<Control>(ucX, "tableLayoutPanel11").Height);
-                        Check("[UI] TQ cửa sổ đủ cao: card Quét đủ 303px, Hàng động nằm trọn trong khung",
-                            gs.Height >= 303 && t12.Height >= 306
-                            && ga.Bottom <= ucX.ClientSize.Height + 2);
+                        // RESPONSIVE: hàng "Hoạt động gần đây" là Percent -> cao lên theo cửa sổ (không chừa
+                        // khoảng trắng ở đáy); 2 nút quét nằm trong khối (a) và trong tầm nhìn của cửa sổ
+                        Check("[UI] TQ cửa sổ đủ cao: thẻ Hoạt động GIÃN theo cửa sổ (>=400px), bảng đe dọa ẩn",
+                            gs.Height >= 400 && t12.Height >= 306 && !ga.Visible
+                            && gs.Bottom <= ucX.ClientSize.Height + 2
+                            && F<Control>(ucX, "pnlAnToan").Visible && fhBottom <= ucX.ClientSize.Height);
 
                         geo.ClientSize = new Size(1000, 560); // thấp hơn min -> PHẢI scroll, nội dung không bị ép
                         Application.DoEvents(); geo.Refresh();
-                        gs = F<GroupBox>(ucX, "grpScan");
+                        gs = F<GroupBox>(ucX, "grpActivity");
                         var t11 = F<Control>(ucX, "tableLayoutPanel11");
                         Console.WriteLine("  geo560 gs.H=" + gs.Height + " tlp11.H=" + t11.Height
                             + " AutoScroll=" + pn.AutoScroll);
-                        // min mới theo Theme.ScrollablePage: TLP11 giữ MinimumSize 980x640 -> t11.H >= 630,
-                        // card Quét vẫn nguyên 303px, AutoScroll bật thay vì ép các card
+                        // min theo Theme.ScrollablePage: TLP11 giữ MinimumSize 980x640 -> t11.H >= 630,
+                        // thẻ Hoạt động vẫn là hàng Percent nên đủ chỗ, AutoScroll bật thay vì ép các card
                         Check("[UI] TQ cửa sổ thấp: AutoScroll bật + card KHÔNG bị ép (giữ >=303px)",
-                            pn.AutoScroll && gs.Height >= 303 && t11.Height >= 630);
+                            pn.AutoScroll && gs.Height >= 303 && t11.Height >= 630
+                            && gs.Bottom <= t11.Height + 2);
+
+                        // Trạng thái (b) — "Phát hiện đe dọa": bảng đe dọa hiện 400px, thẻ Hoạt động nhường chỗ
+                        F<DataGridView>(ucX, "dgvActions").Rows.Add(false, @"C:\fake\threat.bin",
+                            "Chữ ký: ui-9c", "Cao", "Xem chi tiết");
+                        InvokeM(ucX, "UpdateThreatUi");
+                        Application.DoEvents();
+                        geo.PerformLayout();
+                        ucX.PerformLayout();
+                        Application.DoEvents();
+                        ga = F<GroupBox>(ucX, "grpAction");
+                        gs = F<GroupBox>(ucX, "grpActivity");
+                        var fa = F<Control>(ucX, "flowPhatHienActions");   // 2 nút của hero (b)
+                        var parentB = F<Control>(ucX, "pnlPhatHienDeDoa");
+                        Console.WriteLine("  geoB ga.H=" + ga.Height + " ga.Visible=" + ga.Visible
+                            + " gs.Visible=" + gs.Visible + " heroDeDoa=" + parentB.Visible
+                            + " fa.Right=" + fa.Right + " hero.W=" + parentB.ClientSize.Width
+                            + " fh.Visible=" + fh.Visible);
+                        // 2 nút quét nằm trong khối (a) nên ở (b) chúng bị ẩn; 2 nút của hero (b) phải nằm
+                        // TRONG panel (lỗi cũ: neo x=1854 -> vô hình)
+                        Check("[UI] TQ trạng thái (b): bảng đe dọa hiện, thẻ Hoạt động nhường chỗ, nút hero nằm TRONG panel",
+                            ga.Visible && ga.Height >= 303 && !gs.Visible && parentB.Visible
+                            && !fh.Visible && fa.Visible && fa.Right <= parentB.ClientSize.Width);
                         geo.Close();
                     }
                     mfd.Close();
