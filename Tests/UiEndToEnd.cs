@@ -686,108 +686,329 @@ static class UiEndToEnd
                 }
                 else Console.WriteLine("  SKIP 5b (máy đang có tệp cách ly thật, không dám xóa hàng loạt)");
 
-                // ===== 6. Tab Lịch sử: dữ liệu thật + tab đe dọa =====
+                // ===== 6. Tab Lịch sử: giao diện mới theo ảnh 26/09/2026 (README §3) =====
+                Console.WriteLine("== SECTION 6 ==");
                 var hist = new UcLichSu();
                 hist.Dock = DockStyle.Fill;
                 form.Controls.Add(hist);
                 Application.DoEvents();
                 var grid = F<DataGridView>(hist, "dgvHistory");
-                // cột 0 là colPick (checkbox), cột 1=colTime, 2=colScanType, ... 5=colThreatCount
-                Check("[UI] Lịch sử có phiên quét tùy chọn + đe dọa=2",
-                    grid.Rows.Cast<DataGridViewRow>().Any(r =>
-                        (string)r.Cells[2].Value == "Quét tùy chọn" && (string)r.Cells[5].Value == "2"));
-                F<Button>(hist, "btnFilterThreats").PerformClick(); // chỉ dòng đe dọa > 0
+                int ciTime = F<DataGridViewColumn>(hist, "colScanTime").Index;
+                int ciType = F<DataGridViewColumn>(hist, "colScanType").Index;
+                int ciResult = F<DataGridViewColumn>(hist, "colResult").Index;
+                int ciFiles = F<DataGridViewColumn>(hist, "colFileCount").Index;
+                int ciThreats = F<DataGridViewColumn>(hist, "colThreatCount").Index;
+                int ciDur = F<DataGridViewColumn>(hist, "colDuration").Index;
+                int ciView = F<DataGridViewColumn>(hist, "colView").Index;
+                var cboLoai = F<ComboBox>(hist, "cboLoaiQuet");
+                var dtpTu = F<DateTimePicker>(hist, "dtpTuNgay");
+                var dtpDen = F<DateTimePicker>(hist, "dtpDenNgay");
+                var lblTong = F<Label>(hist, "lblTotal");
+                var lblTrang = F<Label>(hist, "lblPage");
+                var lblTrong = F<Label>(hist, "lblEmpty");
+                var btnTruoc = F<Button>(hist, "btnPrev");
+                var btnSau = F<Button>(hist, "btnNext");
+                var btnLoc = F<Button>(hist, "btnLoc");
+                var menu = F<ContextMenuStrip>(hist, "menuLichSu");
+                var mLamMoi = F<ToolStripMenuItem>(hist, "miLamMoi");
+                var mXoa = F<ToolStripMenuItem>(hist, "miXoaDong");
+                var mChiTiet = F<ToolStripMenuItem>(hist, "miXemChiTiet");
+                var mPhien = F<ToolStripMenuItem>(hist, "miXemPhienQuet");
+                var mCanhBao = F<ToolStripMenuItem>(hist, "miXemCanhBao");
+                var mCapNhat = F<ToolStripMenuItem>(hist, "miXemCapNhat");
+
+                // ----- 6a. Bố cục tĩnh: 7 cột đúng thứ tự, KHÔNG còn cột Chọn / nút xóa hàng loạt -----
+                Console.WriteLine("== SECTION 6a ==");
+                Check("[UI] Lịch sử: đúng 7 cột theo thứ tự ảnh (Thời gian/Loại quét/Kết quả/Số tệp/Đe dọa/Thời lượng/Chi tiết)",
+                    grid.Columns.Count == 7 && ciTime == 0 && ciType == 1 && ciResult == 2 && ciFiles == 3
+                    && ciThreats == 4 && ciDur == 5 && ciView == 6
+                    && F<DataGridViewColumn>(hist, "colScanTime").HeaderText == "Thời gian"
+                    && F<DataGridViewColumn>(hist, "colScanType").HeaderText == "Loại quét"
+                    && F<DataGridViewColumn>(hist, "colResult").HeaderText == "Kết quả"
+                    && F<DataGridViewColumn>(hist, "colFileCount").HeaderText == "Số tệp quét"
+                    && F<DataGridViewColumn>(hist, "colThreatCount").HeaderText == "Số mối đe dọa"
+                    && F<DataGridViewColumn>(hist, "colDuration").HeaderText == "Thời gian"
+                    && F<DataGridViewColumn>(hist, "colView").HeaderText == "Chi tiết");
+                Check("[UI] Lịch sử: đã GỠ cột tick colPick + nút xóa hàng loạt + bộ nút lọc cũ",
+                    NoField(hist, "colPick") && NoField(hist, "btnDeleteHistory") && NoField(hist, "lblSelection")
+                    && NoField(hist, "btnFilterAll") && NoField(hist, "btnFilterThreats")
+                    && NoField(hist, "btnFilterUpdates") && NoField(hist, "btnRefreshHistory")
+                    && NoField(hist, "btnViewDetail") && NoField(hist, "lblStats"));
+                Check("[UI] Lịch sử: lưới chỉ-đọc, chọn cả hàng, header + hàng cao 46–50px, cột giãn Fill",
+                    grid.ReadOnly && !grid.AllowUserToAddRows && !grid.RowHeadersVisible
+                    && grid.SelectionMode == DataGridViewSelectionMode.FullRowSelect
+                    && grid.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.Fill
+                    && grid.ColumnHeadersHeight >= 46 && grid.ColumnHeadersHeight <= 50
+                    && grid.RowTemplate.Height >= 46 && grid.RowTemplate.Height <= 50);
+                var ttlH = F<Label>(hist, "lblHistoryTitle");
+                var subH = F<Label>(hist, "lblHistorySubtitle");
+                Check("[UI] Lịch sử: tiêu đề 'Lịch sử' 24–26pt đậm + phụ đề 10–11pt xám đúng câu của ảnh",
+                    ttlH.Text == "Lịch sử" && Math.Abs(ttlH.Font.SizeInPoints - 25f) < 0.15f && ttlH.Font.Bold
+                    && Math.Abs(subH.Font.SizeInPoints - 10.5f) < 0.15f
+                    && subH.Text == "Xem lại các lần quét và những mối đe dọa đã được xử lý.");
+                Check("[UI] Lịch sử: hàng bộ lọc đủ Từ ngày/Đến ngày/Loại quét + nút Lọc (dd/MM/yyyy, DropDownList)",
+                    dtpTu.Format == DateTimePickerFormat.Custom && dtpTu.CustomFormat == "dd/MM/yyyy"
+                    && dtpDen.Format == DateTimePickerFormat.Custom && dtpDen.CustomFormat == "dd/MM/yyyy"
+                    && cboLoai.DropDownStyle == ComboBoxStyle.DropDownList
+                    && cboLoai.Items.Contains("Tất cả") && cboLoai.Items.Contains("Quét nhanh")
+                    && (cboLoai.SelectedItem as string) == "Tất cả"
+                    && btnLoc.Text == "Lọc" && btnLoc.Image != null);
+                Check("[UI] Lịch sử: chân trang 'Tổng cộng: N lần quét' + nút Xem từng dòng, 10 phiên/trang",
+                    lblTong.Text.StartsWith("Tổng cộng:") && lblTong.Text.EndsWith("lần quét")
+                    && F<DataGridViewColumn>(hist, "colView").HeaderText == "Xem"
+                    && grid.Rows.Count == Math.Min(10, ScanHistoryStore.Entries().Count(e =>
+                        e.Type != "Cập nhật CSDL" && e.Type != "Bảo vệ thời gian thực")));
+
+                // ----- 6b. Dữ liệu THẬT: phiên quét tùy chọn của section 1 + trạng thái cách ly thật -----
+                Console.WriteLine("== SECTION 6b ==");
+                int truocLoc = grid.Rows.Count;
+                var rowQuet = grid.Rows.Cast<DataGridViewRow>().FirstOrDefault(r =>
+                    Convert.ToString(r.Cells[ciType].Value) == "Quét tùy chọn"
+                    && Convert.ToInt32(r.Cells[ciThreats].Value) == 2);
+                Check("[UI] 6b: bảng có dòng THẬT của phiên quét tùy chọn (2 tệp, 2 đe dọa, phạm vi = thư mục test)",
+                    rowQuet != null && Convert.ToInt32(rowQuet.Cells[ciFiles].Value) == 2
+                    && rowQuet.Tag is HistoryEntry && ((HistoryEntry)rowQuet.Tag).Scope.Contains(root));
+                var entryQuet = rowQuet == null ? null : rowQuet.Tag as HistoryEntry;
+                string ketQuaMongDoi = "<không có dòng>";
+                if (entryQuet != null)
+                {
+                    bool coBangChung = ScanEngine.ListQuarantined().Any(it =>
+                        it.DetectedTime >= entryQuet.Time.AddSeconds(-5)
+                        && it.DetectedTime <= entryQuet.Time.AddSeconds(Math.Max(1.0, entryQuet.Seconds) + 60));
+                    ketQuaMongDoi = coBangChung ? "Đã cách ly" : "Phát hiện mối đe dọa";
+                }
+                Check("[UI] 6b: cột Kết quả = '" + ketQuaMongDoi + "' — khớp ĐÚNG bằng chứng sổ cách ly thật (không bịa)",
+                    entryQuet != null && Convert.ToString(rowQuet.Cells[ciResult].Value) == ketQuaMongDoi);
+                Check("[UI] 6b: cột dữ liệu đúng KIỂU thật (DateTime + TimeSpan; log thiếu thời lượng -> '—')",
+                    rowQuet != null && rowQuet.Cells[ciTime].Value is DateTime
+                    && (rowQuet.Cells[ciDur].Value is TimeSpan
+                        || Convert.ToString(rowQuet.Cells[ciDur].Value) == "—")
+                    && F<DataGridViewColumn>(hist, "colScanTime").DefaultCellStyle.Format == "dd/MM/yyyy HH:mm");
+                // Bộ lọc chỉ áp dụng khi nhấn Lọc (§3.2)
+                cboLoai.SelectedItem = "Quét toàn bộ";
+                PumpMs(80);
+                Check("[UI] 6b: đổi combo Loại quét nhưng CHƯA nhấn Lọc -> bảng giữ nguyên",
+                    grid.Rows.Count == truocLoc);
+                cboLoai.SelectedItem = "Quét tùy chọn";
+                btnLoc.PerformClick();
                 PumpMs(200);
-                Check("[UI] filter chỉ-mối-de-dọa: mọi dòng Threats>0",
-                    grid.Rows.Count > 0 && grid.Rows.Cast<DataGridViewRow>().All(r =>
-                    {
-                        int n;
-                        return int.TryParse(Convert.ToString(r.Cells[5].Value), out n) && n > 0;
-                    }));
-                F<Button>(hist, "btnFilterUpdates").PerformClick();
+                int soDongQuetTuyChon = grid.Rows.Count;
+                Check("[UI] 6b: nhấn Lọc với Loại quét = 'Quét tùy chọn' -> mọi dòng đúng loại đó",
+                    soDongQuetTuyChon > 0 && grid.Rows.Cast<DataGridViewRow>()
+                        .All(r => Convert.ToString(r.Cells[ciType].Value) == "Quét tùy chọn")
+                    && lblTong.Text.EndsWith("lần quét"));
+                // Enter trong vùng lọc cũng kích hoạt Lọc; "Tất cả" không làm mất phiên quét (§3.2)
+                cboLoai.SelectedItem = "Tất cả";
+                typeof(UcLichSu).GetMethod("FilterKeyDown", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(hist, new object[] { cboLoai, new KeyEventArgs(Keys.Enter) });
                 PumpMs(200);
-                Check("[UI] filter Cập nhật: có dòng 'Cập nhật CSDL'",
-                    grid.Rows.Cast<DataGridViewRow>().Any(r => (string)r.Cells[2].Value == "Cập nhật CSDL"));
-                // Quay lại Mọi phiên quét + hai nút: Chi tiết + Làm mới
-                F<Button>(hist, "btnFilterAll").PerformClick();
-                PumpMs(150);
-                int beforeDetail = grid.Rows.Count;
-                grid.Rows[0].Selected = true;
-                F<Button>(hist, "btnViewDetail").PerformClick();
-                PumpMs(500); // MessageBox chi tiết -> closer bấm OK
-                Check("[UI] btnViewDetail mở hộp chi tiết xong vẫn còn bảng", grid.Rows.Count == beforeDetail);
-                F<Button>(hist, "btnRefreshHistory").PerformClick();
+                Check("[UI] 6b: Enter trong vùng lọc -> áp dụng 'Tất cả' mà không mất phiên quét nào",
+                    grid.Rows.Count >= soDongQuetTuyChon
+                    && grid.Rows.Cast<DataGridViewRow>().Count(r =>
+                        Convert.ToString(r.Cells[ciType].Value) == "Quét tùy chọn") == soDongQuetTuyChon);
+
+
+                // ----- 6c. Phân trang 10 phiên/trang + tổng số + nút Trước/Sau + sắp xếp theo header -----
+                Console.WriteLine("== SECTION 6c ==");
+                const string loaiTrang = "6c page test";
+                for (int i = 1; i <= 12; i++)
+                    ScanHistoryStore.AddEntry(new HistoryEntry {
+                        Time = DateTime.Now.AddMinutes(-i), Type = loaiTrang, Scope = "6c #" + i,
+                        Files = 100 + i, Threats = 0, Seconds = i });
+                mLamMoi.PerformClick();                 // "Làm mới dữ liệu" trong menu phụ (§3.5)
                 PumpMs(300);
-                Check("[UI] btnRefreshHistory nạp lại dữ liệu", grid.Rows.Count > 0);
-                // ===== 6b. Cột Chọn (checkbox) + nút Xóa mục đã chọn + Sắp xếp =====
-                ScanHistoryStore.Add("Xoa sort test", "pham vi test 6b", 7, 0, 1.0);
-                F<Button>(hist, "btnRefreshHistory").PerformClick();
+                cboLoai.SelectedItem = loaiTrang;       // loại có THẬT trong log -> combo tự bổ sung khi nạp
+                dtpTu.Value = DateTime.Today.AddDays(-1);   // an toàn quanh nửa đêm: phiên test luôn trong khoảng
+                dtpDen.Value = DateTime.Today;
+                btnLoc.PerformClick();
+                PumpMs(200);
+                Func<int[]> tepTrang = delegate {
+                    return grid.Rows.Cast<DataGridViewRow>()
+                        .Select(r => Convert.ToInt32(r.Cells[ciFiles].Value)).ToArray();
+                };
+                Check("[UI] 6c: trang 1 đủ 10 phiên MỚI NHẤT (tệp 101..110), nhãn '1 / 2', nút Trước tắt",
+                    grid.Rows.Count == 10 && lblTrang.Text == "1 / 2"
+                    && tepTrang().SequenceEqual(Enumerable.Range(101, 10))
+                    && !btnTruoc.Enabled && btnSau.Enabled);
+                Check("[UI] 6c: 'Tổng cộng: 12 lần quét' = cả 12 phiên, không phải 10 dòng đang hiện",
+                    lblTong.Text.StartsWith("Tổng cộng: 12"));
+                Check("[UI] 6c: mọi dòng có khóa định danh (Tag = bản ghi gốc), không dựa chỉ số dòng",
+                    grid.Rows.Cast<DataGridViewRow>().All(r => r.Tag is HistoryEntry
+                        && ((HistoryEntry)r.Tag).Type == loaiTrang));
+                btnSau.PerformClick();
+                PumpMs(200);
+                Check("[UI] 6c: sang trang 2 -> 2 phiên cũ nhất (111, 112), nhãn '2 / 2', nút Sau tắt",
+                    grid.Rows.Count == 2 && lblTrang.Text == "2 / 2"
+                    && tepTrang().SequenceEqual(new[] { 111, 112 })
+                    && btnSau.Enabled == false && btnTruoc.Enabled);
+                Check("[UI] 6c: đổi trang KHÔNG mất bộ lọc và không đụng dữ liệu",
+                    (cboLoai.SelectedItem as string) == loaiTrang
+                    && grid.Rows.Cast<DataGridViewRow>().All(r =>
+                        Convert.ToString(r.Cells[ciType].Value) == loaiTrang));
+                mLamMoi.PerformClick();                 // nạp lại: giữ bộ lọc, trang hiện tại vẫn hợp lệ (§3.4)
                 PumpMs(300);
-                var testRows = grid.Rows.Cast<DataGridViewRow>()
-                    .Where(r => (string)r.Cells[2].Value == "Xoa sort test").ToList();
-                Check("[UI] 6b: dòng test xuất hiện sau refresh", testRows.Count == 1);
-                // nút Xóa chỉ bật khi có tick -> tick 1 dòng
-                Check("[UI] 6b: btnDeleteHistory disabled khi chưa tick", !F<Button>(hist, "btnDeleteHistory").Enabled);
-                testRows[0].Cells[0].Value = true;
-                Application.DoEvents();
-                Check("[UI] 6b: tick bật nút Xóa + label 'Đã chọn 1 dòng'",
-                    F<Button>(hist, "btnDeleteHistory").Enabled
-                    && F<Label>(hist, "lblSelection").Text.Contains("1"));
-                int totalBefore = ScanHistoryStore.Entries().Count;
-                F<Button>(hist, "btnDeleteHistory").PerformClick();
-                PumpMs(600); // confirm Yes -> closer
-                Check("[UI] 6b: btnDeleteHistory xóa đúng dòng đã tick",
-                    !ScanHistoryStore.Entries().Any(x => x.Type == "Xoa sort test")
-                    && ScanHistoryStore.Entries().Count == totalBefore - 1);
-                Check("[UI] 6b: lưới sau xóa không còn dòng test",
-                    !grid.Rows.Cast<DataGridViewRow>().Any(r => (string)r.Cells[2].Value == "Xoa sort test"));
-                // Sắp xếp deterministic: cắm 2 mốc thời gian cách nhau 90 phút
-                ScanHistoryStore.AddEntry(new HistoryEntry {
-                    Time = DateTime.Now.AddMinutes(-90), Type = "6b sort cu", Scope = "x",
-                    Files = 1, Threats = 0, Seconds = 1 });
-                ScanHistoryStore.AddEntry(new HistoryEntry {
-                    Time = DateTime.Now.AddMinutes(-2), Type = "6b sort moi", Scope = "x",
-                    Files = 1, Threats = 0, Seconds = 1 });
-                F<Button>(hist, "btnRefreshHistory").PerformClick();
-                PumpMs(300);
-                Func<string, int> idxOf = type => grid.Rows.Cast<DataGridViewRow>()
-                    .Select((r, i) => new { r, i })
-                    .First(z => (string)z.r.Cells[2].Value == type).i;
-                Check("[UI] 6b: mặc định mới-trước (moi above cu)",
-                    idxOf("6b sort moi") < idxOf("6b sort cu"));
-                typeof(UcLichSu).GetMethod("ToggleSort", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(hist, null);
-                Check("[UI] 6b: header Thời gian -> cũ lên đầu",
-                    idxOf("6b sort cu") < idxOf("6b sort moi"));
-                typeof(UcLichSu).GetMethod("ToggleSort", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(hist, null);
-                Check("[UI] 6b: bấm lần 2 -> trả lại mới trước",
-                    idxOf("6b sort moi") < idxOf("6b sort cu"));
-                Check("[UI] 6b: header Chọn là icon (HeaderText rỗng, có tooltip)",
-                    F<DataGridViewColumn>(hist, "colPick").HeaderText == ""
-                    && F<DataGridViewColumn>(hist, "colPick").ToolTipText.Length > 0);
+                Check("[UI] 6c: nhấn Làm mới giữ nguyên bộ lọc và vẫn ở trang 2",
+                    lblTrang.Text == "2 / 2" && (cboLoai.SelectedItem as string) == loaiTrang
+                    && grid.Rows.Count == 2);
+                btnTruoc.PerformClick();
+                PumpMs(200);
+                Check("[UI] 6c: quay lại trang 1 -> đủ 10 dòng như cũ",
+                    grid.Rows.Count == 10 && lblTrang.Text == "1 / 2"
+                    && tepTrang().SequenceEqual(Enumerable.Range(101, 10)));
+                // Sắp xếp nằm ở header "Thời gian": nhấp lần 1 -> cũ trước, lần 2 -> mới trước (§3.3)
                 var hdrClick = typeof(UcLichSu).GetMethod("Grid_HeaderClick",
                     BindingFlags.Instance | BindingFlags.NonPublic);
-                int pickCol = F<DataGridViewCheckBoxColumn>(hist, "colPick").Index;
-                hdrClick.Invoke(hist, new object[] { null,
-                    new DataGridViewCellMouseEventArgs(pickCol, -1, 20, 20, new MouseEventArgs(MouseButtons.Left, 1, 20, 20, 0)) });
-                Check("[UI] 6b: click header checkbox -> chọn TẤT CẢ dòng",
-                    grid.Rows.Count > 0
-                    && grid.Rows.Cast<DataGridViewRow>().All(r => r.Cells[pickCol].Value is bool bb && bb)
-                    && F<Button>(hist, "btnDeleteHistory").Enabled);
-                hdrClick.Invoke(hist, new object[] { null,
-                    new DataGridViewCellMouseEventArgs(pickCol, -1, 20, 20, new MouseEventArgs(MouseButtons.Left, 1, 20, 20, 0)) });
-                Check("[UI] 6b: click lần 2 -> bỏ chọn toàn bộ, nút Xóa tắt lại",
-                    !grid.Rows.Cast<DataGridViewRow>().Any(r => r.Cells[pickCol].Value is bool bb && bb)
-                    && !F<Button>(hist, "btnDeleteHistory").Enabled);
-                // dọn 2 mốc sort: TICK cả 2 dòng rồi xóa 1 phát (lint luồng multi-delete)
-                grid.Rows[idxOf("6b sort moi")].Cells[0].Value = true;
-                grid.Rows[idxOf("6b sort cu")].Cells[0].Value = true;
-                F<Button>(hist, "btnDeleteHistory").PerformClick();
+                Action nhapHeader = delegate {
+                    hdrClick.Invoke(hist, new object[] { null,
+                        new DataGridViewCellMouseEventArgs(ciTime, -1, 20, 20,
+                            new MouseEventArgs(MouseButtons.Left, 1, 20, 20, 0)) });
+                    PumpMs(150);
+                };
+                nhapHeader();
+                Check("[UI] 6c: nhấp header Thời gian -> cũ lên đầu (trang 1 = tệp 112..103)",
+                    tepTrang().SequenceEqual(Enumerable.Range(103, 10).Reverse()) && lblTrang.Text == "1 / 2");
+                nhapHeader();
+                Check("[UI] 6c: nhấp header lần 2 -> mới nhất lên đầu lại (101..110)",
+                    tepTrang().SequenceEqual(Enumerable.Range(101, 10)));
+                Check("[UI] 6c: nhãn cột vẫn là 'Thời gian' + có tooltip đổi chiều sắp xếp",
+                    F<DataGridViewColumn>(hist, "colScanTime").HeaderText == "Thời gian"
+                    && F<DataGridViewColumn>(hist, "colScanTime").ToolTipText.Length > 0
+                    && F<DataGridViewColumn>(hist, "colView").HeaderText == "Xem");
+
+                // ----- 6d. Nút "Xem" TỪNG DÒNG + menu phụ "…" (định danh theo bản ghi, §3.5) -----
+                Console.WriteLine("== SECTION 6d ==");
+                var mContent = typeof(UcLichSu).GetMethod("Grid_CellContentClick",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                var eDong6 = grid.Rows[6].Tag as HistoryEntry;
+                mContent.Invoke(hist, new object[] { null, new DataGridViewCellEventArgs(ciView, 6) });
+                PumpMs(600);                            // MessageBox "Chi tiết lịch sử" -> closer bấm OK
+                Check("[UI] 6d: bấm 'Xem' dòng 7 -> mở đúng phiên của dòng đó, bảng nguyên vẹn",
+                    eDong6 != null && Convert.ToInt32(grid.Rows[6].Cells[ciFiles].Value) == eDong6.Files
+                    && Convert.ToString(grid.Rows[6].Cells[ciType].Value) == eDong6.Type
+                    && grid.Rows.Count == 10 && lblTrang.Text == "1 / 2");
+                btnSau.PerformClick();                  // sang trang 2: "Xem" vẫn phải đúng bản ghi
+                PumpMs(200);
+                var eTrang2 = grid.Rows[0].Tag as HistoryEntry;
+                mContent.Invoke(hist, new object[] { null, new DataGridViewCellEventArgs(ciView, 0) });
                 PumpMs(600);
-                Check("[UI] 6b: multi-delete xóa sạch 2 dòng đã tick",
-                    !ScanHistoryStore.Entries().Any(x =>
-                        x.Type == "6b sort cu" || x.Type == "6b sort moi"));
+                Check("[UI] 6d: 'Xem' ở trang 2 vẫn mở ĐÚNG bản ghi (không theo chỉ số dòng của trang 1)",
+                    eTrang2 != null && eTrang2.Files == 111 && eTrang2.Scope == "6c #11"
+                    && grid.Rows.Count == 2 && lblTrang.Text == "2 / 2");
+                btnTruoc.PerformClick();
+                PumpMs(200);
+                grid.CurrentCell = grid.Rows[0].Cells[ciTime];  // "dòng đang chọn" cho menu phụ
+                bool menuDaMo = false;
+                menu.Opened += delegate { menuDaMo = true; };   // phòng khi Visible chưa kịp đổi trên máy chậm
+                F<Button>(hist, "btnMore").PerformClick();   // mở menu phụ "…"
+                PumpMs(250);
+                Check("[UI] 6d: nút '…' mở menu phụ; mục theo dòng + mục 'Chỉ hiện phiên quét' đang tick",
+                    (menu.Visible || menuDaMo) && mChiTiet.Enabled && mXoa.Enabled && mPhien.Checked
+                    && !mCanhBao.Checked && !mCapNhat.Checked && mChiTiet.Text.StartsWith("Xem chi tiết"));
+                mChiTiet.PerformClick();                // "Xem chi tiết dòng đang chọn" -> hộp thoại
+                PumpMs(600);
+                Check("[UI] 6d: menu 'Xem chi tiết' mở hộp chi tiết, bảng + bộ lọc giữ nguyên",
+                    grid.Rows.Count == 10 && (cboLoai.SelectedItem as string) == loaiTrang);
+
+                // ----- 6e. Menu "Xóa dòng đang chọn" (nghiệp vụ cũ, nay nằm trong menu phụ) -----
+                Console.WriteLine("== SECTION 6e ==");
+                btnSau.PerformClick();                  // sang trang 2 (2 dòng) để kiểm tra tự chỉnh trang
+                PumpMs(200);
+                grid.CurrentCell = grid.Rows[0].Cells[ciTime];   // dòng cũ nhất còn lại (tệp 111)
+                int truocXoa = ScanHistoryStore.Entries().Count(x => x.Type == loaiTrang);
+                mXoa.PerformClick();
+                PumpMs(700);                            // YesNo -> closer bấm "Có"
+                Check("[UI] 6e: xóa ĐÚNG bản ghi đang chọn (còn 11 phiên, mất đúng tệp 111)",
+                    truocXoa == 12
+                    && ScanHistoryStore.Entries().Count(x => x.Type == loaiTrang) == 11
+                    && !ScanHistoryStore.Entries().Any(x => x.Type == loaiTrang && x.Files == 111));
+                Check("[UI] 6e: xóa xong ở lại trang hợp lệ, giữ bộ lọc, lưới khớp dữ liệu còn lại",
+                    lblTrang.Text == "2 / 2" && grid.Rows.Count == 1
+                    && Convert.ToInt32(grid.Rows[0].Cells[ciFiles].Value) == 112
+                    && (cboLoai.SelectedItem as string) == loaiTrang);
+                while (ScanHistoryStore.Entries().Any(x => x.Type == loaiTrang))
+                {
+                    grid.CurrentCell = grid.Rows[Math.Min(1, grid.Rows.Count - 1)].Cells[ciTime];
+                    mXoa.PerformClick();
+                    PumpMs(500);
+                }
+                Check("[UI] 6e: xóa hết phiên test -> loại đó rời combo 'Loại quét' (tự về 'Tất cả'), bảng nạp lại phiên THẬT",
+                    ScanHistoryStore.Entries().All(x => x.Type != loaiTrang)
+                    && !cboLoai.Items.Contains(loaiTrang) && (cboLoai.SelectedItem as string) == "Tất cả"
+                    && grid.Rows.Count > 0 && !lblTrong.Visible
+                    && grid.Rows.Cast<DataGridViewRow>().All(r =>
+                        Convert.ToString(r.Cells[ciType].Value) != loaiTrang)
+                    && lblTrang.Text.StartsWith("1 /")   // tự về trang 1 của danh sách mới hợp lệ
+                    && lblTong.Text.StartsWith("Tổng cộng: ") && lblTong.Text.EndsWith("lần quét"));
+                // (Trạng thái rỗng *"Không có lịch sử quét phù hợp"* + nhãn "0 / 0" được khẳng định ở 6g.)
+
+                // ----- 6f. Ba "mục" xem qua menu phụ (thay 3 tab con đã bỏ) — nhật ký cập nhật/cảnh báo vẫn còn -----
+                Console.WriteLine("== SECTION 6f ==");
+                mCapNhat.PerformClick();
+                PumpMs(250);
+                int soCapNhat = ScanHistoryStore.Entries().Count(e => e.Type == "Cập nhật CSDL");
+                Check("[UI] 6f: mục 'Nhật ký cập nhật CSDL' -> bảng CHỈ còn loại 'Cập nhật CSDL', đơn vị đếm đổi",
+                    soCapNhat > 0
+                    && grid.Rows.Cast<DataGridViewRow>()
+                        .All(r => Convert.ToString(r.Cells[ciType].Value) == "Cập nhật CSDL")
+                    && grid.Rows.Count == Math.Min(10, soCapNhat)
+                    && lblTong.Text.StartsWith("Tổng cộng: " + soCapNhat + " ")
+                    && lblTong.Text.EndsWith("lần cập nhật CSDL")
+                    && mCapNhat.Checked && !mPhien.Checked && !mCanhBao.Checked);
+                mCanhBao.PerformClick();
+                PumpMs(250);
+                Check("[UI] 6f: mục 'Cảnh báo thời gian thực' -> chỉ dòng cảnh báo, không trộn phiên quét",
+                    grid.Rows.Cast<DataGridViewRow>()
+                        .All(r => Convert.ToString(r.Cells[ciType].Value) == "Bảo vệ thời gian thực")
+                    && lblTong.Text.EndsWith("cảnh báo")
+                    && mCanhBao.Checked && !mPhien.Checked && !mCapNhat.Checked);
+                mPhien.PerformClick();
+                PumpMs(250);
+                Check("[UI] 6f: quay lại 'Chỉ hiện phiên quét' -> phiên quét thật hiện lại, nhật ký bị loại",
+                    grid.Rows.Count > 0 && lblTong.Text.EndsWith("lần quét")
+                    && grid.Rows.Cast<DataGridViewRow>().All(r =>
+                    {
+                        string t = Convert.ToString(r.Cells[ciType].Value);
+                        return t != "Cập nhật CSDL" && t != "Bảo vệ thời gian thực";
+                    })
+                    && mPhien.Checked && !mCanhBao.Checked && !mCapNhat.Checked);
+
+                // ----- 6g. Lọc theo ngày + chặn khoảng ngày sai (§3.2) -----
+                Console.WriteLine("== SECTION 6g ==");
+                DateTime ngayCuNhat = DateTime.Today;
+                foreach (HistoryEntry e in ScanHistoryStore.Entries())
+                    if (e.Time.Date < ngayCuNhat) ngayCuNhat = e.Time.Date;
+                DateTime ngayTrong = ngayCuNhat.AddDays(-7);
+                if (ngayTrong < dtpTu.MinDate) ngayTrong = dtpTu.MinDate;
+                dtpTu.Value = ngayTrong;
+                dtpDen.Value = ngayTrong;
+                btnLoc.PerformClick();
+                PumpMs(200);
+                Check("[UI] 6g: khoảng ngày không có dữ liệu -> 'Không có lịch sử quét phù hợp', tổng 0, '0 / 0'",
+                    grid.Rows.Count == 0 && lblTrong.Visible && lblTrang.Text == "0 / 0"
+                    && !btnTruoc.Enabled && !btnSau.Enabled
+                    && lblTong.Text.StartsWith("Tổng cộng: 0"));
+                dtpDen.Value = ngayCuNhat;              // ngày có dữ liệu: phải bao gồm TRỌN ngày kết thúc
+                btnLoc.PerformClick();
+                PumpMs(200);
+                int mongDoiTrongKhoang = ScanHistoryStore.Entries().Count(e =>
+                    e.Time.Date >= ngayTrong && e.Time.Date <= ngayCuNhat
+                    && e.Type != "Cập nhật CSDL" && e.Type != "Bảo vệ thời gian thực");
+                Check("[UI] 6g: Đến ngày = ngày có dữ liệu (trọn ngày) -> phiên quét hiện lại đúng tổng số",
+                    grid.Rows.Count > 0 && !lblTrong.Visible
+                    && lblTong.Text.StartsWith("Tổng cộng: " + mongDoiTrongKhoang + " "));
+                int truocSai = grid.Rows.Count;
+                string tongTruocSai = lblTong.Text;
+                dtpTu.Value = DateTime.Today;
+                dtpDen.Value = DateTime.Today.AddDays(-1);
+                btnLoc.PerformClick();
+                PumpMs(700);                            // MessageBox cảnh báo -> closer bấm OK
+                Check("[UI] 6g: Từ ngày > Đến ngày -> báo ngắn và GIỮ NGUYÊN bảng đang xem (không lọc sai)",
+                    grid.Rows.Count == truocSai && lblTong.Text == tongTruocSai);
+                dtpTu.Value = ngayTrong;
+                dtpDen.Value = DateTime.Today;
+                btnLoc.PerformClick();
+                PumpMs(200);
+                Check("[UI] 6g: khôi phục khoảng ngày hợp lệ -> bảng đầy đủ trở lại", grid.Rows.Count > 0);
                 hist.Dispose();
 
                 // ===== 7. Tab Bảo vệ: 2 công tắc thật =====
@@ -1157,7 +1378,8 @@ static class UiEndToEnd
                 Console.WriteLine("== SECTION 9 done ==");
 
                 // ===== 9b. Ngôn ngữ thiết kế đồng bộ theo chuẩn tab Lịch sử =====
-                // 5/5 tab phải có page-header 18pt Bold (title) + 9.75 xám (subtitle);
+                // 5/5 tab phải có page-header: 18pt Bold (title) + 9.75 xám (subtitle) — RIÊNG tab Lịch sử
+                // theo ảnh tham chiếu 26/09/2026 dùng cỡ LỚN 25pt + phụ đề 10.5 (Theme.PageTitleLargeFont).
                 // mọi GroupBox đầu tiên mỗi tab phải mang card-style 10.125 Bold BlueDark.
                 Console.WriteLine("== SECTION 9b ==");
                 {
@@ -1174,18 +1396,24 @@ static class UiEndToEnd
                     {
                         var tabUc = F<UserControl>(mfd, tb[0]);
                         var ttl = F<Label>(tabUc, tb[1]);
-                        bool ok = Math.Abs(ttl.Font.SizeInPoints - Theme.PageTitleFont.SizeInPoints) < 0.15f
+                        // (26/09/2026) Tab Lịch sử nay là bản dựng theo ảnh tham chiếu: tiêu đề LỚN 25pt +
+                        // phụ đề 10.5 (Theme.PageTitleLargeFont/PageSubLargeFont, §3.1); 4 tab còn lại 18pt.
+                        bool laLichSu = tb[0] == "ucLichSu";
+                        Font fTtl = laLichSu ? Theme.PageTitleLargeFont : Theme.PageTitleFont;
+                        Font fSub = laLichSu ? Theme.PageSubLargeFont : Theme.PageSubFont;
+                        bool ok = Math.Abs(ttl.Font.SizeInPoints - fTtl.SizeInPoints) < 0.15f
                             && ttl.Font.Bold && ttl.ForeColor == Theme.TextDark;
                         if (tb[2] != null)
                         {
                             var sub = F<Label>(tabUc, tb[2]);
-                            ok = ok && Math.Abs(sub.Font.SizeInPoints - Theme.PageSubFont.SizeInPoints) < 0.15f
+                            ok = ok && Math.Abs(sub.Font.SizeInPoints - fSub.SizeInPoints) < 0.15f
                                 && sub.ForeColor == Theme.TextGray;
                         }
                         if (ok) headerOk++;
                         else Console.WriteLine("  header lệch: " + tb[1] + " font=" + ttl.Font.Size);
                     }
-                    Check("[UI] 5/5 tab có page-header chuẩn Lịch sử (18B + subtitle xám)", headerOk == 5);
+                    Check("[UI] 5/5 tab có page-header đúng chuẩn (Lịch sử 25B theo ảnh, 4 tab kia 18B + subtitle xám)",
+                        headerOk == 5);
 
                     int grpWith = 0, grpStyled = 0;
                     foreach (string[] tb in tabs)

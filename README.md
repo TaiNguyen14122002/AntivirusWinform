@@ -39,9 +39,10 @@ ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\ScanAndRemoveVirus.exe
 > (`XVIRUS-TEST-SIGNATURE::`, mẫu EICAR nhận theo tên) — **không** phải CSDL virus thương mại.
 > Tất cả 10 tính năng ở tab Bảo vệ đều là cơ chế **thật** (watcher/WMI/MOTW/registry/VirusTotal).
 
-> 🎨 **Ngôn ngữ thiết kế chung (chuẩn = tab Lịch sử):** mỗi tab có page-header (tên 18pt Bold + phụ đề xám),
+> 🎨 **Ngôn ngữ thiết kế chung (chuẩn = tab Lịch sử):** mỗi tab có page-header (tên 18pt Bold + phụ đề 9.75 xám;
+> riêng tab Lịch sử theo ảnh tham chiếu 26/09/2026 dùng cỡ **LỚN** 25pt + phụ đề 10.5 — `Theme.StyleHistoryHeader`),
 > GroupBox dạng card (nhãn 10.125 Bold xanh brand `#0A3E8C` trên nền trắng), lưới header 40px xanh nhạt,
-> nút theo 5 vai trò `Theme.BtnRole` (kể cả ô chọn dạng checkbox trong lưới Lịch sử). Ép buộc bằng test
+> nút theo 5 vai trò `Theme.BtnRole` (kể cả nút **Xem** từng dòng của lưới Lịch sử qua `Theme.StyleHistoryGridButton`). Ép buộc bằng test
 > `UiEndToEnd` section 9b — thêm tab mới chỉ cần gọi `Theme.StylePageHeader/StyleCard/StyleGrid`.
 
 ---
@@ -94,7 +95,7 @@ Giao diện thiết kế lại theo **3 trạng thái** nối tiếp nhau trong 
 > • **Trang giãn theo cửa sổ (responsive)**: `tableLayoutPanel11` có **2 hàng**: hàng 0 = **dải loading quét** `pnlLoadingQuet` (hàng `Absolute`, **0px khi rảnh → 46px khi đang quét** — xem ghi chú *lần 9*) + hàng 1 = `tableLayoutPanel12` (**`Percent 100`** — giãn hết chiều cao); `tableLayoutPanel12` còn **6 hàng** `164 / 104 / 400 / 400 / 620 / 640`. `HienThi()` đổi hàng của **khối đang hiện** sang **`Percent 100`** (`SetRowFill`) — thẻ *Hoạt động gần đây* ở (a), bảng đe dọa ở (b), chi tiết ở (c), quét nâng cao ở (d) — nên trang **lấp hết chiều cao cửa sổ**, không còn khoảng trắng ở đáy; các hàng còn lại vẫn `Absolute` và hạ về 0 khi ẩn. Cửa sổ thấp hơn min `980×640` thì `AutoScroll` (mục `Theme.ScrollablePage`) giữ nguyên min, **không ép card nào**; riêng ở (c)/(d) hàng `104` của 3 thẻ số liệu bị hạ về `0` (xem ghi chú *lần 5* cho (d) / *lần 8* cho (c)) và **cả trang (d) còn tự xếp lại theo bề rộng cửa sổ** (xem ghi chú *lần 7*).
 > • **Nút "Quét lại" của trạng thái (b) kiêm nút hủy**: đang quét thì đổi thành **"Hủy quét"** (`Theme.BtnRole.Cancel`) và bấm là hủy phiên đang chạy — dùng thay nút "Hủy quét" của dải header đã gỡ.
 > • **Sửa lỗi ẩn**: `flowPhatHienActions` (2 nút *Xem chi tiết* / *Quét lại* ở (b)) trước neo `x = 1854` — **ngoài** `pnlPhatHienDeDoa` rộng 1168 nên vô hình; nay neo `Top|Right` tại `(872, 58)`, cách mép phải 24px ở mọi bề rộng cửa sổ.
-> • **Kiểm thử**: vẫn **95 check** (sau ghi chú *lần 5* là **97 check**, *lần 6* là **106 check**, *lần 7* là **116 check**, *lần 8* là **118 check**, *lần 9* là **127 check**) — section 3b assert bố cục mới (NoField `pnlOverviewHeader`/`pnlScanStrip`/`pnlChips`; `tlpAnToanText` 4 hàng và `flowHeaderActions` là con `(0, 3)`; `tableLayoutPanel12` còn 6 hàng); section **9c** thêm 3 assert *responsive* (cửa sổ 1280×980: thẻ *Hoạt động* giãn ≥ 400px + hàng Percent vẫn nằm trong khung + nút quét trong tầm nhìn; cửa sổ 560px: `AutoScroll` bật, card giữ ≥ 303px, `grpActivity.Bottom` vẫn trong `tableLayoutPanel11`; trạng thái (b): bảng đe dọa hiện, nút *Xem chi tiết* phải **nằm trong** `pnlPhatHienDeDoa`).
+> • **Kiểm thử**: vẫn **95 check** (sau ghi chú *lần 5* là **97 check**, *lần 6* là **106 check**, *lần 7* là **116 check**, *lần 8* là **118 check**, *lần 9* là **127 check**, *lần 10* là **146 check**) — section 3b assert bố cục mới (NoField `pnlOverviewHeader`/`pnlScanStrip`/`pnlChips`; `tlpAnToanText` 4 hàng và `flowHeaderActions` là con `(0, 3)`; `tableLayoutPanel12` còn 6 hàng); section **9c** thêm 3 assert *responsive* (cửa sổ 1280×980: thẻ *Hoạt động* giãn ≥ 400px + hàng Percent vẫn nằm trong khung + nút quét trong tầm nhìn; cửa sổ 560px: `AutoScroll` bật, card giữ ≥ 303px, `grpActivity.Bottom` vẫn trong `tableLayoutPanel11`; trạng thái (b): bảng đe dọa hiện, nút *Xem chi tiết* phải **nằm trong** `pnlPhatHienDeDoa`).
 > • **Dọn mã chết**: bỏ field `syncingChecks` trong `Control\UcTongQuan.cs` (khai báo + nhánh `if (syncingChecks || e.RowIndex < 0)` ở `dgvActions.CellValueChanged`) — field chưa bao giờ được gán nên luôn `false` (chỉ tổ tốn cảnh báo CS0649); hành vi chọn-hàng không đổi vì `Theme.PickAll` gán giá trị cell trực tiếp (không bắn `CellValueChanged`).
 > • **Đã biên dịch thật trên macOS**: `dotnet build ScanAndRemoveVirus.csproj` (kèm reference assemblies net472) và `dotnet build Tests\UiEndToEnd.compile-check.csproj` (file **mới** — biên dịch rời harness UI test đúng như `csc` trên Windows) đều **Build succeeded — 0 Warning / 0 Error**; công thức nằm ở mục *Kiểm thử tự động*. Máy Mac **không chạy** được WinForms nên `PASS/FAIL` runtime vẫn phải lấy trên Windows.
 
@@ -211,17 +212,89 @@ Mỗi chế độ kết thúc bằng hộp **"Lưu ý"** (icon ⓘ, 1–2 gạch
 * **Panel "Trạng thái chi tiết"** — 7 chỉ số đều đọc từ nguồn thật: phiên bản CSDL (= version assembly), ngày cập nhật cuối (`dbupdate.txt`), lần quét thời gian thực gần nhất, **tổng số tệp đã quét** và **tổng đe dọa đã chặn** (tính từ toàn bộ lịch sử).
 * **Vùng Cài đặt** chuyển thành **tab riêng** — xem mục "Cài đặt — `UcCaiDat`" bên dưới.
 
-### 3. Lịch sử — `UcLichSu`
+### 3. Lịch sử — `UcLichSu` (giao diện mới theo ảnh tham chiếu 26/09/2026)
 
-Toàn bộ là **dữ liệu thật** từ `scanhistory.log` (mới nhất hiện trước):
+> **Phạm vi:** Thiết kế lại **chỉ giao diện** `UcLichSu` theo ảnh tham chiếu; giữ nguyên `ScanHistoryStore`, tệp `scanhistory.log`, dữ liệu thật, xử lý xem chi tiết và các nghiệp vụ hiện có. Không sửa giao diện các trang khác, không thêm thư viện giao diện bên ngoài. Ảnh chỉ minh họa bố cục và dữ liệu; **không** hard-code các dòng, ngày tháng hoặc số liệu trong ảnh.
 
-| Tab con | Nội dung |
+#### 3.1. Bố cục tổng thể
+
+- **Thanh điều hướng bên trái:** dùng lại sidebar chung của `FrmMain` (logo Antivirus; Tổng quan, Bảo vệ, Cách ly, **Lịch sử** đang được chọn, Cài đặt). Mục Lịch sử có nền xanh rất nhạt, vạch xanh bên trái, biểu tượng đồng hồ và chữ xanh đậm. **Không tạo sidebar thứ hai bên trong `UcLichSu`.** Thanh tiêu đề Windows và nút thu nhỏ/phóng to/đóng thuộc `FrmMain`, không thuộc UserControl.
+- **Vùng nội dung bên phải:** nền trắng, padding khoảng 34–36px; co giãn theo kích thước vùng chứa. Trình tự từ trên xuống: **tiêu đề và phụ đề → bộ lọc căn phải → bảng lịch sử → chân trang gồm tổng số và phân trang**. Không dùng `GroupBox` viền đậm bao toàn bộ trang, không hiển thị các thẻ thống kê phụ.
+- **Tiêu đề:** `Lịch sử`, cỡ khoảng 24–26pt, đậm, màu xanh đen; phụ đề `Xem lại các lần quét và những mối đe dọa đã được xử lý.` cỡ 10–11pt màu xám xanh. Giữ khoảng trắng thoáng giữa tiêu đề và vùng lọc.
+- **Màu sắc tham chiếu:** xanh chủ đạo `#1264ED` (có thể ánh xạ về token xanh hiện có trong `Theme`), chữ chính `#172338`, chữ phụ `#52627C`, đường viền `#D8E2F1`, nền header bảng `#F4F8FE`, xanh trạng thái sạch `#07843C`, đỏ phát hiện `#E11D20`, cam đã cách ly `#D98200`. Font ưu tiên Segoe UI; dùng token `Theme` chung để thống nhất ứng dụng.
+
+#### 3.2. Hàng bộ lọc
+
+Đặt **cùng một hàng, căn phải**, phía trên bảng; khi cửa sổ hẹp có thể xuống hàng để không bị cắt nội dung:
+
+| Điều khiển | Nội dung và hành vi |
 |---|---|
-| **Lịch sử quét** | Mọi phiên quét (loại, phạm vi, số tệp, số đe dọa, thời lượng, kết quả) |
-| **Chỉ mối đe dọa** | Lọc còn các dòng có ≥ 1 phát hiện — gồm cả cảnh báo của bảo vệ thời gian thực |
-| **Cập nhật** | Nhật ký sự kiện "Kiểm tra cập nhật" CSDL |
+| **Từ ngày** | Nhãn `Từ ngày`, bên dưới `DateTimePicker` định dạng `dd/MM/yyyy`, có biểu tượng lịch. Mặc định chọn khoảng thời gian hợp lý từ dữ liệu hoặc cấu hình; không gán cố định ngày mẫu trong ảnh. |
+| **Đến ngày** | Nhãn `Đến ngày`, bên dưới `DateTimePicker` định dạng `dd/MM/yyyy`. Lọc bao gồm **toàn bộ ngày kết thúc** (đến trước 00:00 của ngày kế tiếp). |
+| **Loại quét** | Nhãn `Loại quét`, bên dưới `ComboBox` dạng `DropDownList`: `Tất cả`, `Quét toàn bộ`, `Quét nhanh`, `Quét tệp`; nếu dữ liệu thật có `Quét thư mục`, `Quét tùy chọn` hoặc loại khác, bổ sung các lựa chọn tương ứng, không làm mất phiên quét. |
+| **Lọc** | Nút viền xanh, icon kính lúp màu xanh và chữ `Lọc`. Chỉ áp dụng đồng thời các điều kiện khi nhấn; nhấn Enter khi đang ở vùng lọc cũng có thể kích hoạt. |
 
-Nút: **Xem chi tiết** (hộp thoại đầy đủ thông tin dòng đang chọn) · **Làm mới** · **Xuất CSV…** (phân cách bằng `;`, kèm BOM — mở trực tiếp bằng Excel không lỗi font). Tab tự làm mới mỗi lần bạn chuyển vào.
+Nếu `Từ ngày > Đến ngày`, thông báo ngắn và không áp dụng bộ lọc sai. Khi đổi bộ lọc và nhấn **Lọc**, trở về trang 1, cập nhật tổng số kết quả và bảng. **Tất cả** nghĩa là không giới hạn loại quét, nhưng vẫn áp dụng khoảng ngày. Danh sách `Loại quét` được dựng lại từ log ở mỗi lần nạp: nếu loại đang chọn không còn bản ghi nào (ví dụ vừa xóa hết dòng của loại đó), combo tự trở về `Tất cả` thay vì giữ một lựa chọn trỏ vào dữ liệu đã hết. Có thể cung cấp thao tác xóa lọc qua menu/ngữ cảnh nếu đã tồn tại; không thêm nút nổi làm sai ảnh.
+
+#### 3.3. Bảng lịch sử
+
+Dùng `DataGridView` WinForms thuần, `Dock = Fill`, `ReadOnly = true`, `AllowUserToAddRows = false`, `RowHeadersVisible = false`, chọn cả hàng, không cho chỉnh sửa dữ liệu trực tiếp. Header cao khoảng 46–50px, nền xanh rất nhạt, chữ đậm; hàng cao khoảng 46–50px, nền trắng, đường kẻ ngang xanh xám mảnh; không dùng sọc màu đậm. Bảng chiếm toàn bộ chiều rộng khả dụng, co giãn chiều cao, có thanh cuộn dọc khi cần. Các cột **đúng thứ tự như ảnh**:
+
+| Cột | Nội dung | Hiển thị |
+|---|---|---|
+| **Thời gian** | Thời điểm bắt đầu phiên quét `dd/MM/yyyy HH:mm` | Căn trái; sắp xếp mới nhất trước theo `DateTime` thật, không theo chuỗi hiển thị. |
+| **Loại quét** | `Quét toàn bộ`, `Quét nhanh`, `Quét tệp`… | Icon máy tính / tia sét / tệp bên trái tên; dùng icon tự vẽ GDI+ hoặc `UiIcons` hiện có. |
+| **Kết quả** | Trạng thái thực của phiên | `Phát hiện mối đe dọa` **đỏ**; `Không phát hiện` **xanh lá**; `Đã cách ly` **cam** khi thực sự đã xử lý cách ly. Không suy diễn đã cách ly chỉ từ số đe dọa. |
+| **Số tệp quét** | Tổng số tệp thực tế đã quét | Phân cách hàng nghìn theo `vi-VN` (ví dụ `125.430`). |
+| **Số mối đe dọa** | Số lượng phát hiện trong phiên | `0` màu xám; số lớn hơn 0 màu đỏ. |
+| **Thời gian** | **Thời lượng quét** dạng `hh:mm:ss` | Căn trái/phải nhất quán. Trong mã đặt tên riêng `colDuration` để tránh trùng cột thời điểm `colScanTime`. |
+| **Chi tiết** | Nút `Xem` trên **mỗi dòng** | Nút nền xám rất nhạt, viền xám xanh, bo góc nhẹ; bấm mở đúng **phiên quét tương ứng**, không phụ thuộc vị trí sau khi lọc/sắp xếp. |
+
+Không có cột checkbox, không có cột thao tác hàng loạt, không có thanh tab con `Lịch sử quét / Chỉ mối đe dọa / Cập nhật` trên màn hình chính của thiết kế mới. **Không xóa dữ liệu cảnh báo thời gian thực hay nhật ký cập nhật:** các loại sự kiện không phải phiên quét vẫn được giữ trong nguồn lưu trữ và các chức năng nghiệp vụ hiện có; bảng chính ưu tiên các **phiên quét** có đủ dữ liệu cho 7 cột. Nếu cần truy cập nhật ký sự kiện cũ, giữ khả năng truy cập qua chức năng phụ hiện có, không trộn sự kiện cập nhật thành phiên quét giả.
+
+#### 3.4. Chân trang và phân trang
+
+- Góc **trái dưới**: `Tổng cộng: N lần quét`, trong đó `N` là **tổng số phiên thỏa bộ lọc**, không phải số dòng đang hiển thị trên trang.
+- Góc **phải dưới**: nút mũi tên trái, nhãn `trang hiện tại / tổng số trang` (ví dụ `1 / 3`), nút mũi tên phải; mỗi trang **10 phiên quét** như ảnh. Nút Trước bị vô hiệu ở trang đầu, nút Sau bị vô hiệu ở trang cuối. Khi không có kết quả: bảng hiện `Không có lịch sử quét phù hợp`, tổng cộng 0, phân trang `0 / 0` và cả hai nút vô hiệu.
+- Đổi trang không đọc sai bản ghi, không mất bộ lọc và không mở nhầm chi tiết; khi nạp lại dữ liệu, nếu trang hiện tại vượt số trang mới, tự điều chỉnh về trang cuối hợp lệ.
+
+#### 3.5. Xem chi tiết và liên kết với dữ liệu thật
+
+- Bấm `Xem` ở dòng nào sẽ mở **chi tiết phiên quét đó**. Ưu tiên dùng lại trang **Chi tiết kết quả quét** đã có (bảng mối đe dọa + 5 tab `Thông tin chi tiết`, `VirusTotal`, `Hành vi`, `Chuỗi ký tự`, `Thông tin bổ sung`) nếu luồng điều hướng hiện tại hỗ trợ mở phiên lịch sử; nếu chưa, giữ hộp thoại chi tiết hiện có và chỉ mở rộng khi dữ liệu lịch sử thực sự đủ. Không hiển thị thông tin giả, không gọi VirusTotal khi người dùng chưa yêu cầu hoặc chưa có dữ liệu phù hợp.
+- **Khóa định danh phiên:** giữ `ScanId`/ID hiện có nếu có; nếu chưa có, dùng tham chiếu bản ghi gốc ổn định thay vì chỉ số dòng `DataGridView`, để `Xem` vẫn đúng sau lọc, phân trang và sắp xếp.
+- Nguồn dữ liệu vẫn là `ScanHistoryStore`/`scanhistory.log`; **không tạo JSON giả lập cho giao diện này**. Tab tải dữ liệu khi mở, tự làm mới mỗi lần chuyển vào theo hành vi hiện tại. Nếu đang có chức năng **Xuất CSV** và **Làm mới** ở mã cũ, bảo toàn logic và có thể đặt vào menu phụ hoặc gọi từ nơi khác; không thêm hai nút vào hàng bộ lọc của ảnh.
+- Không sửa `ScanEngine`, cách ly, `VirusTotalClient` hoặc cấu trúc log chỉ để phục vụ thay đổi bố cục. Nếu dữ liệu lịch sử cũ thiếu thời lượng/trạng thái cách ly, hiển thị `—` hoặc trạng thái có thể xác minh thay vì tự tạo số liệu.
+
+#### 3.6. Hướng dẫn triển khai WinForms thuần
+
+- Cập nhật `Control/UcLichSu.Designer.cs` cho **layout** (page header, `TableLayoutPanel` vùng lọc, `DataGridView`, footer); xử lý nạp dữ liệu, lọc ngày/loại, định dạng ô, phân trang và sự kiện `Xem` trong `Control/UcLichSu.cs`. Không đặt vòng lặp hoặc logic truy vấn trong `InitializeComponent` để Visual Studio Designer vẫn mở được.
+- Dùng `TableLayoutPanel`/`Panel` và `Anchor`/`Dock` thay vì đặt tọa độ cứng cho toàn bộ trang. `DataGridView` dùng `AutoSizeColumnsMode = Fill` kết hợp `FillWeight`/`MinimumWidth`; khi chiều ngang nhỏ, cho cuộn ngang thay vì cắt chữ/nút. Chỉ vẽ icon hoặc nút trong cell khi cần, không phụ thuộc thư viện UI ngoài.
+- `Theme`/`UiIcons` là nguồn màu và icon chung. Chỉ bổ sung style dành cho trang Lịch sử nếu cần; không thay đổi style các trang còn lại. Tránh gọi API/đọc log trên luồng UI khi dữ liệu lớn; cập nhật `DataGridView` trên UI thread.
+
+#### 3.7. Tiêu chí nghiệm thu
+
+1. Giao diện khớp ảnh ở các vùng **tiêu đề, 4 bộ lọc, 7 cột, nút Xem từng hàng, tổng số và phân trang**; không còn 3 tab con trong bố cục chính.
+2. Dữ liệu thật, mới nhất trước; lọc ngày bao gồm cả ngày kết thúc; lọc loại quét; kết quả rỗng hiển thị đúng.
+3. Mỗi trang 10 dòng; điều hướng đầu/cuối và tổng số sau lọc chính xác; `Xem` luôn mở đúng phiên kể cả sau khi lọc/sắp xếp.
+4. Màu trạng thái phản ánh đúng dữ liệu, không tự đánh dấu cách ly; không ảnh hưởng `UcTongQuan`, `UcBaoVe`, `UcCachLy`, `UcCaiDat` hoặc logic quét hiện có.
+5. WinForms Designer mở được, giao diện co giãn ở cửa sổ lớn/nhỏ, không dùng thư viện UI bên thứ ba.
+
+> 🔄 **Tái dựng giao diện tab Lịch sử theo ảnh tham chiếu (26/09/2026, lần 10)** — `Control\UcLichSu.cs` +
+> `UcLichSu.Designer.cs` được **viết lại toàn bộ phần nhìn** (nghiệp vụ `ScanHistoryStore`/`scanhistory.log` giữ nguyên):
+> page-header **25pt** + phụ đề 10.5 (`Theme.StyleHistoryHeader`), hàng bộ lọc *Từ ngày · Đến ngày · Loại quét · Lọc*,
+> lưới **7 cột** (`colScanTime/colScanType/colResult/colFileCount/colThreatCount/colDuration/colView`),
+> pager *Trước · trang `x / y` · Sau · Tổng cộng: N lần quét*, nhãn rỗng *"Không có lịch sử quét phù hợp"*,
+> menu phụ **"…"** gom *Xem chi tiết · Làm mới · Xuất CSV · Xóa dòng* + 3 "mục" xem
+> (*Nhật ký cập nhật CSDL · Nhật ký cảnh báo · Phiên quét*).
+> • **Đã gỡ** (được test khẳng định bằng `NoField`): cột tick `colPick`, nút *Xóa mục đã chọn*, `btnFilterAll`/`btnFilterThreat`,
+> 3 tab con `tabChiTiet/tabDeDoa/tabCapNhat`, các nút rời *Xem chi tiết · Làm mới · Xuất CSV · Xóa dòng* trên header.
+> • **Dữ liệu tự chữa lành**: `dgvHistory.ReadOnly = true` đặt ngay trong Designer (đúng §3.3); danh sách *Loại quét* dựng lại
+> từ log mỗi lần nạp nên khi loại đang chọn hết bản ghi (vừa xóa hết dòng) combo tự về *Tất cả*; trạng thái rỗng
+> *"Không có lịch sử quét phù hợp"* + `0 / 0` được khẳng định bằng một khoảng ngày không có dữ liệu (6g).
+> • **Kiểm thử**: 127 → **146 check** — section **6a–6g** mới (bố cục 7 cột + NoField các control cũ, lọc chỉ áp dụng
+> khi nhấn *Lọc*/Enter, ô *Kết quả* phải khớp bằng chứng `ScanEngine.ListQuarantined()`, phân trang + nhãn `0 / 0` khi rỗng,
+> *Xem* mở đúng bản ghi sau khi lọc/sang trang/sắp xếp, xóa dòng ở lại trang hợp lệ, 3 mục nhật ký, chặn `Từ ngày > Đến ngày`),
+> section **9b** cập nhật theo (Lịch sử 25pt, 4 tab còn lại 18pt).
 
 ### 4. Cách ly — `UcCachLy`
 
@@ -387,7 +460,7 @@ $csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe
   Tests\ScanEngineTest.cs
 .\eng.exe        # kỳ vọng: == ALL TESTS PASSED ==   (~40s nếu WMI live hoạt động)
 
-# 2) UI End-to-End — 127 check: dựng FrmMain + 5 UserControl THẬT, PerformClick TỪNG NÚT
+# 2) UI End-to-End — 146 check: dựng FrmMain + 5 UserControl THẬT, PerformClick TỪNG NÚT
 #    (5 nút sidebar, quét + Hủy giữa phiên, bỏ thẻ "Tuỳ chọn quét nhanh" (NoField + bố cục mới:
 #     tableLayoutPanel12 còn 6 hàng, flowHeaderActions nằm trong tlpAnToanText) + SetCustomPath ->
 #     chế độ Quét tùy chọn, đã bỏ thanh loading quét CŨ (pgbScan — nay có "dải loading quét" mới) + cả khối "cập nhật dữ liệu" + thẻ "Đang cách ly"
@@ -395,8 +468,13 @@ $csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe
 #     pnlChips) và trang giãn theo cửa sổ (section 9c), hàng 3 thẻ số liệu bị bỏ ở CẢ trang chi tiết (c) lẫn
 #     trang Quét nâng cao (d) — màn hình riêng, và quay lại thì hiện đủ 104px (section 3e), 4 thẻ chế độ ở trang Quét nâng cao chuyển qua lại tự do (section 3f) + cả trang Quét nâng cao tự xếp lại bố cục theo bề rộng (section 3g), dải loading quét hiện ngay khi bấm bất kỳ nút quét nào (section 3c + 3h — đủ cả 3 nút, kể cả "Bắt đầu quét" ở (d) và hủy bằng nút của dải), tự động cập nhật 24h ghi 1 dòng vào bảng
 #     "Hoạt động gần đây", VT flow với key giả,
-#     cách ly/xóa CHỌN & TẤT CẢ, bộ mẫu 6 tệp -> đúng 5 threat, tab lịch sử (cột colPick chọn
-#     nhiều + nút xóa mục đã chọn), chi tiết, làm mới, liên kết "Mở tab Lịch sử" ở Tổng quan,
+#     cách ly/xóa CHỌN & TẤT CẢ, bộ mẫu 6 tệp -> đúng 5 threat, tab lịch sử GIAO DIỆN MỚI theo ảnh
+#     26/09/2026 (section 6a-6g: 7 cột — bỏ hẳn colPick + nút xóa hàng loạt + 3 tab con, bộ lọc ngày/loại
+#     chỉ áp dụng khi nhấn Lọc hoặc Enter, phân trang 10 phiên/trang + nhãn "0 / 0" khi rỗng, nút "Xem"
+#     từng dòng đúng bản ghi qua Tag, sắp xếp theo header Thời gian, Làm mới/Xuất CSV/Xóa dòng & 3 "mục" xem
+#     nằm trong menu phụ; xóa hết dòng của một loại -> combo "Loại quét" tự về "Tất cả" (6e) vì danh sách loại
+#     dựng lại từ log mỗi lần nạp, trạng thái rỗng "Không có lịch sử quét phù hợp" + "0 / 0" kiểm bằng khoảng
+#     ngày không có dữ liệu (6g), `dgvHistory.ReadOnly` đặt trong Designer), liên kết "Mở tab Lịch sử" ở Tổng quan,
 #     tab Cài đặt (8 checkbox live-apply, VTkey, Khôi phục mặc định, Xóa cache, nhãn info),
 #     LẬT 2 CHIỀU 10 HÀNG tab Bảo vệ, thống kê khởi động không còn mock 2025)
 #     — closer-thread tự bấm Có/OK cho MessageBox.
@@ -428,7 +506,7 @@ Toàn bộ chạy trong ~1–2 phút; kết quả hiện `PASS/FAIL` từng chec
 > #    -> Build succeeded — 0 Warning(s), 0 Error(s)
 > ```
 >
-> Đây là *cổng chặn lỗi cú pháp* trước khi mở Windows — cả 2 lệnh phải **0 Error / 0 Warning**. Bước 1/2 chỉ **biên dịch**, không **chạy**: WinForms/WinExe chỉ chạy trên Windows (`dotnet ui_test_check.exe` trên macOS báo *libhostpolicy.dylib not found*), nên kết quả `PASS/FAIL` thật của 127 + 86 check vẫn phải lấy từ Windows (mục trên).
+> Đây là *cổng chặn lỗi cú pháp* trước khi mở Windows — cả 2 lệnh phải **0 Error / 0 Warning**. Bước 1/2 chỉ **biên dịch**, không **chạy**: WinForms/WinExe chỉ chạy trên Windows (`dotnet ui_test_check.exe` trên macOS báo *libhostpolicy.dylib not found*), nên kết quả `PASS/FAIL` thật của 146 + 86 check vẫn phải lấy từ Windows (mục trên).
 
 ---
 

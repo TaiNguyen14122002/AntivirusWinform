@@ -264,6 +264,152 @@ namespace ScanAndRemoveVirus.Control
                     g.FillEllipse(brush, s * 0.18f, s * 0.18f, s * 0.64f, s * 0.64f);
             });
         }
+
+        // ================= ICON TRANG LỊCH SỬ (ảnh tham chiếu 26/09/2026 — README §3.3/§3.4) =================
+
+        /// <summary>Mũi tên → (nút "trang sau" ở chân trang Lịch sử).</summary>
+        public static Bitmap ArrowRight(int size, Color color)
+        {
+            return Get("arrow-right", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.6f, s * 0.12f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawLine(pen, 3.2f * u, 8f * u, 12.8f * u, 8f * u);
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(8.6f * u, 3.6f * u),
+                        new PointF(13f * u, 8f * u),
+                        new PointF(8.6f * u, 12.4f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Kính lúp (nút "Lọc" của hàng bộ lọc Lịch sử).</summary>
+        public static Bitmap Search(int size, Color color)
+        {
+            return Get("search", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.12f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 16f;
+                    g.DrawEllipse(pen, 2.2f * u, 2.2f * u, 8.2f * u, 8.2f * u);
+                    g.DrawLine(pen, 9.4f * u, 9.4f * u, 13.4f * u, 13.4f * u);
+                }
+            });
+        }
+
+        /// <summary>Ba chấm ngang ••• (nút "thêm thao tác" của trang Lịch sử).</summary>
+        public static Bitmap More(int size, Color color)
+        {
+            return Get("more", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var brush = new SolidBrush(c))
+                {
+                    float d = Math.Max(2.4f, s * 0.17f);
+                    for (int i = 0; i < 3; i++)
+                        g.FillEllipse(brush, s * 0.5f - d / 2f + (i - 1) * s * 0.30f, s * 0.5f - d / 2f, d, d);
+                }
+            });
+        }
+
+        /// <summary>Màn hình máy tính (loại quét toàn bộ).</summary>
+        public static Bitmap Desktop(int size, Color color)
+        {
+            return Get("desktop", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.2f, s * 0.10f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawRectangle(pen, 1.8f * u, 2.6f * u, 12.4f * u, 8.4f * u);
+                    g.DrawLine(pen, 5.4f * u, 13.4f * u, 10.6f * u, 13.4f * u);
+                    g.DrawLine(pen, 8f * u, 11f * u, 8f * u, 13.4f * u);
+                }
+            });
+        }
+
+        /// <summary>Tia sét (loại quét nhanh).</summary>
+        public static Bitmap Bolt(int size, Color color)
+        {
+            return Get("bolt", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var brush = new SolidBrush(c))
+                {
+                    float u = s / 16f;
+                    g.FillPolygon(brush, new[]
+                    {
+                        new PointF(9.6f * u, 1.4f * u),
+                        new PointF(3.6f * u, 9.2f * u),
+                        new PointF(7.5f * u, 9.2f * u),
+                        new PointF(6.1f * u, 14.6f * u),
+                        new PointF(12.4f * u, 6.4f * u),
+                        new PointF(8.5f * u, 6.4f * u)
+                    });
+                }
+            });
+        }
+        /// <summary>Tờ tệp (quét tệp).</summary>
+        public static Bitmap Doc(int size, Color color)
+        {
+            return Get("doc", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.2f, s * 0.10f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(3.4f * u, 1.8f * u), new PointF(9.4f * u, 1.8f * u),
+                        new PointF(12.6f * u, 5.0f * u), new PointF(12.6f * u, 14.2f * u),
+                        new PointF(3.4f * u, 14.2f * u), new PointF(3.4f * u, 1.8f * u)
+                    });
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(9.4f * u, 1.8f * u), new PointF(9.4f * u, 5.0f * u),
+                        new PointF(12.6f * u, 5.0f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Thư mục (quét thư mục / quét tùy chọn).</summary>
+        public static Bitmap Folder(int size, Color color)
+        {
+            return Get("folder", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.2f, s * 0.10f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(1.8f * u, 13.4f * u), new PointF(1.8f * u, 2.6f * u),
+                        new PointF(6.2f * u, 2.6f * u), new PointF(7.7f * u, 4.8f * u),
+                        new PointF(14f * u, 4.8f * u), new PointF(14f * u, 13.4f * u),
+                        new PointF(1.8f * u, 13.4f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Khiên rỗng (cảnh báo "Bảo vệ thời gian thực").</summary>
+        public static Bitmap Shield(int size, Color color)
+        {
+            return Get("shield", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.2f, s * 0.10f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    using (GraphicsPath p = ShieldPath(s))
+                        g.DrawPath(pen, p);
+                }
+            });
+        }
     }
 }
 
