@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace ScanAndRemoveVirus.Control
@@ -202,6 +203,95 @@ namespace ScanAndRemoveVirus.Control
                 subtitle.Font = PageSubFont;
                 subtitle.ForeColor = TextGray;
             }
+        }
+
+        // ================= TRANG LỊCH SỬ (ảnh tham chiếu 26/09/2026 — README §3) =================
+        // CHỈ dùng cho UcLichSu: tiêu đề lớn hơn chuẩn chung (18pt) theo ảnh = 25pt đậm + phụ đề 10.5;
+        // lưới 7 cột với header/hàng 48px và đường kẻ ngang xanh xám (không sọc xen kẽ).
+        // Màu của ảnh được ánh xạ về token sẵn có: #F4F8FE -> BlueTint, #D8E2F1 -> BlueSoft,
+        // #172338 -> TextDark, #52627C -> TextGray, #07843C -> Green, #E11D20 -> Red, #D98200 -> Amber.
+        public static readonly Font PageTitleLargeFont = new Font("Segoe UI", 25F, FontStyle.Bold);
+        public static readonly Font PageSubLargeFont = new Font("Segoe UI", 10.5F, FontStyle.Regular);
+
+        /// <summary>Header trang Lịch sử: tiêu đề 25B TextDark + phụ đề 10.5 xám xanh.</summary>
+        public static void StyleHistoryHeader(Label title, Label subtitle)
+        {
+            if (title != null)
+            {
+                title.Font = PageTitleLargeFont;
+                title.ForeColor = TextDark;
+            }
+            if (subtitle != null)
+            {
+                subtitle.Font = PageSubLargeFont;
+                subtitle.ForeColor = TextGray;
+            }
+        }
+
+        /// <summary>Nhãn nhỏ phía trên mỗi điều khiển trong hàng bộ lọc (Từ ngày / Đến ngày / Loại quét).</summary>
+        public static void StyleFilterLabel(Label lbl)
+        {
+            if (lbl == null) return;
+            lbl.Font = SmallFont;
+            lbl.ForeColor = TextGray;
+        }
+
+        /// <summary>Điều khiển trong hàng bộ lọc: nền trắng, chữ TextDark, combo kiểu DropDownList phẳng.</summary>
+        public static void StyleFilterInput(System.Windows.Forms.Control c)
+        {
+            if (c == null) return;
+            c.BackColor = PageBg;
+            c.ForeColor = TextDark;
+            c.Font = BodyFont;
+            var combo = c as ComboBox;
+            if (combo != null)
+            {
+                combo.FlatStyle = FlatStyle.Flat;
+                combo.DropDownStyle = ComboBoxStyle.DropDownList;
+            }
+        }
+
+        /// <summary>
+        /// Lưới tab Lịch sử: nền trắng, header 48px (xanh rất nhạt + chữ đậm), hàng 48px,
+        /// đường kẻ ngang xanh xám mảnh và KHÔNG sọc xen kẽ như các bảng khác (ảnh 26/09/2026).
+        /// </summary>
+        public static void StyleHistoryGrid(DataGridView g)
+        {
+            StyleGrid(g);
+            g.ColumnHeadersHeight = 48;
+            g.RowTemplate.Height = 48;
+            foreach (DataGridViewRow row in g.Rows) row.Height = 48;
+            g.GridColor = BlueSoft;
+            g.AlternatingRowsDefaultCellStyle.BackColor = PageBg;
+            g.AlternatingRowsDefaultCellStyle.SelectionBackColor = PageBg;
+            g.AlternatingRowsDefaultCellStyle.SelectionForeColor = TextDark;
+            g.DefaultCellStyle.SelectionBackColor = PageBg;
+            g.DefaultCellStyle.SelectionForeColor = TextDark;
+            g.ScrollBars = ScrollBars.Both; // cửa sổ hẹp -> cuộn ngang thay vì cắt chữ (README §3.6)
+        }
+
+        /// <summary>Cột nút "Xem" của lưới Lịch sử: nút phẳng, nền trắng (viền/bo góc vẽ trong UcLichSu).</summary>
+        public static void StyleHistoryGridButton(DataGridViewButtonColumn col)
+        {
+            if (col == null) return;
+            col.FlatStyle = FlatStyle.Flat;
+            col.DefaultCellStyle.BackColor = PageBg;
+            col.DefaultCellStyle.ForeColor = BlueDark;
+            col.DefaultCellStyle.SelectionBackColor = PageBg;
+            col.DefaultCellStyle.SelectionForeColor = BlueDark;
+        }
+
+        /// <summary>Đường bo góc (nút/nhãn vẽ tay). Dùng chung để không lặp code vẽ.</summary>
+        public static GraphicsPath RoundedPath(Rectangle r, int radius)
+        {
+            var path = new GraphicsPath();
+            int d = Math.Max(1, Math.Min(radius, Math.Min(r.Width, r.Height) / 2));
+            path.AddArc(r.X, r.Y, d * 2, d * 2, 180, 90);
+            path.AddArc(r.Right - d * 2 - 1, r.Y, d * 2, d * 2, 270, 90);
+            path.AddArc(r.Right - d * 2 - 1, r.Bottom - d * 2 - 1, d * 2, d * 2, 0, 90);
+            path.AddArc(r.X, r.Bottom - d * 2 - 1, d * 2, d * 2, 90, 90);
+            path.CloseFigure();
+            return path;
         }
 
         // Card/GroupBox chuẩn: chữ đậm Xanh brand (một nguồn, ghi đè designer)
@@ -407,7 +497,10 @@ namespace ScanAndRemoveVirus.Control
                 case "Bật":
                 case "An toàn":
                 case "Đã cập nhật":
+                case "Không phát hiện": // kết quả phiên quét sạch của tab Lịch sử (ảnh 26/09/2026)
                     return Green;
+                case "Đã cách ly": // chỉ hiển thị khi có bằng chứng thật trong sổ cách ly (README §3.3)
+                    return Amber;
                 case "Tắt":
                 case "Phát hiện mối đe dọa":
                 case "Cần xử lý":
