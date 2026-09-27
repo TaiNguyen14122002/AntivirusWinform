@@ -51,15 +51,21 @@ namespace ScanAndRemoveVirus.Control
             FeatureFlags.Changed += OnFlagsChanged;
         }
 
-        private void LoadSettingsIntoUi()
+        // keepPendingEdits: giữ nguyên 2 ô CHỜ LƯU (AutoStart ở registry, SendSamples) —
+        // chúng chỉ được ghi khi bấm "Lưu", nên nạp lại từ đĩa sẽ xóa mất thao tác người
+        // dùng vừa tích. Các ô còn lại là công tắc sống, nạp lại luôn đúng.
+        private void LoadSettingsIntoUi(bool keepPendingEdits = false)
         {
             var s = AppSettings.Load();
             suppressFlagEvents = true;
             try
             {
-                chkAutoStart.Checked = AppSettings.IsAutoStartEnabled();
+                if (!keepPendingEdits)
+                {
+                    chkAutoStart.Checked = AppSettings.IsAutoStartEnabled();
+                    chkSendSamples.Checked = s.SendSamples;
+                }
                 chkAutoUpdate.Checked = FeatureFlags.AutoUpdateEnabled;   // một nguồn với hàng "Tự động cập nhật"
-                chkSendSamples.Checked = s.SendSamples;
                 chkShowNotification.Checked = FeatureFlags.ThreatAlerts;  // một nguồn với hàng "Cảnh báo mối đe dọa"
                 chkVtAutoQuery.Checked = FeatureFlags.VtAutoQuery;
                 chkUsbGuard.Checked = FeatureFlags.UsbProtection;
@@ -275,7 +281,7 @@ namespace ScanAndRemoveVirus.Control
         // Lật cờ từ nơi khác (bảng tab Bảo vệ, auto-update nền) -> UI phản hồi theo
         private void OnFlagsChanged()
         {
-            try { BeginInvoke((MethodInvoker)(LoadSettingsIntoUi)); }
+            try { BeginInvoke((MethodInvoker)(() => LoadSettingsIntoUi(true))); }
             catch (ObjectDisposedException) { }
             catch (InvalidOperationException) { }
         }

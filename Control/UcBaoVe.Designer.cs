@@ -33,7 +33,7 @@
             this.lblProtectionTitle = new System.Windows.Forms.Label();
             this.lblProtectionSubtitle = new System.Windows.Forms.Label();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
-            this.grpProtectionFeatures = new System.Windows.Forms.GroupBox();
+            this.grpProtectionFeatures = new ScanAndRemoveVirus.Control.UiGroup();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.dgvProtecctionFeatures = new System.Windows.Forms.DataGridView();
             this.colFeature = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -41,7 +41,7 @@
             this.colStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
-            this.grpProtectionInfo = new System.Windows.Forms.GroupBox();
+            this.grpProtectionInfo = new ScanAndRemoveVirus.Control.UiGroup();
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
             this.lblStatusTitle = new System.Windows.Forms.Label();
             this.lblDatabaseTitle2 = new System.Windows.Forms.Label();
@@ -82,9 +82,11 @@
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 45F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 45F));
+            // Đầu trang cao CỐ ĐỊNH 84px — cùng con số với 4 tab còn lại. Chia % thì khi cửa
+            // sổ nhỏ tiêu đề 18pt bị bóp (đo được: hàng chỉ còn 22px cho chữ cần 38px).
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 84F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1174, 829);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
@@ -101,10 +103,12 @@
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 4;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 45F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
+            // Toạ độ đầu trang dùng chung cho MỌI tab: tiêu đề ở y=20, phụ đề ở y=56 —
+            // đúng vị trí của lblOverviewTitle/lblOverviewSubtitle ở tab Tổng quan.
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1170, 78);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
@@ -114,7 +118,7 @@
             this.lblProtectionTitle.Dock = System.Windows.Forms.DockStyle.Left;
             this.lblProtectionTitle.Font = new System.Drawing.Font("Segoe UI", 16.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblProtectionTitle.Location = new System.Drawing.Point(0, 11);
-            this.lblProtectionTitle.Margin = new System.Windows.Forms.Padding(0, 0, 0, 5);
+            this.lblProtectionTitle.Margin = new System.Windows.Forms.Padding(0);
             this.lblProtectionTitle.Name = "lblProtectionTitle";
             this.lblProtectionTitle.Size = new System.Drawing.Size(82, 30);
             this.lblProtectionTitle.TabIndex = 0;
@@ -157,7 +161,7 @@
             this.grpProtectionFeatures.Location = new System.Drawing.Point(2, 12);
             this.grpProtectionFeatures.Margin = new System.Windows.Forms.Padding(2);
             this.grpProtectionFeatures.Name = "grpProtectionFeatures";
-            this.grpProtectionFeatures.Padding = new System.Windows.Forms.Padding(2);
+            this.grpProtectionFeatures.Padding = new System.Windows.Forms.Padding(20, 62, 20, 16);
             this.grpProtectionFeatures.Size = new System.Drawing.Size(1166, 355);
             this.grpProtectionFeatures.TabIndex = 0;
             this.grpProtectionFeatures.TabStop = false;
@@ -249,7 +253,7 @@
             this.grpProtectionInfo.Location = new System.Drawing.Point(2, 2);
             this.grpProtectionInfo.Margin = new System.Windows.Forms.Padding(2);
             this.grpProtectionInfo.Name = "grpProtectionInfo";
-            this.grpProtectionInfo.Padding = new System.Windows.Forms.Padding(2);
+            this.grpProtectionInfo.Padding = new System.Windows.Forms.Padding(20, 62, 20, 16);
             this.grpProtectionInfo.Size = new System.Drawing.Size(698, 366);
             this.grpProtectionInfo.TabIndex = 0;
             this.grpProtectionInfo.TabStop = false;
@@ -257,8 +261,11 @@
             // 
             // tableLayoutPanel6
             // 
+            // Bỏ cột đệm 25px + margin 5px: chúng đẩy nhãn lệch vào 50px trong khi bảng
+            // "Các tính năng bảo vệ" ngay trên chỉ thụt 30px — hai thẻ trong cùng một tab
+            // phải thẳng lề với nhau.
             this.tableLayoutPanel6.ColumnCount = 4;
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 0F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 42F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 58F));
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 27F));
@@ -278,7 +285,7 @@
             this.tableLayoutPanel6.Controls.Add(this.lblBlockedThreaetsValue, 2, 7);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel6.Location = new System.Drawing.Point(2, 22);
-            this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(5);
+            this.tableLayoutPanel6.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
             this.tableLayoutPanel6.RowCount = 9;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
@@ -338,7 +345,7 @@
             this.lblUpdateDateTitle.Name = "lblUpdateDateTitle";
             this.lblUpdateDateTitle.Size = new System.Drawing.Size(265, 44);
             this.lblUpdateDateTitle.TabIndex = 3;
-            this.lblUpdateDateTitle.Text = "Ngày cập nhập:";
+            this.lblUpdateDateTitle.Text = "Ngày cập nhật:";
             this.lblUpdateDateTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblRealtimeScanTitle
@@ -350,7 +357,7 @@
             this.lblRealtimeScanTitle.Name = "lblRealtimeScanTitle";
             this.lblRealtimeScanTitle.Size = new System.Drawing.Size(265, 44);
             this.lblRealtimeScanTitle.TabIndex = 4;
-            this.lblRealtimeScanTitle.Text = "Làn quét thời gian thực cuối:";
+            this.lblRealtimeScanTitle.Text = "Lần quét thời gian thực cuối:";
             this.lblRealtimeScanTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblScannerFilesTitle
@@ -493,7 +500,7 @@
         private System.Windows.Forms.Label lblProtectionTitle;
         private System.Windows.Forms.Label lblProtectionSubtitle;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
-        private System.Windows.Forms.GroupBox grpProtectionFeatures;
+        private ScanAndRemoveVirus.Control.UiGroup grpProtectionFeatures;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.DataGridView dgvProtecctionFeatures;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFeature;
@@ -501,7 +508,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAction;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel5;
-        private System.Windows.Forms.GroupBox grpProtectionInfo;
+        private ScanAndRemoveVirus.Control.UiGroup grpProtectionInfo;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;
         private System.Windows.Forms.Label lblStatusTitle;
         private System.Windows.Forms.Label lblDatabaseTitle2;

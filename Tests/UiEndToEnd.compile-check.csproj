@@ -56,6 +56,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../Control/LoadingSpinner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Control/Theme.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Control/UiIcons.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Control/UiKit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Control/VtDonut.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Control/UcTongQuan.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Control/UcTongQuan.ChiTiet.cs" />

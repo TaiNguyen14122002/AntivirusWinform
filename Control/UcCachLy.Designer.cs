@@ -34,7 +34,7 @@
             this.lblQuarantineSubtitle = new System.Windows.Forms.Label();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-            this.grpQuarentineList = new System.Windows.Forms.GroupBox();
+            this.grpQuarentineList = new ScanAndRemoveVirus.Control.UiGroup();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dgvQuarantine = new System.Windows.Forms.DataGridView();
             this.colPick = new System.Windows.Forms.DataGridViewCheckBoxColumn();
@@ -47,15 +47,15 @@
             this.colThreatName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDetectedTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colFileSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.btnRestore = new System.Windows.Forms.Button();
-            this.btnRestoreAll = new System.Windows.Forms.Button();
-            this.btnDeletePermanent = new System.Windows.Forms.Button();
+            this.btnRestore = new ScanAndRemoveVirus.Control.UiButton();
+            this.btnRestoreAll = new ScanAndRemoveVirus.Control.UiButton();
+            this.btnDeletePermanent = new ScanAndRemoveVirus.Control.UiButton();
             this.tableLayoutPanel8 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnRefreshQuarantine = new System.Windows.Forms.Button();
+            this.btnRefreshQuarantine = new ScanAndRemoveVirus.Control.UiButton();
             this.tableLayoutPanel9 = new System.Windows.Forms.TableLayoutPanel();
             this.lblTotalFilesTitle = new System.Windows.Forms.Label();
             this.lblTotalFilesValue = new System.Windows.Forms.Label();
-            this.grpQuarantineInfo = new System.Windows.Forms.GroupBox();
+            this.grpQuarantineInfo = new ScanAndRemoveVirus.Control.UiGroup();
             this.tableLayoutPanel10 = new System.Windows.Forms.TableLayoutPanel();
             this.lblInfo1 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -87,8 +87,8 @@
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 88.88889F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 84F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1174, 829);
             this.tableLayoutPanel1.TabIndex = 0;
@@ -98,14 +98,17 @@
             this.tableLayoutPanel2.ColumnCount = 1;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel2.Controls.Add(this.lblQuarantineTitle, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.lblQuarantineSubtitle, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.lblQuarantineTitle, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.lblQuarantineSubtitle, 0, 2);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 2;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            // Toạ độ đầu trang dùng chung cho MỌI tab: tiêu đề ở y=20, phụ đề ở y=56.
+            this.tableLayoutPanel2.RowCount = 4;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1168, 83);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
@@ -145,8 +148,11 @@
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 92);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 2;
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            // Thẻ "Thông tin" chỉ có 2 dòng chữ nên cao CỐ ĐỊNH:
+            // 62 lề trên + 2×22 nhãn + 16 lề dưới + 6 margin = 128.
+            // Chia 20% thì ở cửa sổ nhỏ nó co còn 18px và hai nhãn bị bóp còn 9px.
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 128F));
             this.tableLayoutPanel3.Size = new System.Drawing.Size(1168, 713);
             this.tableLayoutPanel3.TabIndex = 1;
             // 
@@ -226,8 +232,10 @@
             this.tableLayoutPanel5.Location = new System.Drawing.Point(3, 21);
             this.tableLayoutPanel5.Name = "tableLayoutPanel5";
             this.tableLayoutPanel5.RowCount = 2;
-            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 85F));
-            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            // Thanh công cụ cao CỐ ĐỊNH 66px = 10 lề + 40 nút + 10 lề + 6 margin.
+            // Chia 15% thì ở cửa sổ nhỏ nó co còn ~16px và các nút bị bóp dẹt.
+            this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 66F));
             this.tableLayoutPanel5.Size = new System.Drawing.Size(1150, 534);
             this.tableLayoutPanel5.TabIndex = 1;
             // 
@@ -244,8 +252,10 @@
             // tableLayoutPanel6
             // 
             this.tableLayoutPanel6.ColumnCount = 2;
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
-            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            // Nhóm phải (tổng số tệp + Làm mới) rộng CỐ ĐỊNH: chia % thì nút Làm mới
+            // teo lại mỗi khi bảng cách ly hẹp đi.
+            this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 260F));
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel7, 0, 0);
             this.tableLayoutPanel6.Controls.Add(this.tableLayoutPanel8, 1, 0);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -259,10 +269,13 @@
             // 
             // tableLayoutPanel7
             // 
-            this.tableLayoutPanel7.ColumnCount = 3;
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 31.42857F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34.28571F));
-            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34.28571F));
+            // Cột CỐ ĐỊNH theo bề rộng chữ của nút, cộng một cột đệm co giãn ở cuối.
+            // Chia % thì mỗi nút bị kéo rộng ~200px — nút hành động phải ôm vừa nhãn.
+            this.tableLayoutPanel7.ColumnCount = 4;
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 132F));
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 170F));
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 150F));
+            this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel7.Controls.Add(this.btnRestore, 0, 0);
             this.tableLayoutPanel7.Controls.Add(this.btnRestoreAll, 1, 0);
             this.tableLayoutPanel7.Controls.Add(this.btnDeletePermanent, 2, 0);
@@ -351,12 +364,13 @@
             //
             // tableLayoutPanel8
             // 
-            this.tableLayoutPanel8.ColumnCount = 3;
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel8.Controls.Add(this.btnRefreshQuarantine, 2, 0);
-            this.tableLayoutPanel8.Controls.Add(this.tableLayoutPanel9, 1, 0);
+            // 2 cột: nhãn co giãn + nút Làm mới cố định. Cột 25% đầu tiên trước đây
+            // bỏ trống nên nhãn và nút bị đẩy lệch khỏi nhau.
+            this.tableLayoutPanel8.ColumnCount = 2;
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel8.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120F));
+            this.tableLayoutPanel8.Controls.Add(this.btnRefreshQuarantine, 1, 0);
+            this.tableLayoutPanel8.Controls.Add(this.tableLayoutPanel9, 0, 0);
             this.tableLayoutPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel8.Location = new System.Drawing.Point(681, 3);
             this.tableLayoutPanel8.Name = "tableLayoutPanel8";
@@ -379,8 +393,9 @@
             // tableLayoutPanel9
             // 
             this.tableLayoutPanel9.ColumnCount = 2;
-            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            // "Tổng số tệp:" đứng ngay cạnh con số, không chia đôi rồi tách ra hai đầu.
+            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 90F));
+            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel9.Controls.Add(this.lblTotalFilesTitle, 0, 0);
             this.tableLayoutPanel9.Controls.Add(this.lblTotalFilesValue, 1, 0);
             this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -437,11 +452,12 @@
             this.tableLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel10.Location = new System.Drawing.Point(3, 21);
             this.tableLayoutPanel10.Name = "tableLayoutPanel10";
-            this.tableLayoutPanel10.RowCount = 4;
-            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            // Chỉ có 2 nhãn -> đúng 2 hàng. Khai báo 4 hàng (2 hàng thừa) khiến 40px bị
+            // chia cho hàng rỗng, hai nhãn còn lại bị bóp xuống còn 1px chiều cao.
+            this.tableLayoutPanel10.RowCount = 2;
+            // Mỗi nhãn đúng một dòng 22px — chiều cao chữ, không chia %.
+            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
+            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
             this.tableLayoutPanel10.Size = new System.Drawing.Size(1156, 113);
             this.tableLayoutPanel10.TabIndex = 0;
             // 
@@ -506,7 +522,7 @@
         private System.Windows.Forms.Label lblQuarantineSubtitle;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
-        private System.Windows.Forms.GroupBox grpQuarentineList;
+        private ScanAndRemoveVirus.Control.UiGroup grpQuarentineList;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.DataGridView dgvQuarantine;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colPick;
@@ -514,20 +530,20 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel7;
-        private System.Windows.Forms.Button btnRestore;
-        private System.Windows.Forms.Button btnRestoreAll;
-        private System.Windows.Forms.Button btnDeletePermanent;
+        private ScanAndRemoveVirus.Control.UiButton btnRestore;
+        private ScanAndRemoveVirus.Control.UiButton btnRestoreAll;
+        private ScanAndRemoveVirus.Control.UiButton btnDeletePermanent;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFileName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colOriginaPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn colThreatName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDetectedTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFileSize;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel8;
-        private System.Windows.Forms.Button btnRefreshQuarantine;
+        private ScanAndRemoveVirus.Control.UiButton btnRefreshQuarantine;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel9;
         private System.Windows.Forms.Label lblTotalFilesTitle;
         private System.Windows.Forms.Label lblTotalFilesValue;
-        private System.Windows.Forms.GroupBox grpQuarantineInfo;
+        private ScanAndRemoveVirus.Control.UiGroup grpQuarantineInfo;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel10;
         private System.Windows.Forms.Label lblInfo1;
         private System.Windows.Forms.Label label1;

@@ -28,19 +28,21 @@ namespace ScanAndRemoveVirus.Control
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.lblSettingsTitle = new System.Windows.Forms.Label();
             this.lblSettingsSubtitle = new System.Windows.Forms.Label();
             this.tlpBody = new System.Windows.Forms.TableLayoutPanel();
-            this.grpGeneral = new System.Windows.Forms.GroupBox();
+            this.grpGeneral = new ScanAndRemoveVirus.Control.UiGroup();
             this.tlpGeneral = new System.Windows.Forms.TableLayoutPanel();
             this.chkAutoStart = new System.Windows.Forms.CheckBox();
             this.chkAutoUpdate = new System.Windows.Forms.CheckBox();
             this.chkSendSamples = new System.Windows.Forms.CheckBox();
             this.chkShowNotification = new System.Windows.Forms.CheckBox();
             this.lblGeneralHint = new System.Windows.Forms.Label();
-            this.grpGuards = new System.Windows.Forms.GroupBox();
+            this.grpGuards = new ScanAndRemoveVirus.Control.UiGroup();
             this.tlpGuards = new System.Windows.Forms.TableLayoutPanel();
             this.chkUsbGuard = new System.Windows.Forms.CheckBox();
             this.chkDownloadGuard = new System.Windows.Forms.CheckBox();
@@ -48,29 +50,29 @@ namespace ScanAndRemoveVirus.Control
             this.chkStartupGuard = new System.Windows.Forms.CheckBox();
             this.chkRestoreGuard = new System.Windows.Forms.CheckBox();
             this.lblGuardsHint = new System.Windows.Forms.Label();
-            this.grpVt = new System.Windows.Forms.GroupBox();
+            this.grpVt = new ScanAndRemoveVirus.Control.UiGroup();
             this.tlpVt = new System.Windows.Forms.TableLayoutPanel();
             this.chkVtAutoQuery = new System.Windows.Forms.CheckBox();
             this.lblVtStatus = new System.Windows.Forms.Label();
             this.txtVtKey = new System.Windows.Forms.TextBox();
             this.tlpVtButtons = new System.Windows.Forms.TableLayoutPanel();
-            this.btnSaveVtKey = new System.Windows.Forms.Button();
-            this.btnClearVtKey = new System.Windows.Forms.Button();
+            this.btnSaveVtKey = new ScanAndRemoveVirus.Control.UiButton();
+            this.btnClearVtKey = new ScanAndRemoveVirus.Control.UiButton();
             this.lblVtHint = new System.Windows.Forms.Label();
-            this.grpData = new System.Windows.Forms.GroupBox();
+            this.grpData = new ScanAndRemoveVirus.Control.UiGroup();
             this.tlpData = new System.Windows.Forms.TableLayoutPanel();
             this.lblAppVersion = new System.Windows.Forms.Label();
             this.lblDbUpdate = new System.Windows.Forms.Label();
             this.lblQuarantined = new System.Windows.Forms.Label();
             this.lblDataPath = new System.Windows.Forms.Label();
             this.tlpDataButtons = new System.Windows.Forms.TableLayoutPanel();
-            this.btnOpenData = new System.Windows.Forms.Button();
-            this.btnClearCache = new System.Windows.Forms.Button();
-            this.btnSamples = new System.Windows.Forms.Button();
+            this.btnOpenData = new ScanAndRemoveVirus.Control.UiButton();
+            this.btnClearCache = new ScanAndRemoveVirus.Control.UiButton();
+            this.btnSamples = new ScanAndRemoveVirus.Control.UiButton();
             this.tlpFooter = new System.Windows.Forms.TableLayoutPanel();
             this.lblSavedAt = new System.Windows.Forms.Label();
-            this.btnResetDefaults = new System.Windows.Forms.Button();
-            this.btnSaveSettings = new System.Windows.Forms.Button();
+            this.btnResetDefaults = new ScanAndRemoveVirus.Control.UiButton();
+            this.btnSaveSettings = new ScanAndRemoveVirus.Control.UiButton();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tlpBody.SuspendLayout();
@@ -99,7 +101,7 @@ namespace ScanAndRemoveVirus.Control
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 80F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 84F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1174, 829);
             this.tableLayoutPanel1.TabIndex = 0;
@@ -108,15 +110,17 @@ namespace ScanAndRemoveVirus.Control
             // 
             this.tableLayoutPanel2.ColumnCount = 1;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Controls.Add(this.lblSettingsTitle, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.lblSettingsSubtitle, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.lblSettingsTitle, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.lblSettingsSubtitle, 0, 2);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 2;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 44F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
+            // Toạ độ đầu trang dùng chung cho MỌI tab: tiêu đề ở y=20, phụ đề ở y=56.
+            this.tableLayoutPanel2.RowCount = 4;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1174, 80);
             this.tableLayoutPanel2.TabIndex = 0;
@@ -128,7 +132,7 @@ namespace ScanAndRemoveVirus.Control
             this.lblSettingsTitle.Font = new System.Drawing.Font("Segoe UI", 16.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSettingsTitle.ForeColor = ScanAndRemoveVirus.Control.Theme.BlueDark;
             this.lblSettingsTitle.Location = new System.Drawing.Point(0, 0);
-            this.lblSettingsTitle.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.lblSettingsTitle.Margin = new System.Windows.Forms.Padding(0);
             this.lblSettingsTitle.Name = "lblSettingsTitle";
             this.lblSettingsTitle.Size = new System.Drawing.Size(95, 38);
             this.lblSettingsTitle.TabIndex = 0;
@@ -173,11 +177,10 @@ namespace ScanAndRemoveVirus.Control
             this.grpGeneral.Controls.Add(this.tlpGeneral);
             this.grpGeneral.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpGeneral.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpGeneral.ForeColor = ScanAndRemoveVirus.Control.Theme.BlueDark;
             this.grpGeneral.Location = new System.Drawing.Point(8, 8);
             this.grpGeneral.Margin = new System.Windows.Forms.Padding(8);
             this.grpGeneral.Name = "grpGeneral";
-            this.grpGeneral.Padding = new System.Windows.Forms.Padding(8);
+            this.grpGeneral.Padding = new System.Windows.Forms.Padding(20, 62, 20, 16);
             this.grpGeneral.Size = new System.Drawing.Size(568, 339);
             this.grpGeneral.TabIndex = 0;
             this.grpGeneral.TabStop = false;
@@ -198,11 +201,11 @@ namespace ScanAndRemoveVirus.Control
             this.tlpGeneral.Name = "tlpGeneral";
             this.tlpGeneral.Padding = new System.Windows.Forms.Padding(6, 4, 6, 4);
             this.tlpGeneral.RowCount = 5;
-            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
             this.tlpGeneral.Size = new System.Drawing.Size(552, 303);
             this.tlpGeneral.TabIndex = 0;
             // 
@@ -213,7 +216,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkAutoStart.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkAutoStart.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkAutoStart.Location = new System.Drawing.Point(12, 10);
-            this.chkAutoStart.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkAutoStart.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkAutoStart.Name = "chkAutoStart";
             this.chkAutoStart.Size = new System.Drawing.Size(528, 36);
             this.chkAutoStart.TabIndex = 0;
@@ -227,7 +230,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkAutoUpdate.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkAutoUpdate.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkAutoUpdate.Location = new System.Drawing.Point(12, 50);
-            this.chkAutoUpdate.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkAutoUpdate.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkAutoUpdate.Name = "chkAutoUpdate";
             this.chkAutoUpdate.Size = new System.Drawing.Size(528, 36);
             this.chkAutoUpdate.TabIndex = 1;
@@ -242,7 +245,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkShowNotification.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkShowNotification.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkShowNotification.Location = new System.Drawing.Point(12, 90);
-            this.chkShowNotification.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkShowNotification.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkShowNotification.Name = "chkShowNotification";
             this.chkShowNotification.Size = new System.Drawing.Size(528, 36);
             this.chkShowNotification.TabIndex = 2;
@@ -257,7 +260,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkSendSamples.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkSendSamples.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkSendSamples.Location = new System.Drawing.Point(12, 130);
-            this.chkSendSamples.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkSendSamples.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkSendSamples.Name = "chkSendSamples";
             this.chkSendSamples.Size = new System.Drawing.Size(528, 36);
             this.chkSendSamples.TabIndex = 3;
@@ -282,11 +285,10 @@ namespace ScanAndRemoveVirus.Control
             this.grpGuards.Controls.Add(this.tlpGuards);
             this.grpGuards.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpGuards.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpGuards.ForeColor = ScanAndRemoveVirus.Control.Theme.BlueDark;
             this.grpGuards.Location = new System.Drawing.Point(592, 8);
             this.grpGuards.Margin = new System.Windows.Forms.Padding(8);
             this.grpGuards.Name = "grpGuards";
-            this.grpGuards.Padding = new System.Windows.Forms.Padding(8);
+            this.grpGuards.Padding = new System.Windows.Forms.Padding(20, 62, 20, 16);
             this.grpGuards.Size = new System.Drawing.Size(568, 339);
             this.grpGuards.TabIndex = 1;
             this.grpGuards.TabStop = false;
@@ -308,12 +310,12 @@ namespace ScanAndRemoveVirus.Control
             this.tlpGuards.Name = "tlpGuards";
             this.tlpGuards.Padding = new System.Windows.Forms.Padding(6, 4, 6, 4);
             this.tlpGuards.RowCount = 6;
-            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            this.tlpGuards.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
             this.tlpGuards.Size = new System.Drawing.Size(552, 303);
             this.tlpGuards.TabIndex = 0;
             // 
@@ -324,7 +326,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkUsbGuard.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkUsbGuard.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkUsbGuard.Location = new System.Drawing.Point(12, 10);
-            this.chkUsbGuard.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkUsbGuard.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkUsbGuard.Name = "chkUsbGuard";
             this.chkUsbGuard.Size = new System.Drawing.Size(528, 36);
             this.chkUsbGuard.TabIndex = 0;
@@ -339,7 +341,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkDownloadGuard.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkDownloadGuard.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkDownloadGuard.Location = new System.Drawing.Point(12, 50);
-            this.chkDownloadGuard.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkDownloadGuard.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkDownloadGuard.Name = "chkDownloadGuard";
             this.chkDownloadGuard.Size = new System.Drawing.Size(528, 36);
             this.chkDownloadGuard.TabIndex = 1;
@@ -354,7 +356,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkBehaviorGuard.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkBehaviorGuard.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkBehaviorGuard.Location = new System.Drawing.Point(12, 90);
-            this.chkBehaviorGuard.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkBehaviorGuard.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkBehaviorGuard.Name = "chkBehaviorGuard";
             this.chkBehaviorGuard.Size = new System.Drawing.Size(528, 36);
             this.chkBehaviorGuard.TabIndex = 2;
@@ -369,7 +371,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkStartupGuard.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkStartupGuard.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkStartupGuard.Location = new System.Drawing.Point(12, 130);
-            this.chkStartupGuard.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkStartupGuard.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkStartupGuard.Name = "chkStartupGuard";
             this.chkStartupGuard.Size = new System.Drawing.Size(528, 36);
             this.chkStartupGuard.TabIndex = 3;
@@ -384,7 +386,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkRestoreGuard.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkRestoreGuard.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkRestoreGuard.Location = new System.Drawing.Point(12, 170);
-            this.chkRestoreGuard.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkRestoreGuard.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkRestoreGuard.Name = "chkRestoreGuard";
             this.chkRestoreGuard.Size = new System.Drawing.Size(528, 36);
             this.chkRestoreGuard.TabIndex = 4;
@@ -410,11 +412,10 @@ namespace ScanAndRemoveVirus.Control
             this.grpVt.Controls.Add(this.tlpVt);
             this.grpVt.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpVt.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpVt.ForeColor = ScanAndRemoveVirus.Control.Theme.BlueDark;
             this.grpVt.Location = new System.Drawing.Point(8, 363);
             this.grpVt.Margin = new System.Windows.Forms.Padding(8);
             this.grpVt.Name = "grpVt";
-            this.grpVt.Padding = new System.Windows.Forms.Padding(8);
+            this.grpVt.Padding = new System.Windows.Forms.Padding(20, 62, 20, 16);
             this.grpVt.Size = new System.Drawing.Size(568, 302);
             this.grpVt.TabIndex = 2;
             this.grpVt.TabStop = false;
@@ -450,7 +451,7 @@ namespace ScanAndRemoveVirus.Control
             this.chkVtAutoQuery.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chkVtAutoQuery.ForeColor = ScanAndRemoveVirus.Control.Theme.TextDark;
             this.chkVtAutoQuery.Location = new System.Drawing.Point(12, 10);
-            this.chkVtAutoQuery.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.chkVtAutoQuery.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.chkVtAutoQuery.Name = "chkVtAutoQuery";
             this.chkVtAutoQuery.Size = new System.Drawing.Size(528, 32);
             this.chkVtAutoQuery.TabIndex = 0;
@@ -530,7 +531,7 @@ namespace ScanAndRemoveVirus.Control
             this.lblVtHint.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblVtHint.ForeColor = ScanAndRemoveVirus.Control.Theme.TextGray;
             this.lblVtHint.Location = new System.Drawing.Point(12, 156);
-            this.lblVtHint.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.lblVtHint.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.lblVtHint.Name = "lblVtHint";
             this.lblVtHint.Size = new System.Drawing.Size(528, 16);
             this.lblVtHint.TabIndex = 4;
@@ -541,11 +542,10 @@ namespace ScanAndRemoveVirus.Control
             this.grpData.Controls.Add(this.tlpData);
             this.grpData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpData.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpData.ForeColor = ScanAndRemoveVirus.Control.Theme.BlueDark;
             this.grpData.Location = new System.Drawing.Point(592, 363);
             this.grpData.Margin = new System.Windows.Forms.Padding(8);
             this.grpData.Name = "grpData";
-            this.grpData.Padding = new System.Windows.Forms.Padding(8);
+            this.grpData.Padding = new System.Windows.Forms.Padding(20, 62, 20, 16);
             this.grpData.Size = new System.Drawing.Size(568, 302);
             this.grpData.TabIndex = 3;
             this.grpData.TabStop = false;
@@ -569,7 +569,9 @@ namespace ScanAndRemoveVirus.Control
             this.tlpData.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
             this.tlpData.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
             this.tlpData.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-            this.tlpData.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
+            // Hàng "Thư mục dữ liệu" cao 2 dòng: đường dẫn thật dài hơn bề rộng thẻ nên
+            // Label tự xuống dòng — để 28px thì dòng thứ hai (chính là đường dẫn) bị cắt mất.
+            this.tlpData.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.tlpData.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpData.Size = new System.Drawing.Size(552, 266);
             this.tlpData.TabIndex = 0;
@@ -629,16 +631,18 @@ namespace ScanAndRemoveVirus.Control
             // tlpDataButtons
             // 
             this.tlpDataButtons.ColumnCount = 4;
-            this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 190F));
-            this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 130F));
-            this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 160F));
+            // Chia % chứ không cố định: 3 cột Absolute cộng lại 480px trong khi thẻ chỉ
+            // còn 407px ở cửa sổ nhỏ nhất -> nút cuối tràn ra ngoài viền thẻ 39px.
+            this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 36F));
+            this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 26F));
+            this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 38F));
             this.tlpDataButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpDataButtons.Controls.Add(this.btnOpenData, 0, 0);
             this.tlpDataButtons.Controls.Add(this.btnClearCache, 1, 0);
             this.tlpDataButtons.Controls.Add(this.btnSamples, 2, 0);
             this.tlpDataButtons.Dock = System.Windows.Forms.DockStyle.Top;
             this.tlpDataButtons.Location = new System.Drawing.Point(12, 120);
-            this.tlpDataButtons.Margin = new System.Windows.Forms.Padding(6, 4, 6, 0);
+            this.tlpDataButtons.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.tlpDataButtons.Name = "tlpDataButtons";
             this.tlpDataButtons.RowCount = 1;
             this.tlpDataButtons.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -678,7 +682,11 @@ namespace ScanAndRemoveVirus.Control
             this.btnSamples.Name = "btnSamples";
             this.btnSamples.Size = new System.Drawing.Size(156, 40);
             this.btnSamples.TabIndex = 2;
-            this.btnSamples.Text = "Tạo tệp mẫu 3 kỹ thuật";
+            // Nhãn ngắn: "Tạo tệp mẫu 3 kỹ thuật" cần ~192px, vượt cột 155px ở cửa sổ nhỏ
+            // nhất. Chi tiết chuyển xuống tooltip — không mất thông tin.
+            this.btnSamples.Text = "Tạo tệp mẫu";
+            this.toolTip1.SetToolTip(this.btnSamples,
+                "Tạo 3 tệp mẫu vô hại, mỗi tệp ứng với một kỹ thuật phát hiện, để thử toàn trình quét - cách ly.");
             this.btnSamples.UseVisualStyleBackColor = true;
             // 
             // tlpFooter
@@ -776,14 +784,14 @@ namespace ScanAndRemoveVirus.Control
         private System.Windows.Forms.Label lblSettingsTitle;
         private System.Windows.Forms.Label lblSettingsSubtitle;
         private System.Windows.Forms.TableLayoutPanel tlpBody;
-        private System.Windows.Forms.GroupBox grpGeneral;
+        private ScanAndRemoveVirus.Control.UiGroup grpGeneral;
         private System.Windows.Forms.TableLayoutPanel tlpGeneral;
         private System.Windows.Forms.CheckBox chkAutoStart;
         private System.Windows.Forms.CheckBox chkAutoUpdate;
         private System.Windows.Forms.CheckBox chkSendSamples;
         private System.Windows.Forms.CheckBox chkShowNotification;
         private System.Windows.Forms.Label lblGeneralHint;
-        private System.Windows.Forms.GroupBox grpGuards;
+        private ScanAndRemoveVirus.Control.UiGroup grpGuards;
         private System.Windows.Forms.TableLayoutPanel tlpGuards;
         private System.Windows.Forms.CheckBox chkUsbGuard;
         private System.Windows.Forms.CheckBox chkDownloadGuard;
@@ -791,28 +799,29 @@ namespace ScanAndRemoveVirus.Control
         private System.Windows.Forms.CheckBox chkStartupGuard;
         private System.Windows.Forms.CheckBox chkRestoreGuard;
         private System.Windows.Forms.Label lblGuardsHint;
-        private System.Windows.Forms.GroupBox grpVt;
+        private ScanAndRemoveVirus.Control.UiGroup grpVt;
         private System.Windows.Forms.TableLayoutPanel tlpVt;
         private System.Windows.Forms.CheckBox chkVtAutoQuery;
         private System.Windows.Forms.Label lblVtStatus;
         private System.Windows.Forms.TextBox txtVtKey;
         private System.Windows.Forms.TableLayoutPanel tlpVtButtons;
-        private System.Windows.Forms.Button btnSaveVtKey;
-        private System.Windows.Forms.Button btnClearVtKey;
+        private ScanAndRemoveVirus.Control.UiButton btnSaveVtKey;
+        private ScanAndRemoveVirus.Control.UiButton btnClearVtKey;
         private System.Windows.Forms.Label lblVtHint;
-        private System.Windows.Forms.GroupBox grpData;
+        private ScanAndRemoveVirus.Control.UiGroup grpData;
+        private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.TableLayoutPanel tlpData;
         private System.Windows.Forms.Label lblAppVersion;
         private System.Windows.Forms.Label lblDbUpdate;
         private System.Windows.Forms.Label lblQuarantined;
         private System.Windows.Forms.Label lblDataPath;
         private System.Windows.Forms.TableLayoutPanel tlpDataButtons;
-        private System.Windows.Forms.Button btnOpenData;
-        private System.Windows.Forms.Button btnClearCache;
-        private System.Windows.Forms.Button btnSamples;
+        private ScanAndRemoveVirus.Control.UiButton btnOpenData;
+        private ScanAndRemoveVirus.Control.UiButton btnClearCache;
+        private ScanAndRemoveVirus.Control.UiButton btnSamples;
         private System.Windows.Forms.TableLayoutPanel tlpFooter;
         private System.Windows.Forms.Label lblSavedAt;
-        private System.Windows.Forms.Button btnResetDefaults;
-        private System.Windows.Forms.Button btnSaveSettings;
+        private ScanAndRemoveVirus.Control.UiButton btnResetDefaults;
+        private ScanAndRemoveVirus.Control.UiButton btnSaveSettings;
     }
 }

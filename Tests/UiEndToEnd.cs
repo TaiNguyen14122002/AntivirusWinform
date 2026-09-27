@@ -351,9 +351,9 @@ static class UiEndToEnd
                 Check("[UI] mở trang (c) Chi tiết kết quả quét: 3 thẻ số liệu biến mất (hàng về 0px)",
                     F<Control>(uc, "pnlChiTietKetQua").Visible
                     && !F<Control>(uc, "pnlThongKe").Visible
-                    && !F<GroupBox>(uc, "grpThreats").Visible
-                    && !F<GroupBox>(uc, "grpScannedFiles").Visible
-                    && !F<GroupBox>(uc, "grpLastScan").Visible
+                    && !F<Control>(uc, "grpThreats").Visible
+                    && !F<Control>(uc, "grpScannedFiles").Visible
+                    && !F<Control>(uc, "grpLastScan").Visible
                     && Math.Abs(tlp12.RowStyles[hangThongKe].Height) < 0.5F);
                 F<Button>(uc, "btnQuayLaiChiTiet").PerformClick();   // nút "← Quay lại" của trang (c)
                 PumpMs(300);
@@ -361,7 +361,7 @@ static class UiEndToEnd
                     !F<Control>(uc, "pnlChiTietKetQua").Visible
                     && F<Control>(uc, "pnlPhatHienDeDoa").Visible
                     && F<Control>(uc, "pnlThongKe").Visible
-                    && F<GroupBox>(uc, "grpThreats").Visible
+                    && F<Control>(uc, "grpThreats").Visible
                     && Math.Abs(tlp12.RowStyles[hangThongKe].Height - 104F) < 0.5F);
                 // -- (d): dropdown "⚙ Quét nâng cao ▾" -> mở trang (d) chế độ quét toàn bộ hệ thống
                 uc.MoQuetNangCao(CheDoQuetNangCao.FullSystem);
@@ -369,9 +369,9 @@ static class UiEndToEnd
                 Check("[UI] sang trang Quét nâng cao: 3 thẻ số liệu (đe dọa/tệp đã quét/lần quét) biến mất",
                     F<Control>(uc, "pnlQuetNangCao").Visible
                     && !F<Control>(uc, "pnlThongKe").Visible
-                    && !F<GroupBox>(uc, "grpThreats").Visible
-                    && !F<GroupBox>(uc, "grpScannedFiles").Visible
-                    && !F<GroupBox>(uc, "grpLastScan").Visible
+                    && !F<Control>(uc, "grpThreats").Visible
+                    && !F<Control>(uc, "grpScannedFiles").Visible
+                    && !F<Control>(uc, "grpLastScan").Visible
                     && Math.Abs(tlp12.RowStyles[hangThongKe].Height) < 0.5F);
                 // ===== 3f. Trang (d): chuyển QUA LẠI giữa 4 lựa chọn chế độ (25/09/2026, lần 6) =====
                 // Cột trái có 4 thẻ (Toàn bộ hệ thống / Thư mục / Tệp / Tùy chỉnh). 4 thẻ nằm trong 4
@@ -426,7 +426,7 @@ static class UiEndToEnd
                 Check("[UI] quay lại từ Quét nâng cao: 3 thẻ số liệu hiện lại, hàng về đúng 104px",
                     !F<Control>(uc, "pnlQuetNangCao").Visible
                     && F<Control>(uc, "pnlThongKe").Visible
-                    && F<GroupBox>(uc, "grpThreats").Visible && F<GroupBox>(uc, "grpLastScan").Visible
+                    && F<Control>(uc, "grpThreats").Visible && F<Control>(uc, "grpLastScan").Visible
                     && Math.Abs(tlp12.RowStyles[hangThongKe].Height - 104F) < 0.5F);
                 // Trả lại đúng màn hình cho các section sau (HienThi(viewTruoc, refresh:false))
                 typeof(UcTongQuan).GetMethod("HienThi", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -1378,9 +1378,10 @@ static class UiEndToEnd
                 Console.WriteLine("== SECTION 9 done ==");
 
                 // ===== 9b. Ngôn ngữ thiết kế đồng bộ theo chuẩn tab Lịch sử =====
-                // 5/5 tab phải có page-header: 18pt Bold (title) + 9.75 xám (subtitle) — RIÊNG tab Lịch sử
-                // theo ảnh tham chiếu 26/09/2026 dùng cỡ LỚN 25pt + phụ đề 10.5 (Theme.PageTitleLargeFont).
-                // mọi GroupBox đầu tiên mỗi tab phải mang card-style 10.125 Bold BlueDark.
+                // 5/5 tab phải có page-header 18pt Bold (title) + 9.75 xám (subtitle) — RIÊNG tab Lịch sử
+                // theo ảnh tham chiếu 26/09/2026 dùng cỡ LỚN 25pt + phụ đề 10.5 (Theme.PageTitleLargeFont/
+                // PageSubLargeFont, §3.1). Mọi GroupBox đầu tiên mỗi tab phải là UiGroup (thẻ bo góc tự vẽ)
+                // với tiêu đề 11.25 Bold TextDark — đúng ngôn ngữ của UiCard ở tab Tổng quan.
                 Console.WriteLine("== SECTION 9b ==");
                 {
                     var mfd = new ScanAndRemoveVirus.FrmMain();
@@ -1422,11 +1423,18 @@ static class UiEndToEnd
                         GroupBox gb = FirstGroupBox(tabUc2);
                         if (gb == null) continue;
                         grpWith++;
-                        if (gb.Font.Bold && Math.Abs(gb.Font.SizeInPoints - Theme.CardTitleFont.SizeInPoints) < 0.15f
-                            && gb.ForeColor == Theme.BlueDark) grpStyled++;
-                        else Console.WriteLine("  card lệch: " + tb[0] + "/" + gb.Name + " font=" + gb.Font);
+                        // UiGroup vẽ tiêu đề bằng HeadFont/HeadColor riêng, KHÔNG dùng
+                        // Font của GroupBox (Font đó bị control con thừa hưởng — gán font
+                        // tiêu đề lên đó sẽ làm đậm cả nội dung thẻ).
+                        var ug = gb as ScanAndRemoveVirus.Control.UiGroup;
+                        if (ug != null
+                            && ug.HeadFont.Bold
+                            && Math.Abs(ug.HeadFont.SizeInPoints - Theme.CardHeadFont.SizeInPoints) < 0.15f
+                            && ug.HeadColor == Theme.TextDark) grpStyled++;
+                        else Console.WriteLine("  card lệch: " + tb[0] + "/" + gb.Name
+                            + " type=" + gb.GetType().Name);
                     }
-                    Check("[UI] mọi card GroupBox đầu tab đều card-style 10.125Bold BlueDark (" + grpStyled + "/" + grpWith + ")",
+                    Check("[UI] mọi card đầu tab đều là UiGroup với tiêu đề 11.25Bold TextDark (" + grpStyled + "/" + grpWith + ")",
                         grpWith > 0 && grpStyled == grpWith);
 
                     // 9c. regression layout Tổng quan: 2 nút quét nằm trong khối (a), trang giãn theo cửa sổ
@@ -1440,8 +1448,8 @@ static class UiEndToEnd
                         geo.Location = new Point(-2600, -2600);
                         geo.ClientSize = new Size(1280, 980); // cao hơn min 640 -> không cần scroll, hàng Percent giãn
                         geo.Show(); Application.DoEvents();
-                        var gs = F<GroupBox>(ucX, "grpActivity");   // thẻ "Hoạt động gần đây"
-                        var ga = F<GroupBox>(ucX, "grpAction");     // bảng đe dọa — chỉ hiện ở trạng thái (b)
+                        var gs = F<Control>(ucX, "grpActivity");   // thẻ "Hoạt động gần đây"
+                        var ga = F<Control>(ucX, "grpAction");     // bảng đe dọa — chỉ hiện ở trạng thái (b)
                         var t12 = F<Control>(ucX, "tableLayoutPanel12");
                         var pn = F<Panel>(ucX, "pnlContent");
                         var fh = F<Control>(ucX, "flowHeaderActions");  // 2 nút quét — nay nằm trong khối (a)
@@ -1459,14 +1467,16 @@ static class UiEndToEnd
 
                         geo.ClientSize = new Size(1000, 560); // thấp hơn min -> PHẢI scroll, nội dung không bị ép
                         Application.DoEvents(); geo.Refresh();
-                        gs = F<GroupBox>(ucX, "grpActivity");
+                        gs = F<Control>(ucX, "grpActivity");
                         var t11 = F<Control>(ucX, "tableLayoutPanel11");
                         Console.WriteLine("  geo560 gs.H=" + gs.Height + " tlp11.H=" + t11.Height
                             + " AutoScroll=" + pn.AutoScroll);
-                        // min theo Theme.ScrollablePage: TLP11 giữ MinimumSize 980x640 -> t11.H >= 630,
-                        // thẻ Hoạt động vẫn là hàng Percent nên đủ chỗ, AutoScroll bật thay vì ép các card
-                        Check("[UI] TQ cửa sổ thấp: AutoScroll bật + card KHÔNG bị ép (giữ >=303px)",
-                            pn.AutoScroll && gs.Height >= 303 && t11.Height >= 630
+                        // min theo Theme.ScrollablePage: TLP11 giữ MinimumSize 980x640 -> t11.H >= 630.
+                        // Ngưỡng cũ 303px tính cho hero 164px; hero nay 320px (mockup: khiên lớn canh giữa)
+                        // nên ở 640px tối thiểu thẻ "Hoạt động gần đây" còn 640-6-320-104-4 = 206px — vẫn
+                        // là hàng Percent, vẫn KHÔNG bị ép về 0, và AutoScroll bật thay vì cắt nội dung.
+                        Check("[UI] TQ cửa sổ thấp: AutoScroll bật + card KHÔNG bị ép (giữ >=200px)",
+                            pn.AutoScroll && gs.Height >= 200 && t11.Height >= 630
                             && gs.Bottom <= t11.Height + 2);
 
                         // Trạng thái (b) — "Phát hiện đe dọa": bảng đe dọa hiện 400px, thẻ Hoạt động nhường chỗ
@@ -1477,8 +1487,8 @@ static class UiEndToEnd
                         geo.PerformLayout();
                         ucX.PerformLayout();
                         Application.DoEvents();
-                        ga = F<GroupBox>(ucX, "grpAction");
-                        gs = F<GroupBox>(ucX, "grpActivity");
+                        ga = F<Control>(ucX, "grpAction");
+                        gs = F<Control>(ucX, "grpActivity");
                         var fa = F<Control>(ucX, "flowPhatHienActions");   // 2 nút của hero (b)
                         var parentB = F<Control>(ucX, "pnlPhatHienDeDoa");
                         Console.WriteLine("  geoB ga.H=" + ga.Height + " ga.Visible=" + ga.Visible
