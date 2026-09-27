@@ -178,8 +178,13 @@ namespace ScanAndRemoveVirus.Control
         {
             return new Label
             {
-                Text = text, Font = font, ForeColor = color, Dock = DockStyle.Fill,
-                TextAlign = align, Margin = new Padding(0), AutoEllipsis = true
+                Text = text,
+                Font = font,
+                ForeColor = color,
+                Dock = DockStyle.Fill,
+                TextAlign = align,
+                Margin = new Padding(0),
+                AutoEllipsis = true
             };
         }
 
@@ -212,7 +217,7 @@ namespace ScanAndRemoveVirus.Control
         /// </summary>
         private void BuildQuetNangCaoView()
         {
-            var root = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Name = "tlpQuetNangCao" };
+            var root = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, BackColor = Color.White, Name = "tlpQuetNangCao" };
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, CaoHeaderRong));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
@@ -220,7 +225,7 @@ namespace ScanAndRemoveVirus.Control
             tlpTrangNangCao = root;
             root.Controls.Add(DungHeaderNangCao(), 0, 0);
 
-            var body = new TableLayoutPanel { ColumnCount = 2, Dock = DockStyle.Fill, Margin = new Padding(0), Name = "tlpThanNangCao" };
+            var body = new TableLayoutPanel { ColumnCount = 2, Dock = DockStyle.Fill, Margin = new Padding(0), BackColor = Color.White, Name = "tlpThanNangCao" };
             body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, RongCotCheDo));
             body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             body.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
@@ -244,6 +249,7 @@ namespace ScanAndRemoveVirus.Control
             root.Controls.Add(DungChanTrang(), 0, 2);
             // RESPONSIVE (lần 7): bề rộng vùng trang đổi (kéo cửa sổ, hiện/ẩn thanh cuộn) -> xếp lại bố cục
             pnlQuetNangCao.Resize += delegate { XepBoCucNangCao(); };
+            pnlQuetNangCao.BackColor = Color.White;
             pnlQuetNangCao.Controls.Add(root);
             XepBoCucNangCao();   // áp bố cục đúng với bề rộng hiện tại ngay từ lần dựng đầu
         }
@@ -437,7 +443,8 @@ namespace ScanAndRemoveVirus.Control
         /// <summary>Cột trái: 4 thẻ chọn chế độ (radio dạng card) — chọn thẻ nào thì cột phải đổi ngay.</summary>
         private System.Windows.Forms.Control DungCotCheDo()
         {
-            var t = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0), Name = "pnlCheDoTrai" };
+            
+            var t = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0), BackColor = Color.White, Name = "pnlCheDoTrai" };
             t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             t.RowCount = 5;
             for (int i = 0; i < 4; i++) t.RowStyles.Add(new RowStyle(SizeType.Absolute, CaoTheDoc));
@@ -463,15 +470,18 @@ namespace ScanAndRemoveVirus.Control
                 CheDoQuetNangCao mode = (CheDoQuetNangCao)i;
                 var card = new UiRadioCard
                 {
-                    Text = tieuDe[i], Desc = moTa[i], Icon = bieuTuong[i],
-                    Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 8),
+                    Text = tieuDe[i],
+                    Desc = moTa[i],
+                    Icon = bieuTuong[i],
+                    Dock = DockStyle.Fill,
+                    Margin = new Padding(0, 0, 0, 8),
                     Name = "rdoCheDo" + mode
                 };
                 CheDoQuetNangCao chotMode = mode;
                 // 4 thẻ nay là anh em CÙNG một parent nên RadioButton tự bỏ chọn thẻ cũ; vẫn phải
                 // đi qua ChonTheCheDo() để cột phải và hộp "Lưu ý" đổi theo. Điều hướng bằng phím
                 // mũi tên do RadioButton lo sẵn (ProcessDialogKey) — không cần tự bắt KeyDown nữa.
-                card.CheckedChanged += delegate(object s, EventArgs ev)
+                card.CheckedChanged += delegate (object s, EventArgs ev)
                 {
                     if (((RadioButton)s).Checked) ChonTheCheDo(chotMode);
                 };
@@ -500,23 +510,38 @@ namespace ScanAndRemoveVirus.Control
             luuYTrong.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             var icLuuY = new PictureBox
             {
-                Image = UiIcons.Info(16, Theme.Blue), SizeMode = PictureBoxSizeMode.CenterImage,
-                Dock = DockStyle.Fill, Margin = new Padding(0)
+                Image = UiIcons.Info(16, Theme.Blue),
+                SizeMode = PictureBoxSizeMode.CenterImage,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0)
             };
             lblLuuY = new Label
             {
-                Text = "Lưu ý", Font = Theme.BoldFont, ForeColor = Theme.TextDark,
-                Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(0)
+                Text = "Lưu ý",
+                Font = Theme.BoldFont,
+                ForeColor = Theme.TextDark,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0)
             };
             lblLuuYThan = new Label
             {
-                Font = Theme.SmallFont, ForeColor = Theme.TextMid, Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.TopLeft, Margin = new Padding(0), AutoEllipsis = true
+                Font = Theme.SmallFont,
+                ForeColor = Theme.TextMid,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.TopLeft,
+                Margin = new Padding(0),
+                AutoEllipsis = true
             };
             luuYTrong.Controls.Add(icLuuY, 0, 0);
             luuYTrong.Controls.Add(lblLuuY, 1, 0);
             luuYTrong.Controls.Add(lblLuuYThan, 1, 1);
             Theme.StyleInfoBox(pnlLuuY, lblLuuY);
+            // StyleInfoBox gán Font/ForeColor cho NHÃN NỘI DUNG (8.25 xám) nên phải gán lại tiêu đề
+            // SAU lời gọi đó: "Lưu ý" là dòng tiêu đề của hộp (mockup = đậm, chữ đậm màu) chứ không
+            // phải nội dung — trước đây bị ghi đè thành 8.25 Regular xám.
+            lblLuuY.Font = Theme.BoldFont;
+            lblLuuY.ForeColor = Theme.TextDark;
             pnlLuuY.Controls.Add(luuYTrong);
 
             btnBatDauQuet = Nut("Bắt đầu quét", Theme.BtnRole.Primary, 190, 42);
@@ -571,8 +596,12 @@ namespace ScanAndRemoveVirus.Control
             dgvODia.ReadOnly = false;
             colODiaChon = new DataGridViewCheckBoxColumn
             {
-                HeaderText = "", Name = "colODiaChon", AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
-                Width = 48, Resizable = DataGridViewTriState.False, SortMode = DataGridViewColumnSortMode.NotSortable
+                HeaderText = "",
+                Name = "colODiaChon",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 48,
+                Resizable = DataGridViewTriState.False,
+                SortMode = DataGridViewColumnSortMode.NotSortable
             };
             dgvODia.Columns.Add(colODiaChon);
             dgvODia.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Ổ đĩa", Name = "colODiaTen", FillWeight = 18F });
@@ -584,7 +613,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 if (dgvODia.IsCurrentCellDirty) dgvODia.CommitEdit(DataGridViewDataErrorContexts.Commit);
             };
-            dgvODia.CellValueChanged += delegate(object s, DataGridViewCellEventArgs e)
+            dgvODia.CellValueChanged += delegate (object s, DataGridViewCellEventArgs e)
             {
                 if (e.RowIndex >= 0 && e.ColumnIndex == colODiaChon.Index) CapNhatTrangThaiNutBatDauQuet();
             };
@@ -652,8 +681,12 @@ namespace ScanAndRemoveVirus.Control
             dong1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             txtThuMuc = new TextBox
             {
-                Dock = DockStyle.Fill, ReadOnly = true, BackColor = Theme.ChipGray, ForeColor = Theme.TextMid,
-                Font = Theme.BodyFont, Margin = new Padding(0, 4, 8, 4),
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                BackColor = Theme.ChipGray,
+                ForeColor = Theme.TextMid,
+                Font = Theme.BodyFont,
+                Margin = new Padding(0, 4, 8, 4),
                 Text = "(chọn thư mục cần quét — có thể thêm nhiều thư mục)"
             };
             btnChonThuMuc = Nut("Chọn thư mục", Theme.BtnRole.Secondary, 148, 34);
@@ -678,18 +711,26 @@ namespace ScanAndRemoveVirus.Control
             dgvThuMuc.DragDrop += DgvThuMuc_DragDrop;
             dgvThuMuc.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "STT", AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 50
+                HeaderText = "STT",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 50
             });
             dgvThuMuc.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Đường dẫn thư mục", FillWeight = 60F });
             dgvThuMuc.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "Kích thước", AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 130
+                HeaderText = "Kích thước",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 130
             });
             dgvThuMuc.Columns.Add(new DataGridViewButtonColumn
             {
-                HeaderText = "Thao tác", Text = "Xóa", UseColumnTextForButtonValue = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 86,
-                Resizable = DataGridViewTriState.False, SortMode = DataGridViewColumnSortMode.NotSortable
+                HeaderText = "Thao tác",
+                Text = "Xóa",
+                UseColumnTextForButtonValue = true,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 86,
+                Resizable = DataGridViewTriState.False,
+                SortMode = DataGridViewColumnSortMode.NotSortable
             });
             foreach (DataGridViewColumn c in dgvThuMuc.Columns) if (c.Index != 3) c.ReadOnly = true;
             dgvThuMuc.CellContentClick += DgvThuMuc_CellContentClick;
@@ -733,7 +774,7 @@ namespace ScanAndRemoveVirus.Control
             pnlKeoTha.DragEnter += LuoiHoacPanel_DragEnter;
             pnlKeoTha.DragLeave += delegate { pnlKeoTha.BackColor = Theme.BlueTint; };
             pnlKeoTha.DragDrop += PnlKeoTha_DragDrop;
-            pnlKeoTha.Paint += delegate(object s, PaintEventArgs e)
+            pnlKeoTha.Paint += delegate (object s, PaintEventArgs e)
             {
                 using (var pen = new Pen(Theme.BlueSoft))
                     e.Graphics.DrawRectangle(pen, 0, 0, pnlKeoTha.Width - 1, pnlKeoTha.Height - 1);
@@ -769,19 +810,27 @@ namespace ScanAndRemoveVirus.Control
             dgvTep.DragDrop += PnlKeoTha_DragDrop;
             dgvTep.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "STT", AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 50
+                HeaderText = "STT",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 50
             });
             dgvTep.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Tên tệp", FillWeight = 40F });
             dgvTep.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Đường dẫn (rút gọn)", FillWeight = 45F });
             dgvTep.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "Kích thước", AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 110
+                HeaderText = "Kích thước",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 110
             });
             dgvTep.Columns.Add(new DataGridViewButtonColumn
             {
-                HeaderText = "Thao tác", Text = "Xóa", UseColumnTextForButtonValue = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 86,
-                Resizable = DataGridViewTriState.False, SortMode = DataGridViewColumnSortMode.NotSortable
+                HeaderText = "Thao tác",
+                Text = "Xóa",
+                UseColumnTextForButtonValue = true,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 86,
+                Resizable = DataGridViewTriState.False,
+                SortMode = DataGridViewColumnSortMode.NotSortable
             });
             foreach (DataGridViewColumn c in dgvTep.Columns) if (c.Index != 4) c.ReadOnly = true;
             dgvTep.CellContentClick += DgvTep_CellContentClick;
@@ -858,18 +907,26 @@ namespace ScanAndRemoveVirus.Control
         {
             dgvViTri.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "STT", AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 50
+                HeaderText = "STT",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 50
             });
             dgvViTri.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Đường dẫn", FillWeight = 70F });
             dgvViTri.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "Loại", AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 90
+                HeaderText = "Loại",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 90
             });
             dgvViTri.Columns.Add(new DataGridViewButtonColumn
             {
-                HeaderText = "Thao tác", Text = "Xóa", UseColumnTextForButtonValue = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 86,
-                Resizable = DataGridViewTriState.False, SortMode = DataGridViewColumnSortMode.NotSortable
+                HeaderText = "Thao tác",
+                Text = "Xóa",
+                UseColumnTextForButtonValue = true,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                Width = 86,
+                Resizable = DataGridViewTriState.False,
+                SortMode = DataGridViewColumnSortMode.NotSortable
             });
             foreach (DataGridViewColumn c in dgvViTri.Columns) if (c.Index != 3) c.ReadOnly = true;
             dgvViTri.CellContentClick += DgvViTri_CellContentClick;
@@ -890,9 +947,14 @@ namespace ScanAndRemoveVirus.Control
             {
                 var rdo = new RadioButton
                 {
-                    Text = loaiTep[i], AutoSize = true, Margin = new Padding(0),
-                    Cursor = Cursors.Hand, ForeColor = Theme.TextMid, Font = Theme.BodyFont,
-                    Checked = i == 0, Name = "rdoLoaiTep" + i
+                    Text = loaiTep[i],
+                    AutoSize = true,
+                    Margin = new Padding(0),
+                    Cursor = Cursors.Hand,
+                    ForeColor = Theme.TextMid,
+                    Font = Theme.BodyFont,
+                    Checked = i == 0,
+                    Name = "rdoLoaiTep" + i
                 };
                 rdo.CheckedChanged += delegate { CapNhatODienPhanMoRong(); };
                 rdoLoai[i] = rdo;
@@ -905,8 +967,11 @@ namespace ScanAndRemoveVirus.Control
         {
             txtPhanMoRong = new TextBox
             {
-                Dock = DockStyle.Fill, Enabled = false, Font = Theme.BodyFont,
-                Margin = new Padding(0, 3, 0, 3), Text = "exe,dll,sys",
+                Dock = DockStyle.Fill,
+                Enabled = false,
+                Font = Theme.BodyFont,
+                Margin = new Padding(0, 3, 0, 3),
+                Text = "exe,dll,sys",
                 BackColor = Theme.ChipGray
             };
             if (tips == null) tips = new ToolTip();
@@ -937,21 +1002,32 @@ namespace ScanAndRemoveVirus.Control
             dong.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             chkBoQuaTepLon = new CheckBox
             {
-                Text = "Bỏ qua các tệp lớn hơn", AutoSize = true, Dock = DockStyle.Left,
-                Margin = new Padding(0, 6, 10, 0), TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
-                ForeColor = Theme.TextMid, Font = Theme.BodyFont, Cursor = Cursors.Hand
+                Text = "Bỏ qua các tệp lớn hơn",
+                AutoSize = true,
+                Dock = DockStyle.Left,
+                Margin = new Padding(0, 6, 10, 0),
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                ForeColor = Theme.TextMid,
+                Font = Theme.BodyFont,
+                Cursor = Cursors.Hand
             };
             chkBoQuaTepLon.CheckedChanged += delegate { CapNhatTrangThaiNutBatDauQuet(); };
             numBoQuaTepLon = new NumericUpDown
             {
-                Minimum = 1, Maximum = 100000, Value = 100, Dock = DockStyle.Fill,
-                Margin = new Padding(0, 3, 6, 3), Font = Theme.BodyFont
+                Minimum = 1,
+                Maximum = 100000,
+                Value = 100,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 3, 6, 3),
+                Font = Theme.BodyFont
             };
             numBoQuaTepLon.ValueChanged += delegate { CapNhatTrangThaiNutBatDauQuet(); };
             cboDonVi = new ComboBox
             {
-                DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill,
-                Margin = new Padding(0, 3, 6, 3), Font = Theme.BodyFont
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 3, 6, 3),
+                Font = Theme.BodyFont
             };
             cboDonVi.Items.AddRange(new object[] { "KB", "MB", "GB" });
             cboDonVi.SelectedIndex = 1;
@@ -1509,83 +1585,83 @@ namespace ScanAndRemoveVirus.Control
             switch (cheDo)
             {
                 case CheDoQuetNangCao.FullSystem:
-                {
-                    var roots = new List<string>();
-                    foreach (DataGridViewRow r in dgvODia.Rows)
-                        if (r.Cells[colODiaChon.Index].Value is bool b && b)
-                            roots.Add(Convert.ToString(r.Cells[1].Value));
-                    if (roots.Count == 0)
                     {
-                        MessageBox.Show("Hãy tick ít nhất 1 ổ đĩa cần quét.", "Quét toàn bộ hệ thống",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return null;
-                    }
-                    job.Targets = roots;
-                    job.DisplayName = "Quét toàn bộ";
-                    job.ScopeText = "Ổ đĩa: " + string.Join(", ", roots.ToArray());
-                    job.AutoQuarantine = chkFull[6].Checked;
-                    break;
-                }
-                case CheDoQuetNangCao.Folder:
-                {
-                    if (dsThuMuc.Count == 0)
-                    {
-                        MessageBox.Show("Hãy thêm ít nhất 1 thư mục cần quét.", "Quét thư mục",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return null;
-                    }
-                    job.Targets = new List<string>(dsThuMuc);
-                    job.DisplayName = "Quét thư mục";
-                    job.ScopeText = string.Format("{0} thư mục: {1}", dsThuMuc.Count, string.Join(", ", dsThuMuc.ToArray()));
-                    job.AutoQuarantine = chkFolder[5].Checked;
-                    break;
-                }
-                case CheDoQuetNangCao.Files:
-                {
-                    if (dsTep.Count == 0)
-                    {
-                        MessageBox.Show("Hãy chọn ít nhất 1 tệp cần quét.", "Quét tệp",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return null;
-                    }
-                    job.Targets = new List<string>(dsTep);
-                    job.DisplayName = "Quét tệp";
-                    job.ScopeText = string.Format("{0} tệp đã chọn", dsTep.Count);
-                    job.AutoQuarantine = chkFiles[2].Checked;
-                    break;
-                }
-                default:
-                {
-                    if (dsViTri.Count == 0)
-                    {
-                        MessageBox.Show("Hãy thêm ít nhất 1 vị trí (thư mục hoặc tệp) cần quét.", "Quét tùy chỉnh",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return null;
-                    }
-                    job.Targets = dsViTri.Select(t => t.Path).ToList();
-                    job.DisplayName = "Quét tùy chỉnh";
-                    job.ScopeText = string.Format("{0} vị trí đã chọn", dsViTri.Count);
-                    job.AutoQuarantine = chkCustom[4].Checked;
-
-                    if (rdoLoai[1].Checked) job.ExtensionFilter = ExecutableExtensions;
-                    else if (rdoLoai[2].Checked) job.ExtensionFilter = ArchiveExtensions;
-                    else if (rdoLoai[3].Checked) job.ExtensionFilter = DocumentExtensions;
-                    else if (rdoLoai[4].Checked)
-                    {
-                        string loi;
-                        HashSet<string> set = ParsePhanMoRong(out loi);
-                        if (set.Count == 0)
+                        var roots = new List<string>();
+                        foreach (DataGridViewRow r in dgvODia.Rows)
+                            if (r.Cells[colODiaChon.Index].Value is bool b && b)
+                                roots.Add(Convert.ToString(r.Cells[1].Value));
+                        if (roots.Count == 0)
                         {
-                            MessageBox.Show(loi, "Loại tệp quét", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            txtPhanMoRong.Focus();
+                            MessageBox.Show("Hãy tick ít nhất 1 ổ đĩa cần quét.", "Quét toàn bộ hệ thống",
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return null;
                         }
-                        job.ExtensionFilter = set;
+                        job.Targets = roots;
+                        job.DisplayName = "Quét toàn bộ";
+                        job.ScopeText = "Ổ đĩa: " + string.Join(", ", roots.ToArray());
+                        job.AutoQuarantine = chkFull[6].Checked;
+                        break;
                     }
-                    if (chkBoQuaTepLon.Checked)
-                        job.SkipLargerThanBytes = (long)numBoQuaTepLon.Value * HeSoDonVi();
-                    break;
-                }
+                case CheDoQuetNangCao.Folder:
+                    {
+                        if (dsThuMuc.Count == 0)
+                        {
+                            MessageBox.Show("Hãy thêm ít nhất 1 thư mục cần quét.", "Quét thư mục",
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return null;
+                        }
+                        job.Targets = new List<string>(dsThuMuc);
+                        job.DisplayName = "Quét thư mục";
+                        job.ScopeText = string.Format("{0} thư mục: {1}", dsThuMuc.Count, string.Join(", ", dsThuMuc.ToArray()));
+                        job.AutoQuarantine = chkFolder[5].Checked;
+                        break;
+                    }
+                case CheDoQuetNangCao.Files:
+                    {
+                        if (dsTep.Count == 0)
+                        {
+                            MessageBox.Show("Hãy chọn ít nhất 1 tệp cần quét.", "Quét tệp",
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return null;
+                        }
+                        job.Targets = new List<string>(dsTep);
+                        job.DisplayName = "Quét tệp";
+                        job.ScopeText = string.Format("{0} tệp đã chọn", dsTep.Count);
+                        job.AutoQuarantine = chkFiles[2].Checked;
+                        break;
+                    }
+                default:
+                    {
+                        if (dsViTri.Count == 0)
+                        {
+                            MessageBox.Show("Hãy thêm ít nhất 1 vị trí (thư mục hoặc tệp) cần quét.", "Quét tùy chỉnh",
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return null;
+                        }
+                        job.Targets = dsViTri.Select(t => t.Path).ToList();
+                        job.DisplayName = "Quét tùy chỉnh";
+                        job.ScopeText = string.Format("{0} vị trí đã chọn", dsViTri.Count);
+                        job.AutoQuarantine = chkCustom[4].Checked;
+
+                        if (rdoLoai[1].Checked) job.ExtensionFilter = ExecutableExtensions;
+                        else if (rdoLoai[2].Checked) job.ExtensionFilter = ArchiveExtensions;
+                        else if (rdoLoai[3].Checked) job.ExtensionFilter = DocumentExtensions;
+                        else if (rdoLoai[4].Checked)
+                        {
+                            string loi;
+                            HashSet<string> set = ParsePhanMoRong(out loi);
+                            if (set.Count == 0)
+                            {
+                                MessageBox.Show(loi, "Loại tệp quét", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                txtPhanMoRong.Focus();
+                                return null;
+                            }
+                            job.ExtensionFilter = set;
+                        }
+                        if (chkBoQuaTepLon.Checked)
+                            job.SkipLargerThanBytes = (long)numBoQuaTepLon.Value * HeSoDonVi();
+                        break;
+                    }
             }
             return job;
         }

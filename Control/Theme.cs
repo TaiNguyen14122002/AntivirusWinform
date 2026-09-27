@@ -1,6 +1,8 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace ScanAndRemoveVirus.Control
@@ -133,17 +135,93 @@ namespace ScanAndRemoveVirus.Control
             card.Padding = new Padding(10, 0, 6, 0);
         }
 
+        // =====================================================================
+        // TIỆN ÍCH CHỐNG LỖI VẼ (một nguồn duy nhất — dùng cho mọi tab)
+        // =====================================================================
+
+        /// <summary>PropertyInfo của <c>Control.DoubleBuffered</c> (protected) — tra MỘT lần.
+        /// Viết đủ <c>System.Windows.Forms.Control</c> vì trong namespace này tên "Control" bị chính
+        /// namespace <c>ScanAndRemoveVirus.Control</c> che mất.</summary>
+        static readonly PropertyInfo pDoubleBuffered =
+            typeof(System.Windows.Forms.Control).GetProperty("DoubleBuffered",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+        /// <summary>Phương thức protected <c>Control.SetStyle</c> — dùng làm đường dự phòng.</summary>
+        static readonly MethodInfo mSetStyle =
+            typeof(System.Windows.Forms.Control).GetMethod("SetStyle",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+        /// <summary>
+        /// Bật Double Buffered cho control KHÔNG thuộc quyền sửa kiểu (Panel/DataGridView do Designer
+        /// tạo, hoặc UserControl do tab khác sở hữu). <c>DoubleBuffered</c> là thuộc tính protected của
+        /// Control nên chỉ chạm được qua reflection; ở đây KHÔNG đổi kiểu control, KHÔNG sửa file
+        /// Designer, chỉ đọc/ghi đúng thuộc tính đó (kèm đường dự phòng gọi thẳng <c>SetStyle</c>).
+        /// CHỈ gọi cho khung chứa bị vẽ lại liên tục (lưới dữ liệu cuộn, vùng đổi trang, dải có viền
+        /// vẽ tay) — mỗi buffer tốn thêm một bitmap bằng kích thước control nên không bật tràn lan.
+        /// </summary>
+        public static void BatDoubleBuffer(System.Windows.Forms.Control c)
+        {
+            if (c == null) return;
+            try
+            {
+                if (pDoubleBuffered != null && !(bool)pDoubleBuffered.GetValue(c, null))
+                {
+                    pDoubleBuffered.SetValue(c, true, null);
+                    return;
+                }
+                if (pDoubleBuffered != null) return;
+            }
+            catch (Exception)
+            {
+                // Ghi thuộc tính không được -> thử đường dự phòng bên dưới.
+            }
+            try
+            {
+                if (mSetStyle != null)
+                    mSetStyle.Invoke(c, new object[]
+                    {
+                        ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true
+                    });
+            }
+            catch (Exception)
+            {
+                // Nền tảng không cho ghi -> bỏ qua: giao diện vẫn chạy, chỉ còn nhấp nháy như trước.
+            }
+        }
+
+        /// <summary>Đánh dấu control đã được gắn handler vẽ — để gọi lại Style* không cộng dồn handler.</summary>
+        static readonly ConditionalWeakTable<System.Windows.Forms.Control, object> daGanHandler =
+            new ConditionalWeakTable<System.Windows.Forms.Control, object>();
+
+        /// <summary>Gắn handler MỘT LẦN cho control (gọi lại trên cùng control là no-op).</summary>
+        static bool GanLanDau(System.Windows.Forms.Control c)
+        {
+            object da;
+            if (daGanHandler.TryGetValue(c, out da)) return false;
+            daGanHandler.Add(c, new object());
+            return true;
+        }
+
+        /// <summary>Viền 1px quanh hộp info-box / dải loading — dùng chung cho cả hai Style* bên dưới.</summary>
+        static void VeVienNhat(System.Windows.Forms.Control host, PaintEventArgs e)
+        {
+            using (var pen = new Pen(BlueSoft))
+                e.Graphics.DrawRectangle(pen, 0, 0, host.Width - 1, host.Height - 1);
+        }
+
         /// <summary>Hộp "lưu ý / info-box" (nền xanh nhạt + viền xanh) quanh 1 Label nội dung.</summary>
         public static void StyleInfoBox(Panel host, Label text)
         {
+            if (host == null) return;
             host.BackColor = BlueTint;
             host.Padding = new Padding(10, 8, 10, 8);
-            host.Paint += delegate(object s, PaintEventArgs e)
-            {
-                using (var pen = new Pen(BlueSoft))
-                    e.Graphics.DrawRectangle(pen, 0, 0, host.Width - 1, host.Height - 1);
-            };
+            // Chỉ gắn MỘT lần: gọi lại StyleInfoBox trên cùng panel mà cộng dồn handler thì viền
+            // được vẽ 2–3 lần (nét đậm bất thường) và mỗi lần vẽ lại chạy thừa một lượt.
+            if (GanLanDau(host)) host.Paint += delegate(object s, PaintEventArgs e) { VeVienNhat(host, e); };
+            BatDoubleBuffer(host);
             if (text == null) return;
+            // Lưu ý thứ tự: khối này ghi đè Font/ForeColor của nhãn — tiêu đề nào cần đậm thì
+            // phải gán lại SAU lời gọi này (xem UcTongQuan.QuetNangCao.cs, hộp "Lưu ý").
             text.BackColor = BlueTint;
             text.ForeColor = TextMid;
             text.Font = SmallFont;
@@ -159,11 +237,10 @@ namespace ScanAndRemoveVirus.Control
             if (strip != null)
             {
                 strip.BackColor = BlueTint;
-                strip.Paint += delegate(object s, PaintEventArgs e)
-                {
-                    using (var pen = new Pen(BlueSoft))
-                        e.Graphics.DrawRectangle(pen, 0, 0, strip.Width - 1, strip.Height - 1);
-                };
+                // Cùng cơ chế với StyleInfoBox: gắn viền MỘT lần (gọi lại không cộng dồn handler).
+                if (GanLanDau(strip)) strip.Paint += delegate(object s, PaintEventArgs e) { VeVienNhat(strip, e); };
+                // Dải này co giãn theo cửa sổ trong lúc quét -> tô nền + viền vẽ tay rất dễ nhấp nháy.
+                BatDoubleBuffer(strip);
             }
             if (spinner != null)
             {
@@ -285,17 +362,20 @@ namespace ScanAndRemoveVirus.Control
             col.DefaultCellStyle.SelectionForeColor = BlueDark;
         }
 
-        /// <summary>Đường bo góc (nút/nhãn vẽ tay). Dùng chung để không lặp code vẽ.</summary>
+        /// <summary>
+        /// Đường bo góc cho chỗ VẼ TAY (nút/nhãn) — giữ nguyên hình học đang dùng ở lưới Lịch sử,
+        /// nhưng thân hàm nay gọi thuật toán DUY NHẤT <see cref="UiKit.Round"/>: trước đây đây là bản
+        /// sao AddArc thứ hai (khác 1px và khác cách kẹp bán kính) nên rất dễ lệch nhau khi chỉ sửa một
+        /// bên. Không còn chỗ nào tự AddArc cho hình bo góc.
+        /// Vì sao lùi 1px ở phải/dưới: với hình chữ nhật (x, y, W, H), path đặt đúng ở "x + W" /
+        /// "y + H" là nằm NGOÀI vùng vẽ (pixel cuối cùng là x + W - 1) nên nửa nét bút 1px ở hai cạnh
+        /// đó bị cắt -> viền mảnh hơn ở phải/dưới. Lùi 1px (giống hệt cách <see cref="UiKit.Fill"/> tự
+        /// lùi trước khi vẽ nền + viền) để cả 4 cạnh đều có viền 1px đủ nét như nhau.
+        /// </summary>
         public static GraphicsPath RoundedPath(Rectangle r, int radius)
         {
-            var path = new GraphicsPath();
-            int d = Math.Max(1, Math.Min(radius, Math.Min(r.Width, r.Height) / 2));
-            path.AddArc(r.X, r.Y, d * 2, d * 2, 180, 90);
-            path.AddArc(r.Right - d * 2 - 1, r.Y, d * 2, d * 2, 270, 90);
-            path.AddArc(r.Right - d * 2 - 1, r.Bottom - d * 2 - 1, d * 2, d * 2, 0, 90);
-            path.AddArc(r.X, r.Bottom - d * 2 - 1, d * 2, d * 2, 90, 90);
-            path.CloseFigure();
-            return path;
+            return UiKit.Round(new Rectangle(r.X, r.Y,
+                Math.Max(1, r.Width - 1), Math.Max(1, r.Height - 1)), radius);
         }
 
         // Card/GroupBox chuẩn: chữ đậm Xanh brand (một nguồn, ghi đè designer)
@@ -354,7 +434,11 @@ namespace ScanAndRemoveVirus.Control
             g.DefaultCellStyle.SelectionBackColor = PageBg;
             g.DefaultCellStyle.SelectionForeColor = TextDark;
             // và xóa cả KHUNG FOCUS nét đứt quanh ô vừa bấm — artifact highlight cuối cùng
-            g.CellPainting += StripFocusRing;
+            // Chỉ gắn MỘT lần: StyleHistoryGrid/StyleGrid có thể chạy lại trên cùng lưới, cộng dồn
+            // handler thì mỗi ô được vẽ lại thêm một lượt.
+            if (GanLanDau(g)) g.CellPainting += StripFocusRing;
+            // Bảng cuộn tay từng dòng/đổi trang liên tục -> không double buffer là nhấp nháy thấy rõ.
+            BatDoubleBuffer(g);
         }
 
         // Vẽ lại ô bình thường nhưng bỏ phần Focus (khung nét đứt trên ô current cell)
@@ -434,17 +518,49 @@ namespace ScanAndRemoveVirus.Control
         public enum BtnRole { Primary, Secondary, Cancel, Action, Neutral, Danger }
         public static readonly Font ButtonFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
 
+        /// <summary>
+        /// Trạng thái đang áp của một nút (vai trò + đang rê chuột?) — lưu theo nút để
+        /// <see cref="StyleButton"/> gọi lại chỉ ĐỔI VAI TRÒ chứ không đăng ký thêm sự kiện.
+        /// </summary>
+        sealed class BtnState
+        {
+            public BtnRole Role;
+            public bool Hover;
+            public bool Hooked;
+        }
+
+        // ConditionalWeakTable: khoá là nút, KHÔNG giữ nút sống (nút bị Dispose là mục tự mất).
+        static readonly ConditionalWeakTable<Button, BtnState> nutStates =
+            new ConditionalWeakTable<Button, BtnState>();
+
         public static void StyleButton(Button b, BtnRole role)
         {
+            if (b == null) return;
             b.FlatStyle = FlatStyle.Flat;
             b.UseVisualStyleBackColor = false;
             b.Font = ButtonFont;
             b.Cursor = Cursors.Hand;
-            ApplyRole(b, role, false);
-            bool[] hovered = { false };
-            b.EnabledChanged += delegate { ApplyRole(b, role, hovered[0]); };
-            b.MouseEnter += delegate { hovered[0] = true; ApplyRole(b, role, true); };
-            b.MouseLeave += delegate { hovered[0] = false; ApplyRole(b, role, false); };
+
+            // Một nút chỉ ĐĂNG KÝ SỰ KIỆN MỘT LẦN. Trước đây mỗi lời gọi cộng thêm 1 handler
+            // EnabledChanged + 2 handler chuột: UpdateThreatUi() gọi lại 4 nút sau MỖI thay đổi của
+            // bảng đe dọa, sau vài chục lượt là hàng trăm handler cho một nút — mỗi lần rê chuột
+            // chạy hết chừng đó lượt áp style (giật + nhấp nháy). Nay vai trò được LƯU lại, handler
+            // đọc state tại thời điểm chạy nên luôn áp đúng vai trò mới nhất.
+            BtnState st = nutStates.GetOrCreateValue(b);
+            st.Role = role;
+            if (!st.Hooked)
+            {
+                st.Hooked = true;
+                b.EnabledChanged += delegate { ApplyRole(b, st); };
+                b.MouseEnter += delegate { st.Hover = true; ApplyRole(b, st); };
+                b.MouseLeave += delegate { st.Hover = false; ApplyRole(b, st); };
+            }
+            ApplyRole(b, st);
+        }
+
+        static void ApplyRole(Button b, BtnState st)
+        {
+            ApplyRole(b, st.Role, st.Hover);
         }
 
         private static void ApplyRole(Button b, BtnRole role, bool hover)
@@ -498,7 +614,9 @@ namespace ScanAndRemoveVirus.Control
             b.UseVisualStyleBackColor = false;
             b.FlatAppearance.BorderSize = 0;
             b.Cursor = Cursors.Hand;
-            b.Font = new Font("Segoe UI", 10.125F, active ? FontStyle.Bold : FontStyle.Regular);
+            // Token chung: trước đây new Font(...) mỗi lời gọi -> mỗi lượt là một GDI font mới
+            // không bao giờ được giải phóng.
+            b.Font = active ? NavBoldFont : NavFont;
             b.BackColor = active ? Blue : BlueFaint;
             b.ForeColor = active ? Color.White : Blue;
         }
@@ -540,6 +658,11 @@ namespace ScanAndRemoveVirus.Control
         public static void ScrollablePage(UserControl page, System.Windows.Forms.Control root, int minWidth, int minHeight)
         {
             page.AutoScroll = true;
+            // Nhấp nháy khi chuyển tab / kéo cửa sổ: cả trang là một khung lớn nhiều control con,
+            // để WinForms xoá nền rồi vẽ lại từng lớp là thấy rõ. Double buffer của CHÍNH trang
+            // (UserControl thừa hưởng protected DoubleBuffered -> gọi qua Theme.BatDoubleBuffer).
+            // Mọi tab đều đi qua hàm này nên chỉ cần bật ở MỘT chỗ.
+            BatDoubleBuffer(page);
             // AutoScrollMinSize mới là thứ tạo ra thanh cuộn: nó nâng DisplayRectangle của
             // trang lên tối thiểu (minWidth × minHeight), và control Dock=Fill được xếp theo
             // DisplayRectangle nên nội dung giãn đủ chỗ rồi cuộn.
@@ -631,6 +754,11 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Font CardHeadFont = new Font("Segoe UI", 11.25F, FontStyle.Bold); // tiêu đề card
         public static readonly Font FieldFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);  // nhãn/giá trị
         public static readonly Font MonoFont = new Font("Consolas", 9.75F, FontStyle.Regular);
+        // Mục điều hướng sidebar: bản thường + bản đậm (mục đang chọn). Một nguồn cho cả
+        // Theme.StyleNav (nút sidebar kiểu cũ) lẫn UiKit.UiNavItem (sidebar hiện tại) — trước đây
+        // mỗi bên tự new Font(...), riêng UiNavItem còn new Font(Font, Bold) MỖI LẦN VẼ.
+        public static readonly Font NavFont = new Font("Segoe UI", 10.125F, FontStyle.Regular);
+        public static readonly Font NavBoldFont = new Font("Segoe UI", 10.125F, FontStyle.Bold);
 
         /// <summary>Màu chữ của một "pill" theo ngữ nghĩa (nền = bản *Tint*, chữ = bản *Text*).</summary>
         public enum PillKind { Danger, Warn, Low, Ok, Info, Neutral }

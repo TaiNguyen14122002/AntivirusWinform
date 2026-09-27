@@ -15,7 +15,10 @@ $p = Get-Process ScanAndRemoveVirus | Select-Object -First 1
 Start-Sleep -Milliseconds 1200
 $r = New-Object W+RECT
 [void][W]::GetWindowRect($p.MainWindowHandle, [ref]$r)
-$bmp = New-Object System.Drawing.Bitmap(($r.R - $r.L), ($r.B - $r.T))
+# 24bpp (KHÔNG alpha): BitBlt của CopyFromScreen không ghi kênh alpha, nên bitmap mặc định
+# (32bppArgb) sẽ có alpha=0 ở toàn ảnh; trình xem ghép trên nền đen sẽ cho ra "vùng đen" giả
+# quanh các thẻ bo góc. 24bpp = đúng màu nhìn thấy trên màn hình.
+$bmp = New-Object System.Drawing.Bitmap(($r.R - $r.L), ($r.B - $r.T), [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.CopyFromScreen($r.L, $r.T, 0, 0, $bmp.Size)
 $out = Join-Path $env:TEMP "kilo\shot_$($args[0]).png"

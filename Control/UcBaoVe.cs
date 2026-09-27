@@ -101,7 +101,7 @@ namespace ScanAndRemoveVirus.Control
             BackColor = Theme.PageBg;
             // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
             Theme.ScrollablePage(this, tableLayoutPanel1, 980, 640);
-            Theme.StylePageHeader(lblProtectionTitle, lblProtectionSubtitle);
+            //Theme.StylePageHeader(lblProtectionTitle, lblProtectionSubtitle);
             Theme.StyleCard(grpProtectionFeatures, grpProtectionInfo);
             // StyleGrid phải chạy TRƯỚC khi nạp hàng để mọi dòng theo đúng RowTemplate chung
             Theme.StyleGrid(dgvProtecctionFeatures);

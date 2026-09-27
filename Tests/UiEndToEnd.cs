@@ -16,8 +16,11 @@
 //     Tests\UiEndToEnd.cs
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -1437,6 +1440,28 @@ static class UiEndToEnd
                     Check("[UI] mọi card đầu tab đều là UiGroup với tiêu đề 11.25Bold TextDark (" + grpStyled + "/" + grpWith + ")",
                         grpWith > 0 && grpStyled == grpWith);
 
+                    // (27/09/2026) Font/PADDING nội dung thẻ là của KIT, không phải của Designer.
+                    // InitializeComponent() chạy SAU hàm dựng nên: (i) Font designer gán ở grpProtectionInfo
+                    // ("Segoe UI 11.25 Regular") từng đè UiGroup và làm 14 nhãn trong thẻ "Thông tin bảo vệ"
+                    // to bằng tiêu đề thẻ, trong khi mọi nhãn nội dung khác của app là 9.75 Regular
+                    // (UcCachLy lblInfo1/label1, UcCaiDat 10 nhãn) — nay UiGroup() tự gán Theme.BodyFont và
+                    // Designer đã bị bỏ hết Font/Padding -> nhãn con phải thừa hưởng đúng BodyFont, KHÔNG đậm.
+                    var ucBv9b = F<UserControl>(mfd, "ucBaoVe");
+                    var grpBvInfo = F<ScanAndRemoveVirus.Control.UiGroup>(ucBv9b, "grpProtectionInfo");
+                    var grpBvFeat = F<ScanAndRemoveVirus.Control.UiGroup>(ucBv9b, "grpProtectionFeatures");
+                    var lblBvValue = F<Label>(ucBv9b, "lblScannedFilesValue");
+                    var lblBvTitle = F<Label>(ucBv9b, "lblBlockedThreatsTitle");
+                    Check("[UI] card 'Thông tin bảo vệ' dùng font nội dung của kit (Theme.BodyFont) và nhãn con thừa hưởng đúng cỡ, không đậm",
+                        Math.Abs(grpBvInfo.Font.SizeInPoints - Theme.BodyFont.SizeInPoints) < 0.15f
+                        && !grpBvInfo.Font.Bold
+                        && Math.Abs(grpBvFeat.Font.SizeInPoints - Theme.BodyFont.SizeInPoints) < 0.15f
+                        && !grpBvFeat.Font.Bold
+                        && grpBvInfo.Padding == ScanAndRemoveVirus.Control.UiGroup.CardPadding
+                        && grpBvFeat.Padding == ScanAndRemoveVirus.Control.UiGroup.CardPadding
+                        && Math.Abs(lblBvValue.Font.SizeInPoints - Theme.BodyFont.SizeInPoints) < 0.15f
+                        && Math.Abs(lblBvTitle.Font.SizeInPoints - Theme.BodyFont.SizeInPoints) < 0.15f
+                        && !lblBvValue.Font.Bold && !lblBvTitle.Font.Bold);
+
                     // 9c. regression layout Tổng quan: 2 nút quét nằm trong khối (a), trang giãn theo cửa sổ
                     Console.WriteLine("== SECTION 9c ==");
                     using (var geo = new Form())
@@ -1505,6 +1530,171 @@ static class UiEndToEnd
                     mfd.Close();
                 }
 
+                // ===== 9d. Chống lỗi VẼ (nguồn duy nhất cho bo góc · nền trong suốt · handler không
+                // trùng · double buffer · không có vùng ĐEN) =====
+                // 4 nhóm lỗi hiển thị hay gặp của WinForms được biến thành assert để không tái phát:
+                // (1) hai thuật toán bo góc lệch nhau -> 2 góc chéo không đều;
+                // (2) control tự vẽ bo góc thiếu SupportsTransparentBackColor -> nền trong suốt bị vẽ
+                //     thành MÀU ĐEN ở 4 góc;
+                // (3) Style* gọi lại trên cùng control -> cộng dồn handler vẽ (vẽ lặp, giật);
+                // (4) thiếu double buffer -> nhấp nháy khi đổi tab/cuộn bảng.
+                Console.WriteLine("== SECTION 9d ==");
+                {
+                    // ---- 9d.1 Bo góc chỉ còn MỘT thuật toán ----
+                    //  Theme.RoundedPath phải cho ĐÚNG hình mà UiKit.Round cho với cùng hình chữ nhật
+                    //  đã lùi 1px (quy ước "path nằm trong pixel cuối cùng" để viền 1px không bị cắt).
+                    var rBo = new Rectangle(10, 20, 100, 30);
+                    var rBoTrong = new Rectangle(rBo.X, rBo.Y, rBo.Width - 1, rBo.Height - 1);
+                    Rectangle bTheme, bKit;
+                    using (GraphicsPath p1 = Theme.RoundedPath(rBo, 6))
+                    using (GraphicsPath p2 = ScanAndRemoveVirus.Control.UiKit.Round(rBoTrong, 6))
+                    {
+                        bTheme = Rectangle.Round(p1.GetBounds());
+                        bKit = Rectangle.Round(p2.GetBounds());
+                    }
+                    Console.WriteLine("  bo góc: rect=" + rBo + " · Theme.RoundedPath=" + bTheme + " · UiKit.Round=" + bKit);
+                    Check("[UI] bo góc chỉ có MỘT thuật toán (Theme.RoundedPath == UiKit.Round + quy ước lùi 1px, giữ hình học cũ)",
+                        bTheme == bKit && bTheme.Right == rBo.Right - 1 && bTheme.Bottom == rBo.Bottom - 1);
+
+                    // ---- 9d.2 Control tự vẽ thẻ/nút bo góc: nền trong suốt HỢP LỆ + có double buffer ----
+                    MethodInfo getStyle = typeof(Control).GetMethod("GetStyle", BindingFlags.Instance | BindingFlags.NonPublic);
+                    var tuVe = new Control[]
+                    {
+                        new ScanAndRemoveVirus.Control.UiCard(),
+                        new ScanAndRemoveVirus.Control.UiGroup(),
+                        new ScanAndRemoveVirus.Control.UiButton(),
+                        new ScanAndRemoveVirus.Control.UiPill("Cao", Theme.PillKind.Danger),
+                        new ScanAndRemoveVirus.Control.UiRadioCard(),
+                        new ScanAndRemoveVirus.Control.UiNavItem("Tổng quan", null),
+                        new ScanAndRemoveVirus.Control.UiIconBadge(null, 20)
+                    };
+                    int trongSuot = 0, coBuf = 0;
+                    foreach (Control c in tuVe)
+                    {
+                        bool flag = (bool)getStyle.Invoke(c, new object[] { ControlStyles.SupportsTransparentBackColor });
+                        if (flag && c.BackColor == Color.Transparent) trongSuot++;
+                        else Console.WriteLine("  nền trong suốt không hợp lệ: " + c.GetType().Name
+                            + " flag=" + flag + " BackColor=" + c.BackColor);
+                        // Kiểm tra trực tiếp ControlStyles.OptimizedDoubleBuffer (đúng thứ WinForms dùng
+                        // để quyết định có vẽ qua buffer hay không), không phụ thuộc getter DoubleBuffered.
+                        if ((bool)getStyle.Invoke(c, new object[] { ControlStyles.OptimizedDoubleBuffer })) coBuf++;
+                        c.Dispose();
+                    }
+                    Console.WriteLine("  control tự vẽ: nền trong suốt " + trongSuot + "/" + tuVe.Length
+                        + " · double buffer " + coBuf + "/" + tuVe.Length);
+                    Check("[UI] mọi control tự vẽ bo góc bật SupportsTransparentBackColor + BackColor=Transparent (chống nền ĐEN 4 góc)",
+                        trongSuot == tuVe.Length);
+                    Check("[UI] mọi control tự vẽ bo góc bật double buffer (chống nhấp nháy)",
+                        coBuf == tuVe.Length);
+
+                    // ---- 9d.3 StyleButton gọi lại KHÔNG cộng dồn handler ----
+                    var nut9d = new Button();
+                    int hEnterTruoc = DemHandler(nut9d, "EventMouseEnter");
+                    for (int i = 0; i < 20; i++)
+                        Theme.StyleButton(nut9d, (i % 2 == 0) ? Theme.BtnRole.Danger : Theme.BtnRole.Neutral);
+                    int hEnter = DemHandler(nut9d, "EventMouseEnter");
+                    int hLeave = DemHandler(nut9d, "EventMouseLeave");
+                    int hEnabled = DemHandler(nut9d, "EventEnabled");
+                    Console.WriteLine("  handler nút: MouseEnter " + hEnterTruoc + " -> " + hEnter
+                        + " · MouseLeave " + hLeave + " · EnabledChanged " + hEnabled);
+                    if (hEnter < 0)
+                        Console.WriteLine("  (bỏ qua check: không đọc được EventHandlerList nội bộ trên framework này)");
+                    else
+                        Check("[UI] StyleButton gọi 20 lần vẫn chỉ gắn 1 handler/sự kiện (không cộng dồn)",
+                            hEnterTruoc == 0 && hEnter == 1 && hLeave == 1 && hEnabled == 1);
+                    nut9d.Dispose();
+
+                    // ---- 9d.4 Double buffer ở lưới dữ liệu + 5 tab + vùng nội dung của FrmMain ----
+                    var luoi9d = new DataGridView();
+                    Theme.StyleGrid(luoi9d);
+                    bool luoiBuf = DocDoubleBuffered(luoi9d);
+                    luoi9d.Dispose();
+                    int tabBuf = 0;
+                    using (var mf9d = new ScanAndRemoveVirus.FrmMain())
+                    {
+                        string[] namTab = new[] { "ucTongQuan", "ucBaoVe", "ucCachLy", "ucLichSu", "ucCaiDat" };
+                        foreach (string ten in namTab)
+                            if (DocDoubleBuffered(F<Control>(mf9d, ten))) tabBuf++;
+                        if (DocDoubleBuffered(F<Control>(mf9d, "pnlContent"))) tabBuf++;
+                        Console.WriteLine("  double buffer: lưới=" + luoiBuf + " · tab+pnlContent=" + tabBuf + "/6");
+                        Check("[UI] double buffer cho lưới dữ liệu, 5 tab và vùng nội dung (chống nhấp nháy khi cuộn/đổi tab)",
+                            luoiBuf && tabBuf == 6);
+
+                        // ---- 9d.5 Không có vùng ĐEN tuyệt đối: render THẬT từng trang ra bitmap 24bpp ----
+                        // Bảng màu của app không có màu đen tuyệt đối -> khối đen ĐẶC = lỗi nền trong suốt
+                        // hoặc lỗi vẽ. Chỉ tính "khối đặc" >= 4x4 để không bắt oan nét mảnh của glyph hệ
+                        // thống (khung checkbox 1px, mũi tên combo/scrollbar chỉ dày vài px).
+                        int demThu = 0, demThua = 0;
+                        using (var mau = BitmapTuMau())
+                            demThu = DemPixelDenDac(mau, 4, out demThua);
+                        Console.WriteLine("  tự kiểm bộ đếm (khối đen 10x10 nhân tạo): pixel đen=" + demThua
+                            + " · khối đặc=" + demThu);
+                        Check("[UI] bộ đếm vùng đen hoạt động (nhận đúng khối đen nhân tạo 10x10)",
+                            demThu >= 40 && demThua >= 90);
+
+                        mf9d.Show();
+                        MethodInfo shot9d = typeof(ScanAndRemoveVirus.FrmMain)
+                            .GetMethod("ShowForShot", BindingFlags.Instance | BindingFlags.NonPublic);
+                        string thuMuc = Path.Combine(Path.GetTempPath(), "xvirus-ui-shots");
+                        Directory.CreateDirectory(thuMuc);
+                        foreach (string v in new[] { "tongquan", "baove", "cachly", "lichsu", "caidat" })
+                        {
+                            shot9d.Invoke(mf9d, new object[] { v });
+                            PumpMs(350);
+                            int denDac, denTong, theKiem = 0, gocDen = 0;
+                            string chiTietDen = "";
+                            string tep = Path.Combine(thuMuc, "9d-" + v + ".png");
+                            using (var bmp = new Bitmap(mf9d.ClientSize.Width, mf9d.ClientSize.Height,
+                                       PixelFormat.Format24bppRgb))
+                            {
+                                mf9d.DrawToBitmap(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height));
+                                denDac = DemPixelDenDac(bmp, 4, out denTong);
+                                bmp.Save(tep, ImageFormat.Png);
+
+                                // (a) Kiểm ĐÚNG hiện tượng "đen ở 4 góc": 4 điểm NGAY NGOÀI cung bo góc của
+                                // từng thẻ phải là NỀN của control cha (trắng / xanh nhạt), KHÔNG bao giờ
+                                // là màu tối. Phép kiểm này miễn nhiễm với chữ: nội dung thẻ đã thụt theo
+                                // Padding nên không có glyph nào nằm ở đúng góc bounding box của thẻ.
+                                Control gocUc = F<Control>(mf9d, "pnlContent").Controls[0];
+                                foreach (Control con in TheHet(gocUc))
+                                {
+                                    bool laThe = con is ScanAndRemoveVirus.Control.UiCard
+                                              || con is ScanAndRemoveVirus.Control.UiGroup;
+                                    if (!laThe || !con.Visible || con.Width < 24 || con.Height < 24) continue;
+                                    Point p0 = mf9d.PointToClient(con.PointToScreen(Point.Empty));
+                                    int x = p0.X, y = p0.Y, w = con.Width, h = con.Height;
+                                    if (x < 0 || y < 0 || x + w >= bmp.Width || y + h >= bmp.Height) continue;
+                                    theKiem++;
+                                    int[] cx = new[] { x + 1, x + w - 2, x + 1, x + w - 2 };
+                                    int[] cy = new[] { y + 1, y + 1, y + h - 2, y + h - 2 };
+                                    for (int i = 0; i < 4; i++)
+                                    {
+                                        Color px = bmp.GetPixel(cx[i], cy[i]);
+                                        if (px.R + px.G + px.B <= 90)   // rất tối (đen=0, Theme.TextDark=127)
+                                        {
+                                            gocDen++;
+                                            if (chiTietDen.Length < 160)
+                                                chiTietDen += " " + con.Name + "(" + cx[i] + "," + cy[i] + ")";
+                                        }
+                                    }
+                                }
+                            }
+                            Console.WriteLine("  " + v + ": thẻ kiểm=" + theKiem + " · góc đen=" + gocDen
+                                + " · pixel đen tuyệt đối=" + denTong + " · khối đen đặc(4x4)=" + denDac
+                                + " · ảnh=" + tep + chiTietDen);
+                            Check("[UI] trang " + v + ": 4 góc của MỌI thẻ bo góc đều thấy NỀN (không có góc đen) — "
+                                + theKiem + " thẻ", gocDen == 0 && theKiem >= 3);
+                            // (b) Chốt chặn lỗi lớn: vùng đen ĐẶC không được chiếm từ 1% diện tích trang
+                            // (chữ đậm màu mặc định của hệ thống có thể tạo ít khối 4x4 nên ngưỡng phải
+                            // rộng; một mảng nền/1 thẻ bị đen sẽ vượt ngưỡng này rất xa).
+                            Check("[UI] trang " + v + ": không có MẢNG ĐEN lớn (khối đặc 4x4 < 1% diện tích trang)",
+                                denDac < (long)mf9d.ClientSize.Width * mf9d.ClientSize.Height / 100);
+                        }
+                        Console.WriteLine("  (mở các ảnh trên để soi 4 góc thẻ/nút bo góc ở DPI hiện tại)");
+                    }
+
+                }
+
                 // ===== 10. Dọn các mục còn lại trong test ledger =====
                 Console.WriteLine("== SECTION 10 ==");
                 foreach (var item in listNow) ScanEngine.DeleteQuarantined(item.Id);
@@ -1526,6 +1716,107 @@ static class UiEndToEnd
     }
 
     static DataGridView dgvQ(UcCachLy q) { return F<DataGridView>(q, "dgvQuarantine"); }
+
+    // ---------- helper cho section 9d (chống lỗi VẼ) ----------
+
+    /// <summary>Số handler đang gắn cho một sự kiện của Control, đọc qua EventHandlerList nội bộ. -1 = không đọc được.</summary>
+    static int DemHandler(Control c, string tenFieldSuKien)
+    {
+        try
+        {
+            FieldInfo f = typeof(Control).GetField(tenFieldSuKien, BindingFlags.Static | BindingFlags.NonPublic);
+            if (f == null) return -1;
+            PropertyInfo ev = typeof(Component).GetProperty("Events", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (ev == null) return -1;
+            var list = (EventHandlerList)ev.GetValue(c, null);
+            if (list == null) return -1;
+            Delegate d = list[f.GetValue(null)];
+            return d == null ? 0 : d.GetInvocationList().Length;
+        }
+        catch (Exception) { return -1; }
+    }
+
+    /// <summary>DoubleBuffered là thuộc tính protected của Control -> đọc bằng reflection.</summary>
+    static bool DocDoubleBuffered(Control c)
+    {
+        try
+        {
+            PropertyInfo p = typeof(Control).GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
+            return p != null && (bool)p.GetValue(c, null);
+        }
+        catch (Exception) { return false; }
+    }
+
+    /// <summary>Bitmap mẫu: nền trắng + MỘT khối đen 10x10 (để tự kiểm bộ đếm vùng đen).</summary>
+    static Bitmap BitmapTuMau()
+    {
+        var bmp = new Bitmap(60, 40, PixelFormat.Format24bppRgb);
+        using (Graphics g = Graphics.FromImage(bmp))
+        {
+            g.Clear(Color.White);
+            using (var b = new SolidBrush(Color.Black)) g.FillRectangle(b, 10, 10, 10, 10);
+        }
+        return bmp;
+    }
+
+    /// <summary>
+    /// Đếm "vùng đen": trả về số ô k×k ĐEN hoàn toàn (0,0,0) và tổng số pixel đen tuyệt đối qua
+    /// <paramref name="tongDen"/>. Bảng màu của app KHÔNG có màu đen tuyệt đối, nên một khối đen đặc
+    /// nghĩa là nền trong suốt / vùng vẽ bị lỗi (thẻ-nút bo góc bị đen ở 4 góc). Đếm theo KHỐI ĐẶC
+    /// thay vì mọi pixel đen để không bắt oan nét mảnh của glyph hệ thống (khung checkbox 1px, mũi
+    /// tên combo/scrollbar chỉ dày vài px).
+    /// </summary>
+    static int DemPixelDenDac(Bitmap bmp, int k, out int tongDen)
+    {
+        int khoi = 0;
+        tongDen = 0;
+        BitmapData d = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+            ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+        try
+        {
+            int stride = d.Stride, w = bmp.Width, h = d.Height;
+            var buf = new byte[stride * h];
+            Marshal.Copy(d.Scan0, buf, 0, buf.Length);
+            for (int y = 0; y < h; y++)
+            {
+                int row = y * stride;
+                for (int x = 0; x < w; x++)
+                {
+                    int i = row + x * 3;
+                    if (buf[i] == 0 && buf[i + 1] == 0 && buf[i + 2] == 0) tongDen++;
+                }
+            }
+            for (int y = 0; y + k <= h; y++)
+                for (int x = 0; x + k <= w; x++)
+                {
+                    int i0 = y * stride + x * 3;
+                    if (buf[i0] != 0 || buf[i0 + 1] != 0 || buf[i0 + 2] != 0) continue;  // phần lớn pixel không đen
+                    bool kin = true;
+                    for (int dy = 0; dy < k && kin; dy++)
+                        for (int dx = 0; dx < k; dx++)
+                        {
+                            int i = (y + dy) * stride + (x + dx) * 3;
+                            if (buf[i] != 0 || buf[i + 1] != 0 || buf[i + 2] != 0) { kin = false; break; }
+                        }
+                    if (kin) khoi++;
+                }
+        }
+        finally { bmp.UnlockBits(d); }
+        return khoi;
+    }
+
+    /// <summary>Duyệt hết control con (chiều rộng trước) của một control — dùng cho check 4 góc thẻ (§9d.5).</summary>
+    static IEnumerable<Control> TheHet(Control goc)
+    {
+        var q = new Queue<Control>();
+        q.Enqueue(goc);
+        while (q.Count > 0)
+        {
+            Control c = q.Dequeue();
+            yield return c;
+            foreach (Control ch in c.Controls) q.Enqueue(ch);
+        }
+    }
 
     static GroupBox FirstGroupBox(Control root)
     {

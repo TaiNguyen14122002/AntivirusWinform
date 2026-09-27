@@ -41,7 +41,10 @@ ScanAndRemoveVirus\ScanAndRemoveVirus\bin\Debug\ScanAndRemoveVirus.exe
 
 > 🎨 **Ngôn ngữ thiết kế chung (chuẩn = tab Lịch sử):** mỗi tab có page-header (tên 18pt Bold + phụ đề 9.75 xám;
 > riêng tab Lịch sử theo ảnh tham chiếu 26/09/2026 dùng cỡ **LỚN** 25pt + phụ đề 10.5 — `Theme.StyleHistoryHeader`),
-> GroupBox dạng card (nhãn 10.125 Bold xanh brand `#0A3E8C` trên nền trắng), lưới header 40px xanh nhạt,
+> GroupBox dạng card (nhãn 10.125 Bold xanh brand `#0A3E8C` trên nền trắng — thẻ `UiGroup` vẽ tiêu đề bằng
+> `HeadFont` 11.25 Bold TextDark và tự đặt **font nội dung** `Theme.BodyFont` 9.75 Regular cho control con thừa
+> hưởng: `InitializeComponent()` chạy **sau** hàm dựng nên Designer **không được** gán `Font`/`ForeColor`/
+> `BackColor`/`FlatStyle`/`UseVisualStyleBackColor`/`Padding` lên `Ui*` — chúng sẽ đè giá trị của kit), lưới header 40px xanh nhạt,
 > nút theo 5 vai trò `Theme.BtnRole` (kể cả nút **Xem** từng dòng của lưới Lịch sử qua `Theme.StyleHistoryGridButton`). Ép buộc bằng test
 > `UiEndToEnd` section 9b — thêm tab mới chỉ cần gọi `Theme.StylePageHeader/StyleCard/StyleGrid`.
 
@@ -314,7 +317,7 @@ Tab riêng (nút **Cài đặt** trên sidebar):
 * ☑ *Tự động khởi động cùng Windows* — **thật 100%**: ghi/xóa `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần admin).
 * ☑ *Tự động cập nhật* · ☑ *Gửi mẫu ẩn danh* · ☑ *Hiển thị thông báo* — lưu vào `settings.ini`; **đồng bộ hai chiều** với các hàng "Tự động cập nhật"/"Cảnh báo mối đe dọa" của tab Bảo vệ.
 * **"Lưu thiết lập"** — ghi file + áp dụng autostart ngay; registry từ chối thì checkbox tự nhả về đúng thực tế + cảnh báo.
-* **"Tạo tệp mẫu 3 kỹ thuật"** — phục hồi 6 tệp vô hại trong `TestSamples\` của repo (idempotent); nếu app chạy ngoài repo sẽ tạo ở `Desktop\XVirus-Samples`.
+* **"Tạo tệp mẫu 3 kỹ thuật"** — phục hồi 6 tệp vô hại trong `TestSamples\` của repo (idempotent); nếu app chạy ngoài repo sẽ tạo ở `Desktop\XVirus-Samples`. Bấm nút này khi app chạy **trong repo** sẽ ghi lại chính các tệp đó với kiểu xuống dòng **CRLF** (literal trong `Services\TestSamples.cs`): nội dung y hệt bản đã commit, chỉ khác CRLF/LF nên `git status` hiện "modified" — đây là hệ quả của việc *chạy app*, không phải sửa tay (đừng nhầm với bản vá giao diện).
 
 > ⚠️ Lưu ý khi tự chạy test: guard hành vi WMI coi "exe chạy từ %TEMP%" là dropper. Nếu app THẬT đang bật guard mà bạn compile + chạy binary test vào TEMP, nó sẽ cách ly chính file test. Tạm tắt guard (hoặc để harness test tự tắt như `UiEndToEnd.cs`).
 
@@ -460,7 +463,7 @@ $csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe
   Tests\ScanEngineTest.cs
 .\eng.exe        # kỳ vọng: == ALL TESTS PASSED ==   (~40s nếu WMI live hoạt động)
 
-# 2) UI End-to-End — 146 check: dựng FrmMain + 5 UserControl THẬT, PerformClick TỪNG NÚT
+# 2) UI End-to-End — 162 check: dựng FrmMain + 5 UserControl THẬT, PerformClick TỪNG NÚT
 #    (5 nút sidebar, quét + Hủy giữa phiên, bỏ thẻ "Tuỳ chọn quét nhanh" (NoField + bố cục mới:
 #     tableLayoutPanel12 còn 6 hàng, flowHeaderActions nằm trong tlpAnToanText) + SetCustomPath ->
 #     chế độ Quét tùy chọn, đã bỏ thanh loading quét CŨ (pgbScan — nay có "dải loading quét" mới) + cả khối "cập nhật dữ liệu" + thẻ "Đang cách ly"
@@ -478,6 +481,11 @@ $csc = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe
 #     tab Cài đặt (8 checkbox live-apply, VTkey, Khôi phục mặc định, Xóa cache, nhãn info),
 #     LẬT 2 CHIỀU 10 HÀNG tab Bảo vệ, thống kê khởi động không còn mock 2025)
 #     — closer-thread tự bấm Có/OK cho MessageBox.
+#    + section 9d (16 check, 28/09/2026) — chống lỗi VẼ của WinForms: bo góc chỉ còn MỘT thuật toán
+#    (Theme.RoundedPath == UiKit.Round + quy ước lùi 1px), 7/7 control tự vẽ bật SupportsTransparentBackColor
+#    + BackColor=Transparent (chống "nền ĐEN 4 góc") và double buffer, StyleButton gọi 20 lần vẫn chỉ gắn
+#    1 handler/sự kiện, double buffer cho lưới dữ liệu + 5 tab + pnlContent, và ĐẾM VÙNG ĐEN trên ảnh
+#    render THẬT của 5 trang (ảnh lưu ở %TEMP%\xvirus-ui-shots\9d-<tab>.png để soi 4 góc).
 #    Danh sách file đầy đủ: xem comment đầu Tests\UiEndToEnd.cs
 #    Matrix phủ nút: powershell -File Tests\coverage-matrix.ps1 -> liệt kê nút CLICKED / nút chỉ mở hộp thoại
 #    hệ thống không auto-safe (Chọn tệp / Chọn thư mục ở trang "Quét nâng cao", Xuất CSV, Mở thư mục dữ liệu)
@@ -506,7 +514,88 @@ Toàn bộ chạy trong ~1–2 phút; kết quả hiện `PASS/FAIL` từng chec
 > #    -> Build succeeded — 0 Warning(s), 0 Error(s)
 > ```
 >
-> Đây là *cổng chặn lỗi cú pháp* trước khi mở Windows — cả 2 lệnh phải **0 Error / 0 Warning**. Bước 1/2 chỉ **biên dịch**, không **chạy**: WinForms/WinExe chỉ chạy trên Windows (`dotnet ui_test_check.exe` trên macOS báo *libhostpolicy.dylib not found*), nên kết quả `PASS/FAIL` thật của 146 + 86 check vẫn phải lấy từ Windows (mục trên).
+> Đây là *cổng chặn lỗi cú pháp* trước khi mở Windows — cả 2 lệnh phải **0 Error / 0 Warning**. Bước 1/2 chỉ **biên dịch**, không **chạy**: WinForms/WinExe chỉ chạy trên Windows (`dotnet ui_test_check.exe` trên macOS báo *libhostpolicy.dylib not found*), nên kết quả `PASS/FAIL` thật của 162 + 86 check vẫn phải lấy từ Windows (mục trên). *(Đã chạy lại cả hai lệnh trên bằng `-t:Rebuild` sau bản vá giao diện ở mục dưới: vẫn **0 Warning(s) / 0 Error(s)**, sản phẩm `bin\Debug\ScanAndRemoveVirus.exe` và `Tests\bin\Debug\net472\ui_test_check.exe`.)*
+
+---
+
+## 🎨 Lỗi hiển thị WinForms — nguyên nhân gốc & cách phòng ngừa (28/09/2026)
+
+Rà soát toàn bộ Form/UserControl/Button/Panel cùng các lớp vẽ tay (`UiKit`, `Theme`, `UiIcons`,
+`LoadingSpinner`, `VtDonut`) theo các nhóm lỗi hiển thị thường gặp: chữ/icon chồng nhau, **vùng đen ở
+4 góc** control bo góc, nhấp nháy/vẽ đè, đăng ký sự kiện trùng, DPI/AutoScale. Kết quả: **3 nguyên nhân
+gốc đã sửa**, 4 hạng mục đã rà (không có lỗi) và được **thêm test chống tái phát**; riêng phần DPI
+nêu rõ tình trạng thật + giới hạn kiểm chứng.
+
+### 1. Bất biến — không được vi phạm khi thêm control/tab
+
+| Quy tắc | Vì sao |
+|---|---|
+| Control **tự vẽ hình bo góc** phải bật `ControlStyles.SupportsTransparentBackColor` **và** `BackColor = Color.Transparent` | WinForms vẽ `BackColor = Transparent` thành **MÀU ĐEN** nếu thiếu cờ này → đúng hiện tượng "vùng đen ở 4 góc" thẻ/nút. 7 control trong `UiKit` đều đã bật; §9d.2 assert lại. |
+| **Không** tự `AddArc`/`DrawPath` bo góc ở nơi khác | Chỉ còn MỘT thuật toán: `UiKit.Round` (mọi `Style*` và chỗ vẽ tay đều đi qua nó). Hai bản sao là nguồn của lỗi "2 góc chéo không đều nhau". |
+| Gọi `Style*` **lần thứ hai** trên cùng một control phải vô hại | `StyleButton` lưu vai trò theo nút (`ConditionalWeakTable`) và gắn 3 handler **một lần**; `StyleGrid`/`StyleInfoBox`/`StyleLoadingStrip` gắn handler vẽ **một lần**. Trước đây `UpdateThreatUi()` cộng thêm 3 handler cho 4 nút sau **mỗi** lần bảng đe dọa đổi → mỗi lần rê chuột chạy hàng trăm lượt áp style (giật, nhấp nháy). |
+| Khung chứa vẽ lại liên tục phải có **double buffer** | `DataGridView` (qua `Theme.StyleGrid`), 5 UserControl của tab (qua `Theme.ScrollablePage`), `pnlSidebar`/`pnlContent`/`FrmMain`. Dùng `Theme.BatDoubleBuffer` (đọc/ghi `Control.DoubleBuffered` qua reflection — **không** đổi kiểu control, **không** sửa Designer). |
+| Ảnh render của từng trang là nguồn kiểm tra "vùng đen" | §9d.5 lấy **4 điểm ngay ngoài cung bo góc của từng thẻ** — ở đó phải thấy nền của control cha (trắng / xanh nhạt), không bao giờ là màu tối; kèm chốt chặn "không có mảng đen đặc ≥ 1% diện tích trang". *(Không đếm pixel đen thô: một vài nhãn chưa gán `ForeColor` vẫn vẽ bằng màu chữ mặc định của hệ thống là màu đen, nên đếm thô sẽ báo sai.)* |
+| Ảnh nghiệm thu (`--shot`, `Tests\shot.ps1`) phải ghi ra **24bpp** (không alpha) | Nền trang do GDI vẽ **không ghi kênh alpha**, còn thẻ/nút bo góc do GDI+ `FillPath` vẽ thì có alpha=255: ảnh ARGB lưu ra sẽ trong suốt ở nền, và khi trình xem/khâu chuyển ảnh ghép trên nền đen thì **đúng 4 góc thẻ bo góc thành "vùng đen"** — trong khi 4 góc đó trên màn hình chỉ là nền trắng/xanh nhạt. Đây là nguyên nhân hay gặp nhất của báo cáo "góc đen" khi soi **ảnh chụp**. |
+
+### 2. Đã sửa kỳ này
+
+- `Control/Theme.cs`
+  - `RoundedPath` không còn là bản sao `AddArc` thứ hai: gọi `UiKit.Round` và giữ **đúng hình học cũ**
+    (lùi 1px ở phải/dưới — quy ước để viền 1px không bị cắt; `UiKit.Fill` cũng lùi 1px ngay bên trong nó).
+  - `StyleButton` idempotent (trạng thái vai trò lưu theo nút) → hết cộng dồn handler.
+  - `StyleGrid`: bật double buffer + chỉ gắn `StripFocusRing` một lần.
+  - `StyleInfoBox`/`StyleLoadingStrip`: viền chỉ vẽ MỘT lần (dùng chung hàm `VeVienNhat`) + double buffer.
+  - `ScrollablePage`: bật double buffer cho cả 5 trang (mọi tab đều đi qua hàm này).
+  - Thêm tiện ích chung `Theme.BatDoubleBuffer(Control)` và 2 token chữ `NavFont`/`NavBoldFont`;
+    `StyleNav` không còn `new Font(...)` ở mỗi lời gọi.
+- `Control/UiKit.cs` — `UiNavItem` không còn `new Font(Font, FontStyle.Bold)` **trong `OnPaint`** (mỗi
+  lượt vẽ trước đây cấp phát + huỷ một GDI font); dùng `Theme.NavFont`/`Theme.NavBoldFont`.
+- `Control/UiKit.cs` — `UiCard` bật **tường minh** `ControlStyles.SupportsTransparentBackColor`: trước đây
+  cờ này chỉ **thừa hưởng** từ `Panel`, nên bất biến ở mục 1 và check §9d.2 chỉ đúng *nhờ lớp cơ sở* chứ
+  không nhờ chính control — đổi lớp cơ sở là `BackColor = Color.Transparent` ném `ArgumentException`
+  (hoặc 4 góc thẻ thành đen) mà không ai thấy trước. 7/7 control tự vẽ trong `UiKit` nay tự khai cờ của mình.
+- `Control/UcTongQuan.QuetNangCao.cs` — tiêu đề **"Lưu ý"** giữ đúng kiểu đậm/chữ đậm màu: `Theme.StyleInfoBox`
+  gán Font 8.25 xám cho *nhãn nội dung* nên tiêu đề phải gán **sau** lời gọi đó (trước đây bị ghi đè).
+- `Control/UcTongQuan.cs` — `lblLastScanDate` dùng token `Theme.StatValueFont` (hết `new Font("Segoe UI", 18F, Bold)` rải ngoài Theme).
+- `FrmMain.cs` — `DoubleBuffered = true` cho cửa sổ + `Theme.BatDoubleBuffer(pnlSidebar/pnlContent)`.
+- `Program.cs`, `Tests/shot.ps1` — ảnh chụp/nghiệm thu ghi ra **24bpp** (hết alpha giả).
+- `Tests/UiEndToEnd.cs` — **section 9d (16 check)** theo đúng bảng bất biến ở mục 1; ảnh render của 5
+  trang được lưu ở `%TEMP%\xvirus-ui-shots\9d-<tab>.png` để soi 4 góc ở DPI đang chạy.
+
+### 3. Đã rà nhưng KHÔNG có lỗi (ghi lại để khỏi rà lại)
+
+- **Chữ/icon chồng nhau**: mọi control tự vẽ đều đo chữ bằng `TextRenderer.MeasureText` rồi cộng khoảng
+  cách hằng số — `UiButton` (icon + `IconGap`), `UiNavItem` (icon ở 14, chữ từ 40), `UiRadioCard` (ô icon
+  45..79, chữ từ 90), `UiCard` header (icon 0..18, tiêu đề ở 26), `UiGroup` (tiêu đề nằm trong
+  `Padding.Top = 62`, nội dung bắt đầu từ 62). Kiểm tra bằng mắt dựa vào ảnh tham chiếu + §9d.5 (chụp thật 5 trang).
+- **Đăng ký sự kiện trùng / tạo control nhiều lần**: `WireEvents()`, `BuildChiTietView()`,
+  `BuildQuetNangCaoView()` chỉ chạy một lần trong hàm dựng; `LoadContent()` `Controls.Clear()` trước khi
+  thêm trang; trang (d) đổi chế độ bằng bật/tắt `Visible` (không dựng lại control — test §3g giữ
+  `ReferenceEquals`). Riêng các `Style*` gọi lặp đã được làm idempotent ở mục 2.
+- **`OnPaint`/`OnPaintBackground`**: các control tự vẽ đặt `AllPaintingInWmPaint | UserPaint |
+  OptimizedDoubleBuffer | ResizeRedraw` (+ `SupportsTransparentBackColor` khi cần) và **không** gọi
+  `base.OnPaint` → không bị WinForms vẽ đè thêm khung/ô mặc định (nguồn của "vẽ lặp").
+- **Bố cục**: `Dock`/`Anchor`/`AutoSize`/`TableLayoutPanel` dùng nhất quán; công cụ kiểm tra bố cục thật
+  là `Tests\probe.ps1` (in ra control nào tràn ra ngoài cha / bị bóp nhỏ hơn chiều cao chữ).
+
+### 4. DPI / tỷ lệ hiển thị — tình trạng thật & giới hạn
+
+- `FrmMain` đặt `AutoScaleMode = None`; 5 UserControl đặt `AutoScaleMode.Font` với
+  `AutoScaleDimensions` **khác nhau**: `UcBaoVe/UcCachLy/UcCaiDat/UcTongQuan` = (6,13) — thiết kế ở 100%;
+  `UcLichSu` = (12,25) kèm `Size = 2000x1269` — thiết kế ở **200% DPI**. Hai giá trị này **không** mâu
+  thuẫn: mỗi file ghi tỷ lệ tại lúc thiết kế và WinForms dùng nó để co cho khớp DPI đang chạy. **Cố ý
+  không sửa**: đổi (12,25) → (6,13) sẽ làm tab Lịch sử sai cỡ ở mọi DPI khác (hiện đang đúng vì được
+  thiết kế ở 200%). Muốn nhất quán thì phải dựng lại designer của `UcLichSu` ở 100% — việc riêng, cần
+  nghiệm thu bằng ảnh.
+- App **không có** `app.manifest`/`app.config` khai báo DPI ⇒ Windows coi app là *DPI-unaware* và tự
+  phóng toàn cửa sổ theo kiểu bitmap ở 125%/150% (chữ hơi mờ, **bố cục không vỡ**). Muốn nét ở
+  125%/150% thì phải bật DPI awareness **kèm** rà lại toàn bộ bố cục/`AutoSize` (bật mà không rà lại thì
+  chính các layout cứng sẽ lộ lỗi chồng/cắt chữ). Đây là hạng mục **chưa làm** — và **không thể nghiệm
+  thu trên macOS**.
+- Cách kiểm tra trên Windows, lặp ở **100% · 125% · 150%**:
+  1. `.\Tests\probe.ps1` — in danh sách control tràn/bị bóp cho cả 5 tab (kèm trạng thái `AutoScroll`).
+  2. `.\Tests\shots.ps1 after` — chụp 5 tab bằng `--shot` (ảnh 24bpp, không alpha) vào `obj\UiVerification`.
+  3. `.\ui_test.exe` — chạy §9d.5: đếm pixel/khối đen từng trang và lưu ảnh render vào `%TEMP%\xvirus-ui-shots\`.
 
 ---
 
