@@ -96,32 +96,67 @@ namespace ScanAndRemoveVirus.Control
             return b;
         }
 
+        /// <summary>
+        /// Nút "← Quay lại" của 2 màn hình riêng ((c) và (d)): bản thiết kế vẽ nó như một LIÊN KẾT TRƠ
+        /// (chữ xanh, không viền, không nền) nằm trên một dòng riêng phía trên tiêu đề — không phải
+        /// một nút có khung. Bản cũ dùng nút có viền nằm CHUNG dòng với tiêu đề nên chiếm mất 128px
+        /// bề ngang và đẩy tiêu đề lệch phải.
+        /// Lưu ý: nền dùng Theme.PageBg chứ KHÔNG dùng Color.Transparent — Button không bật
+        /// SupportsTransparentBackColor sẽ vẽ nền trong suốt thành MÀU ĐEN.
+        /// </summary>
+        private static Button NutQuayLai(string text)
+        {
+            var b = new Button
+            {
+                Text = text, Width = 116, Height = 26, Dock = DockStyle.Left,
+                Margin = new Padding(0), FlatStyle = FlatStyle.Flat, UseVisualStyleBackColor = false,
+                BackColor = Theme.PageBg, ForeColor = Theme.Blue, Font = Theme.ButtonFont,
+                TextAlign = ContentAlignment.MiddleLeft, Cursor = Cursors.Hand,
+                Image = UiIcons.ArrowLeft(14, Theme.Blue),
+                TextImageRelation = TextImageRelation.ImageBeforeText
+            };
+            b.FlatAppearance.BorderSize = 0;
+            b.FlatAppearance.MouseOverBackColor = Theme.PageBg;
+            // Đánh dấu để Tests\ButtonAudit.cs biết đây là NGOẠI LỆ CÓ CHỦ Ý: nút trơ
+            // không viền theo đúng bản thiết kế, không phải nút quên style.
+            b.Tag = "link";
+            return b;
+        }
+
+        /// <summary>
+        /// Cột trái đầu trang của 2 màn hình riêng: "← Quay lại" · tiêu đề lớn · mô tả, xếp DỌC.
+        /// Dùng chung cho (c) và (d) để hai màn không lệch nhau.
+        /// </summary>
+        private static System.Windows.Forms.Control DungKhoiTieuDe(Button quayLai, Label tieuDe, Label moTa)
+        {
+            var text = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0) };
+            text.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            text.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));   // "← Quay lại"
+            text.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));   // tiêu đề trang
+            text.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));   // mô tả
+            text.Controls.Add(quayLai, 0, 0);
+            text.Controls.Add(tieuDe, 0, 1);
+            text.Controls.Add(moTa, 0, 2);
+            return text;
+        }
+
         private System.Windows.Forms.Control DungHeaderChiTiet()
         {
-            var head = new TableLayoutPanel { ColumnCount = 3, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 4) };
-            head.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 128F));
+            var head = new TableLayoutPanel { ColumnCount = 2, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 4) };
             head.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             head.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             head.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            btnQuayLaiChiTiet = Nut("Quay lại", Theme.BtnRole.Secondary, 118, 36);
-            btnQuayLaiChiTiet.Dock = DockStyle.Left;
-            btnQuayLaiChiTiet.Image = UiIcons.ArrowLeft(14, Theme.BlueDark);
-            btnQuayLaiChiTiet.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnQuayLaiChiTiet = NutQuayLai("Quay lại");
             btnQuayLaiChiTiet.Click += delegate
             {
                 HienThi(dgvActions.Rows.Count > 0 ? TongQuanView.PhatHienDeDoa : TongQuanView.AnToan);
             };
 
-            var text = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0) };
-            text.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            text.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            text.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             lblChiTietTitle = Nhan("Chi tiết kết quả quét", Theme.PageTitleFont, Theme.TextDark, ContentAlignment.MiddleLeft);
             lblChiTietSub = Nhan("Danh sách các mối đe dọa được phát hiện trong lần quét vừa rồi.",
                 Theme.PageSubFont, Theme.TextGray, ContentAlignment.MiddleLeft);
-            text.Controls.Add(lblChiTietTitle, 0, 0);
-            text.Controls.Add(lblChiTietSub, 0, 1);
+            var text = DungKhoiTieuDe(btnQuayLaiChiTiet, lblChiTietTitle, lblChiTietSub);
 
             var right = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0) };
             right.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -138,9 +173,8 @@ namespace ScanAndRemoveVirus.Control
             right.Controls.Add(lblLoaiQuet, 0, 1);
             right.Controls.Add(btnXuatBaoCao, 0, 2);
 
-            head.Controls.Add(btnQuayLaiChiTiet, 0, 0);
-            head.Controls.Add(text, 1, 0);
-            head.Controls.Add(right, 2, 0);
+            head.Controls.Add(text, 0, 0);
+            head.Controls.Add(right, 1, 0);
             return head;
         }
 

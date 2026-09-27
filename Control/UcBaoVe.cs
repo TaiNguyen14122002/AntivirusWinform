@@ -126,11 +126,18 @@ namespace ScanAndRemoveVirus.Control
         // Panel "Trạng thái bảo vệ": mọi số liệu lấy từ source thật (không còn text mock 2025)
         private void SyncProtectionStats()
         {
-            bool on = RealTimeProtection.IsRunning;
-            lblStatusValue.Text = on
-                ? "Tất cả các tính năng đang hoạt động tốt"
-                : "Bảo vệ thời gian thực đang tắt";
-            lblStatusValue.ForeColor = on ? Theme.Green : Theme.Red;
+            // Đếm THẬT số tính năng đang bật. Câu cũ ("Tất cả các tính năng đang hoạt động
+            // tốt") chỉ hỏi mỗi RealTimeProtection.IsRunning nên vẫn báo "tốt" khi 9/10
+            // tính năng đã tắt — sai lệch ngay trên màn hình an toàn.
+            int total = Catalog.GetLength(0), onCount = 0;
+            for (int i = 0; i < total; i++) if (IsOn(Catalog[i, 0])) onCount++;
+
+            lblStatusValue.Text = onCount == total ? "Tất cả " + total + " tính năng đang bật"
+                                : onCount == 0 ? "Tất cả tính năng đang tắt"
+                                : onCount + "/" + total + " tính năng đang bật";
+            // Bảo vệ thời gian thực là tính năng gốc: tắt nó là báo động đỏ, bật một phần là vàng.
+            lblStatusValue.ForeColor = !RealTimeProtection.IsRunning ? Theme.Red
+                                     : onCount == total ? Theme.Green : Theme.Amber;
 
             lblDatabaseVersionValue.Text = System.Reflection.Assembly
                 .GetExecutingAssembly().GetName().Version.ToString(3);

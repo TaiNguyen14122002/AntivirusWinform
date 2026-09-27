@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Windows.Forms;
 
 namespace ScanAndRemoveVirus.Control
 {
@@ -83,6 +84,23 @@ namespace ScanAndRemoveVirus.Control
             });
         }
 
+        /// <summary>
+        /// Huy hiệu hero của tab Tổng quan (mockup): đĩa tròn màu rất nhạt + icon ở giữa.
+        /// Tỉ lệ lấy đúng mockup — đĩa 100%, icon ~52% đường kính đĩa.
+        /// </summary>
+        public static Bitmap HeroBadge(int size, bool ok)
+        {
+            return Get("hero-badge-" + (ok ? "ok" : "warn"), size, ok ? Theme.Green : Theme.Red,
+                delegate(Graphics g, int s, Color c)
+                {
+                    using (var b = new SolidBrush(Lighten(c, 0.90f)))
+                        g.FillEllipse(b, 0, 0, s - 1, s - 1);
+                    int inner = (int)(s * 0.52f);
+                    Bitmap ico = ok ? ShieldOk(inner) : AlertCircle(inner);
+                    g.DrawImage(ico, (s - inner) / 2, (s - inner) / 2, inner, inner);
+                });
+        }
+
         static GraphicsPath ShieldPath(int s)
         {
             var p = new GraphicsPath();
@@ -138,16 +156,15 @@ namespace ScanAndRemoveVirus.Control
                     }
                     g.ResetTransform();
                     g.FillEllipse(brush, cx - s * 0.33f, cy - s * 0.33f, s * 0.66f, s * 0.66f);
-                    using (var path = new GraphicsPath())
-                    {
-                        path.AddEllipse(cx - s * 0.14f, cy - s * 0.14f, s * 0.28f, s * 0.28f);
-                        g.SetClip(path, CombineMode.Exclude);
-                        g.CompositingMode = CompositingMode.SourceCopy;   // xóa hẳn pixel để lỗ răng trong suốt
-                        using (var clear = new SolidBrush(Color.Transparent))
-                            g.FillRectangle(clear, 0, 0, s, s);
-                        g.CompositingMode = CompositingMode.SourceOver;
-                        g.ResetClip();
-                    }
+                    // Lỗ trục răng: phải ghi đè bằng pixel trong suốt (SourceCopy) vì nền bitmap
+                    // vốn trong suốt nên vẽ chồng bằng SourceOver không xóa được gì.
+                    // KHÔNG dùng SetClip(..., Exclude) quanh đường tròn này: vùng Exclude là phần
+                    // NGOÀI đường tròn, nên lệnh xóa trúng toàn bộ thân + răng và chỉ chừa lại
+                    // lòng trục — bánh răng biến thành một chấm nhỏ (lỗi cũ).
+                    g.CompositingMode = CompositingMode.SourceCopy;
+                    using (var clear = new SolidBrush(Color.Transparent))
+                        g.FillEllipse(clear, cx - s * 0.14f, cy - s * 0.14f, s * 0.28f, s * 0.28f);
+                    g.CompositingMode = CompositingMode.SourceOver;
                 }
             });
         }
@@ -265,7 +282,523 @@ namespace ScanAndRemoveVirus.Control
             });
         }
 
+        // =====================================================================
+        // BỘ ICON CHO GIAO DIỆN MỚI (theo mockup Design/*.jpg)
+        // =====================================================================
+
+        static readonly Dictionary<string, Bitmap> recolorCache = new Dictionary<string, Bitmap>();
+
+        /// <summary>
+        /// Đổi màu một bitmap icon đã vẽ (giữ nguyên độ trong suốt). UiNavItem dùng để tô icon
+        /// theo trạng thái chọn/mặc định mà không phải vẽ lại hình. Có cache theo (bitmap, màu).
+        /// </summary>
+        public static Bitmap Recolor(Bitmap src, Color color)
+        {
+            if (src == null) return null;
+            string k = src.GetHashCode() + "|" + color.ToArgb() + "|" + src.Width;
+            Bitmap hit;
+            if (recolorCache.TryGetValue(k, out hit)) return hit;
+            var bmp = new Bitmap(src.Width, src.Height, PixelFormat.Format32bppArgb);
+            bmp.SetResolution(96, 96);
+            for (int y = 0; y < src.Height; y++)
+                for (int x = 0; x < src.Width; x++)
+                {
+                    Color p = src.GetPixel(x, y);
+                    bmp.SetPixel(x, y, Color.FromArgb(p.A, color));
+                }
+            recolorCache[k] = bmp;
+            return bmp;
+        }
+
+        // ---- Icon điều hướng sidebar ----
+
+        /// <summary>Ngôi nhà (Tổng quan).</summary>
+        public static Bitmap Home(int size, Color color)
+        {
+            return Get("home", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.095f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 20f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(2.6f * u, 8.6f * u),
+                        new PointF(10f * u, 2.6f * u),
+                        new PointF(17.4f * u, 8.6f * u)
+                    });
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(4.6f * u, 8.6f * u),
+                        new PointF(4.6f * u, 17f * u),
+                        new PointF(15.4f * u, 17f * u),
+                        new PointF(15.4f * u, 8.6f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Kính lúp + khiên (Bảo vệ).</summary>
+        public static Bitmap ShieldSearch(int size, Color color)
+        {
+            return Get("shield-search", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.095f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 20f;
+                    // thân khiên
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(10f * u, 2.4f * u),
+                        new PointF(16.4f * u, 5f * u),
+                        new PointF(16.4f * u, 9.4f * u),
+                        new PointF(10f * u, 17.6f * u),
+                        new PointF(3.6f * u, 9.4f * u),
+                        new PointF(3.6f * u, 5f * u),
+                        new PointF(10f * u, 2.4f * u)
+                    });
+                    // kính lúp
+                    g.DrawEllipse(pen, 7.2f * u, 6.6f * u, 5.6f * u, 5.6f * u);
+                    g.DrawLine(pen, 12f * u, 11.4f * u, 14.6f * u, 14f * u);
+                }
+            });
+        }
+
+        /// <summary>Khay/hộp lưu trữ (Cách ly).</summary>
+        public static Bitmap Tray(int size, Color color)
+        {
+            return Get("tray", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.095f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 20f;
+                    g.DrawRectangle(pen, 2.8f * u, 3.4f * u, 14.4f * u, 13.2f * u);
+                    g.DrawLine(pen, 2.8f * u, 11.4f * u, 7f * u, 11.4f * u);
+                    g.DrawLine(pen, 13f * u, 11.4f * u, 17.2f * u, 11.4f * u);
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(7f * u, 11.4f * u),
+                        new PointF(8.4f * u, 14f * u),
+                        new PointF(11.6f * u, 14f * u),
+                        new PointF(13f * u, 11.4f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Đồng hồ (Lịch sử).</summary>
+        public static Bitmap Clock(int size, Color color)
+        {
+            return Get("clock", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.095f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 20f;
+                    g.DrawEllipse(pen, 2.6f * u, 2.6f * u, 14.8f * u, 14.8f * u);
+                    g.DrawLine(pen, 10f * u, 6f * u, 10f * u, 10.4f * u);
+                    g.DrawLine(pen, 10f * u, 10.4f * u, 13.2f * u, 12.2f * u);
+                }
+            });
+        }
+
+        /// <summary>Logo thương hiệu ở đầu sidebar: khiên xanh đặc + dấu ✓ trắng.</summary>
+        public static Bitmap BrandShield(int size)
+        {
+            return Get("brand-shield", size, Theme.Blue, delegate(Graphics g, int s, Color c)
+            {
+                using (GraphicsPath p = ShieldPath(s))
+                using (var brush = new LinearGradientBrush(new Rectangle(0, 0, s, s), Lighten(c, 0.22f), c, 90f))
+                    g.FillPath(brush, p);
+                using (var pen = new Pen(Color.White, s * 0.105f))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 24f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(7.4f * u, 12.2f * u),
+                        new PointF(10.6f * u, 15.4f * u),
+                        new PointF(17f * u, 8.4f * u)
+                    });
+                }
+            });
+        }
+
+        // ---- Icon nhỏ dùng chung ----
+
+        /// <summary>Mũi tên ▾ (mở menu/combobox).</summary>
+        public static Bitmap ChevronDown(int size, Color color)
+        {
+            return Get("chev-down", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.11f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(4f * u, 6.4f * u),
+                        new PointF(8f * u, 10.4f * u),
+                        new PointF(12f * u, 6.4f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Mũi tên › (đi tiếp).</summary>
+        public static Bitmap ChevronRight(int size, Color color)
+        {
+            return Get("chev-right", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.11f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(6.4f * u, 4f * u),
+                        new PointF(10.4f * u, 8f * u),
+                        new PointF(6.4f * u, 12f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Kính lúp (tìm kiếm).</summary>
+        public static Bitmap Search(int size, Color color)
+        {
+            return Get("search", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.105f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 16f;
+                    g.DrawEllipse(pen, 2.6f * u, 2.6f * u, 8.4f * u, 8.4f * u);
+                    g.DrawLine(pen, 10.4f * u, 10.4f * u, 13.4f * u, 13.4f * u);
+                }
+            });
+        }
+
+        /// <summary>Mũi tên tải lên ⬆ (vùng kéo-thả tệp).</summary>
+        public static Bitmap Upload(int size, Color color)
+        {
+            return Get("upload", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.10f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 20f;
+                    g.DrawLine(pen, 10f * u, 15.4f * u, 10f * u, 4.4f * u);
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(6f * u, 8.4f * u),
+                        new PointF(10f * u, 4.4f * u),
+                        new PointF(14f * u, 8.4f * u)
+                    });
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(4f * u, 13.4f * u),
+                        new PointF(4f * u, 16.4f * u),
+                        new PointF(16f * u, 16.4f * u),
+                        new PointF(16f * u, 13.4f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Thư mục (chọn thư mục / đường dẫn loại "Thư mục").</summary>
+        public static Bitmap Folder(int size, Color color)
+        {
+            return Get("folder", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 20f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(2.6f * u, 16f * u),
+                        new PointF(2.6f * u, 4.6f * u),
+                        new PointF(8f * u, 4.6f * u),
+                        new PointF(9.6f * u, 7f * u),
+                        new PointF(17.4f * u, 7f * u),
+                        new PointF(17.4f * u, 16f * u),
+                        new PointF(2.6f * u, 16f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>Màn hình máy tính (card "Thông tin hệ thống").</summary>
+        public static Bitmap Monitor(int size, Color color)
+        {
+            return Get("monitor", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 20f;
+                    g.DrawRectangle(pen, 2.6f * u, 4f * u, 14.8f * u, 10f * u);
+                    g.DrawLine(pen, 7.4f * u, 17f * u, 12.6f * u, 17f * u);
+                    g.DrawLine(pen, 10f * u, 14f * u, 10f * u, 17f * u);
+                }
+            });
+        }
+
+        /// <summary>Quả địa cầu (kết nối mạng).</summary>
+        public static Bitmap Globe(int size, Color color)
+        {
+            return Get("globe", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                {
+                    float u = s / 20f;
+                    g.DrawEllipse(pen, 2.6f * u, 2.6f * u, 14.8f * u, 14.8f * u);
+                    g.DrawEllipse(pen, 7f * u, 2.6f * u, 6f * u, 14.8f * u);
+                    g.DrawLine(pen, 2.6f * u, 10f * u, 17.4f * u, 10f * u);
+                }
+            });
+        }
+
+        /// <summary>Thùng rác (xóa).</summary>
+        public static Bitmap Trash(int size, Color color)
+        {
+            return Get("trash", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 20f;
+                    g.DrawLine(pen, 3f * u, 5.6f * u, 17f * u, 5.6f * u);
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(5.4f * u, 5.6f * u),
+                        new PointF(5.4f * u, 17f * u),
+                        new PointF(14.6f * u, 17f * u),
+                        new PointF(14.6f * u, 5.6f * u)
+                    });
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(7.8f * u, 5.6f * u),
+                        new PointF(7.8f * u, 3.4f * u),
+                        new PointF(12.2f * u, 3.4f * u),
+                        new PointF(12.2f * u, 5.6f * u)
+                    });
+                    g.DrawLine(pen, 8.6f * u, 8.6f * u, 8.6f * u, 14f * u);
+                    g.DrawLine(pen, 11.4f * u, 8.6f * u, 11.4f * u, 14f * u);
+                }
+            });
+        }
+
+        /// <summary>Dấu cộng (thêm vị trí quét).</summary>
+        public static Bitmap Plus(int size, Color color)
+        {
+            return Get("plus", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.12f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 16f;
+                    g.DrawLine(pen, 8f * u, 3.4f * u, 8f * u, 12.6f * u);
+                    g.DrawLine(pen, 3.4f * u, 8f * u, 12.6f * u, 8f * u);
+                }
+            });
+        }
+
+        /// <summary>Dấu ✕ (đóng/xóa).</summary>
+        public static Bitmap Close(int size, Color color)
+        {
+            return Get("close", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.11f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    float u = s / 16f;
+                    g.DrawLine(pen, 4.4f * u, 4.4f * u, 11.6f * u, 11.6f * u);
+                    g.DrawLine(pen, 11.6f * u, 4.4f * u, 4.4f * u, 11.6f * u);
+                }
+            });
+        }
+
+        /// <summary>Dấu ✓ (đã chọn / hợp lệ).</summary>
+        public static Bitmap Check(int size, Color color)
+        {
+            return Get("check", size, color, delegate(Graphics g, int s, Color c)
+            {
+                using (var pen = new Pen(c, Math.Max(1.5f, s * 0.13f)))
+                {
+                    pen.StartCap = pen.EndCap = LineCap.Round;
+                    pen.LineJoin = LineJoin.Round;
+                    float u = s / 16f;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(3.4f * u, 8.4f * u),
+                        new PointF(6.6f * u, 11.6f * u),
+                        new PointF(12.6f * u, 4.6f * u)
+                    });
+                }
+            });
+        }
+
+        // ---- Icon theo loại tệp (bảng danh sách tệp/đe dọa) ----
+
+        /// <summary>Icon tệp theo phần mở rộng: trang giấy + dải màu nhận diện loại tệp.</summary>
+        public static Bitmap FileIcon(int size, string ext)
+        {
+            string e = (ext ?? "").TrimStart('.').ToLowerInvariant();
+            Color tone;
+            switch (e)
+            {
+                case "exe": case "dll": case "sys": case "msi": tone = Color.FromArgb(37, 99, 235); break;
+                case "zip": case "rar": case "7z": case "gz": tone = Color.FromArgb(180, 130, 40); break;
+                case "pdf": tone = Color.FromArgb(220, 38, 38); break;
+                case "doc": case "docx": tone = Color.FromArgb(43, 87, 154); break;
+                case "ps1": case "bat": case "cmd": case "vbs": tone = Color.FromArgb(112, 66, 176); break;
+                default: tone = Theme.TextGray; break;
+            }
+            return Get("file-" + e, size, tone, delegate(Graphics g, int s, Color c)
+            {
+                float u = s / 20f;
+                // trang giấy có góc gấp
+                using (var path = new GraphicsPath())
+                {
+                    path.AddLines(new[]
+                    {
+                        new PointF(4.4f * u, 2.4f * u),
+                        new PointF(11.6f * u, 2.4f * u),
+                        new PointF(15.6f * u, 6.4f * u),
+                        new PointF(15.6f * u, 17.6f * u),
+                        new PointF(4.4f * u, 17.6f * u)
+                    });
+                    path.CloseFigure();
+                    using (var b = new SolidBrush(Color.FromArgb(38, c))) g.FillPath(b, path);
+                    using (var pen = new Pen(c, Math.Max(1.2f, s * 0.085f))) { pen.LineJoin = LineJoin.Round; g.DrawPath(pen, path); }
+                }
+                // nếp gấp góc trên phải
+                using (var pen = new Pen(c, Math.Max(1.2f, s * 0.085f)))
+                {
+                    pen.LineJoin = LineJoin.Round;
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(11.6f * u, 2.4f * u),
+                        new PointF(11.6f * u, 6.4f * u),
+                        new PointF(15.6f * u, 6.4f * u)
+                    });
+                }
+            });
+        }
+
+        /// <summary>
+        /// Icon nhà cung cấp (Microsoft/Kaspersky/ESET/...): ô vuông bo góc mang màu nhận diện
+        /// + chữ cái đầu. Không sao chép logo thật — chỉ là ký hiệu nhận biết trong bảng.
+        /// </summary>
+        public static Bitmap VendorIcon(int size, string name)
+        {
+            string n = string.IsNullOrEmpty(name) ? "?" : name;
+            Color tone = VendorColor(n);
+            return Get("vendor-" + n.ToLowerInvariant(), size, tone, delegate(Graphics g, int s, Color c)
+            {
+                using (GraphicsPath p = UiKit.Round(new Rectangle(0, 0, s - 1, s - 1), Math.Max(3, s / 5)))
+                using (var b = new SolidBrush(c)) g.FillPath(b, p);
+                string letter = n.Substring(0, 1).ToUpperInvariant();
+                using (var f = new Font("Segoe UI", s * 0.56f, FontStyle.Bold, GraphicsUnit.Pixel))
+                    TextRenderer.DrawText(g, letter, f, new Rectangle(0, 0, s, s), Color.White,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            });
+        }
+
+        static Color VendorColor(string name)
+        {
+            switch (name.ToLowerInvariant())
+            {
+                case "microsoft": return Color.FromArgb(0, 120, 212);
+                case "kaspersky": return Color.FromArgb(0, 108, 68);
+                case "eset": return Color.FromArgb(16, 122, 176);
+                case "bitdefender": return Color.FromArgb(214, 30, 40);
+                case "avast": return Color.FromArgb(255, 120, 0);
+                case "avira": return Color.FromArgb(200, 30, 30);
+                case "mcafee": return Color.FromArgb(196, 24, 30);
+                case "symantec": return Color.FromArgb(252, 178, 22);
+                case "trend micro": return Color.FromArgb(208, 40, 46);
+                case "fortinet": return Color.FromArgb(218, 41, 28);
+                case "google": return Color.FromArgb(66, 133, 244);
+                case "clamav": return Color.FromArgb(38, 84, 168);
+                case "sophos": return Color.FromArgb(0, 82, 155);
+                case "panda": return Color.FromArgb(0, 122, 190);
+                default: return Theme.TextGray;
+            }
+        }
+
+        // ---- Icon hành vi (timeline "Phân tích hành vi") ----
+
+        /// <summary>Icon hành vi theo khoá: process / registry / file / network / security.</summary>
+        public static Bitmap Behavior(int size, string key)
+        {
+            switch ((key ?? "").ToLowerInvariant())
+            {
+                case "registry":
+                    return Get("bh-registry", size, Theme.Amber, delegate(Graphics g, int s, Color c)
+                    {
+                        using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                        {
+                            pen.LineJoin = LineJoin.Round;
+                            float u = s / 20f;
+                            g.DrawRectangle(pen, 3.4f * u, 3.4f * u, 13.2f * u, 13.2f * u);
+                            g.DrawLine(pen, 3.4f * u, 8.2f * u, 16.6f * u, 8.2f * u);
+                            g.DrawLine(pen, 3.4f * u, 12.4f * u, 16.6f * u, 12.4f * u);
+                            g.DrawLine(pen, 10f * u, 8.2f * u, 10f * u, 16.6f * u);
+                        }
+                    });
+                case "file":
+                    return FileIcon(size, "dll");
+                case "network":
+                    return Globe(size, Theme.Blue);
+                case "security":
+                    return Get("bh-security", size, Theme.Red, delegate(Graphics g, int s, Color c)
+                    {
+                        using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                        {
+                            pen.LineJoin = LineJoin.Round;
+                            float u = s / 20f;
+                            g.DrawLines(pen, new[]
+                            {
+                                new PointF(10f * u, 2.4f * u),
+                                new PointF(16.4f * u, 5f * u),
+                                new PointF(16.4f * u, 9.4f * u),
+                                new PointF(10f * u, 17.6f * u),
+                                new PointF(3.6f * u, 9.4f * u),
+                                new PointF(3.6f * u, 5f * u),
+                                new PointF(10f * u, 2.4f * u)
+                            });
+                            g.DrawLine(pen, 10f * u, 7f * u, 10f * u, 11.6f * u);
+                            g.DrawLine(pen, 10f * u, 13.8f * u, 10f * u, 14.2f * u);
+                        }
+                    });
+                default: // process
+                    return Get("bh-process", size, Theme.Blue, delegate(Graphics g, int s, Color c)
+                    {
+                        using (var pen = new Pen(c, Math.Max(1.4f, s * 0.095f)))
+                        {
+                            pen.LineJoin = LineJoin.Round;
+                            float u = s / 20f;
+                            g.DrawRectangle(pen, 2.6f * u, 4f * u, 14.8f * u, 12f * u);
+                            g.DrawLine(pen, 2.6f * u, 7.6f * u, 17.4f * u, 7.6f * u);
+                            g.DrawLine(pen, 5.4f * u, 5.8f * u, 6.6f * u, 5.8f * u);
+                        }
+                    });
+            }
+        }
+
         // ================= ICON TRANG LỊCH SỬ (ảnh tham chiếu 26/09/2026 — README §3.3/§3.4) =================
+        // Giữ lại từ nhánh main gốc: UcLichSu.cs gọi trực tiếp các icon này.
 
         /// <summary>Mũi tên → (nút "trang sau" ở chân trang Lịch sử).</summary>
         public static Bitmap ArrowRight(int size, Color color)
@@ -287,22 +820,6 @@ namespace ScanAndRemoveVirus.Control
                 }
             });
         }
-
-        /// <summary>Kính lúp (nút "Lọc" của hàng bộ lọc Lịch sử).</summary>
-        public static Bitmap Search(int size, Color color)
-        {
-            return Get("search", size, color, delegate(Graphics g, int s, Color c)
-            {
-                using (var pen = new Pen(c, Math.Max(1.4f, s * 0.12f)))
-                {
-                    pen.StartCap = pen.EndCap = LineCap.Round;
-                    float u = s / 16f;
-                    g.DrawEllipse(pen, 2.2f * u, 2.2f * u, 8.2f * u, 8.2f * u);
-                    g.DrawLine(pen, 9.4f * u, 9.4f * u, 13.4f * u, 13.4f * u);
-                }
-            });
-        }
-
         /// <summary>Ba chấm ngang ••• (nút "thêm thao tác" của trang Lịch sử).</summary>
         public static Bitmap More(int size, Color color)
         {
@@ -316,7 +833,6 @@ namespace ScanAndRemoveVirus.Control
                 }
             });
         }
-
         /// <summary>Màn hình máy tính (loại quét toàn bộ).</summary>
         public static Bitmap Desktop(int size, Color color)
         {
@@ -332,7 +848,6 @@ namespace ScanAndRemoveVirus.Control
                 }
             });
         }
-
         /// <summary>Tia sét (loại quét nhanh).</summary>
         public static Bitmap Bolt(int size, Color color)
         {
@@ -376,27 +891,6 @@ namespace ScanAndRemoveVirus.Control
                 }
             });
         }
-
-        /// <summary>Thư mục (quét thư mục / quét tùy chọn).</summary>
-        public static Bitmap Folder(int size, Color color)
-        {
-            return Get("folder", size, color, delegate(Graphics g, int s, Color c)
-            {
-                using (var pen = new Pen(c, Math.Max(1.2f, s * 0.10f)))
-                {
-                    pen.LineJoin = LineJoin.Round;
-                    float u = s / 16f;
-                    g.DrawLines(pen, new[]
-                    {
-                        new PointF(1.8f * u, 13.4f * u), new PointF(1.8f * u, 2.6f * u),
-                        new PointF(6.2f * u, 2.6f * u), new PointF(7.7f * u, 4.8f * u),
-                        new PointF(14f * u, 4.8f * u), new PointF(14f * u, 13.4f * u),
-                        new PointF(1.8f * u, 13.4f * u)
-                    });
-                }
-            });
-        }
-
         /// <summary>Khiên rỗng (cảnh báo "Bảo vệ thời gian thực").</summary>
         public static Bitmap Shield(int size, Color color)
         {
@@ -412,4 +906,3 @@ namespace ScanAndRemoveVirus.Control
         }
     }
 }
-

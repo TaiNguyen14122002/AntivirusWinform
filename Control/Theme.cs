@@ -43,10 +43,14 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color TextGray = Color.FromArgb(107, 114, 128);
         public static readonly Color Line = Color.FromArgb(229, 231, 235);
         public static readonly Color ChipGray = Color.FromArgb(243, 244, 246);
-        public static readonly Color ChipGrayText = Color.FromArgb(170, 174, 180);
+        // (170,174,180) trên nền ChipGray chỉ đạt ~2:1 — chữ nút bị vô hiệu gần như tàng hình
+        // (thấy rõ ở 3 nút "Khôi phục/Khôi phục tất cả/Xóa vĩnh viễn" khi chưa chọn dòng nào).
+        // Hạ xuống mức đọc được mà vẫn rõ là đang tắt.
+        public static readonly Color ChipGrayText = Color.FromArgb(148, 153, 161);
         public static readonly Color PageBg = Color.White;
 
         public static readonly Font BodyFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);
+        public static readonly Font BodyBigFont = new Font("Segoe UI", 11.25F, FontStyle.Regular);  // hàng danh sách thoáng (Hoạt động gần đây)
         public static readonly Font BoldFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
         public static readonly Font TitleFont = new Font("Segoe UI", 13.5F, FontStyle.Bold);
         // Ngôn ngữ thiết kế chuẩn (khởi đầu từ tab Lịch sử): header trang + card + lưới dày
@@ -300,6 +304,12 @@ namespace ScanAndRemoveVirus.Control
             foreach (var c in cards)
             {
                 if (c == null) continue;
+                // UiGroup tự vẽ tiêu đề -> chỉ cần giao đúng font/màu cho phần vẽ đó.
+                // Trước đây hàm này gán thẳng c.Font: với GroupBox thì đó là font tiêu đề,
+                // nhưng vì Font là thứ control CON thừa hưởng nên mọi nhãn bên trong thẻ
+                // "Thông tin bảo vệ" bị đổi thành đậm theo.
+                var ug = c as UiGroup;
+                if (ug != null) { ug.HeadFont = CardHeadFont; ug.HeadColor = TextDark; continue; }
                 c.Font = CardTitleFont;
                 c.ForeColor = BlueDark;
             }
@@ -315,6 +325,12 @@ namespace ScanAndRemoveVirus.Control
             g.ColumnHeadersDefaultCellStyle.BackColor = BlueFaint;
             g.ColumnHeadersDefaultCellStyle.ForeColor = BlueDark;
             g.ColumnHeadersDefaultCellStyle.Font = BoldFont;
+            // Ô header của CỘT ĐANG CHỌN được vẽ bằng màu Selection*, mặc định là
+            // SystemColors.Highlight (xanh đặc) + HighlightText (chữ trắng) — đó là lý do
+            // duy nhất cột đầu của bảng Bảo vệ xanh lè còn các cột kia thì không.
+            // Ép về đúng màu header để mọi cột trông như nhau.
+            g.ColumnHeadersDefaultCellStyle.SelectionBackColor = BlueFaint;
+            g.ColumnHeadersDefaultCellStyle.SelectionForeColor = BlueDark;
             g.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             g.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             g.ColumnHeadersHeight = 40;
@@ -433,6 +449,13 @@ namespace ScanAndRemoveVirus.Control
 
         private static void ApplyRole(Button b, BtnRole role, bool hover)
         {
+            // Nút bo góc (UiButton) tự vẽ theo Variant. Nếu chạy tiếp phần FlatAppearance
+            // bên dưới, nút sẽ bị tô thêm một nền VUÔNG đè lên hình bo góc — và vì
+            // StyleButton không hề chạm tới UiButton.Kind, nút phụ sẽ giữ nguyên màu
+            // Primary (xanh) của mặc định. Chuyển vai trò rồi dừng.
+            var ub = b as UiButton;
+            if (ub != null) { UiKit.Apply(ub, role); return; }
+
             if (!b.Enabled)
             {
                 b.BackColor = ChipGray;
@@ -517,7 +540,124 @@ namespace ScanAndRemoveVirus.Control
         public static void ScrollablePage(UserControl page, System.Windows.Forms.Control root, int minWidth, int minHeight)
         {
             page.AutoScroll = true;
+            // AutoScrollMinSize mới là thứ tạo ra thanh cuộn: nó nâng DisplayRectangle của
+            // trang lên tối thiểu (minWidth × minHeight), và control Dock=Fill được xếp theo
+            // DisplayRectangle nên nội dung giãn đủ chỗ rồi cuộn.
+            // Chỉ đặt root.MinimumSize (cách cũ) KHÔNG có tác dụng: root đang Dock=Fill nên
+            // luôn được ép bằng đúng vùng nhìn — thanh cuộn không bao giờ xuất hiện và phần
+            // đáy của MỌI tab bị cắt (đo được: Tổng quan tràn +143px, Cài đặt +99px ở cửa sổ nhỏ).
+            page.AutoScrollMinSize = new Size(minWidth, minHeight);
             root.MinimumSize = new Size(minWidth, minHeight);
+
+            // Chiều cao vùng cuộn phải đủ cho phần nội dung KHÔNG co được (thẻ Cài đặt có 5
+            // hàng cố định 40px). Đo lại mỗi lần xếp layout vì độ cao đó phụ thuộc bề rộng.
+            Action sync = delegate
+            {
+                var want = new Size(minWidth, Math.Max(minHeight, MinContentHeight(root)));
+                if (page.AutoScrollMinSize != want) page.AutoScrollMinSize = want;
+            };
+            root.Layout += delegate { sync(); };
+            sync();
+        }
+
+        /// <summary>
+        /// Chiều cao TỐI THIỂU mà nội dung thật sự cần — chỉ tính phần cứng:
+        /// hàng Absolute của TableLayoutPanel cộng dồn, hàng Percent/AutoSize thì đi xuống
+        /// control con xem bên trong có gì cứng không. Bảng và nhãn co giãn được nên góp 0.
+        /// KHÔNG dùng PreferredSize ở đây: với hàng phần trăm nó trả về chính chiều cao hiện
+        /// tại của bảng, nên nuôi số đó vào AutoScrollMinSize sẽ tự đẩy trang cao dần.
+        /// </summary>
+        static int MinContentHeight(System.Windows.Forms.Control c)
+        {
+            var t = c as TableLayoutPanel;
+            if (t == null)
+            {
+                int inner = 0;
+                foreach (System.Windows.Forms.Control k in c.Controls)
+                    inner = Math.Max(inner, MinContentHeight(k));
+                // 0 = control lá (bảng, nhãn...) co giãn được -> không đòi thêm chỗ
+                return inner == 0 ? 0 : inner + c.Padding.Vertical;
+            }
+            int fixedSum = 0;      // hàng Absolute/AutoSize: cộng thẳng
+            float weightSum = 0f;  // tổng trọng số các hàng Percent
+            float worst = 0f;      // max(nhu cầu / trọng số) — hàng đòi nhiều nhất
+
+            for (int r = 0; r < t.RowCount; r++)
+            {
+                int need = 0;
+                foreach (System.Windows.Forms.Control k in t.Controls)
+                    if (t.GetRow(k) == r) need = Math.Max(need, MinContentHeight(k) + k.Margin.Vertical);
+
+                RowStyle rs = r < t.RowStyles.Count ? t.RowStyles[r] : null;
+                if (rs == null || rs.SizeType != SizeType.Percent)
+                {
+                    fixedSum += Math.Max(rs == null ? 0 : (int)rs.Height, need);
+                    continue;
+                }
+                // Hàng Percent KHÔNG cộng dồn: hai hàng 50% cùng đòi 286px thì bảng chỉ cần
+                // 572px, không phải 286. Cộng thẳng sẽ ra số nhỏ hơn thực tế và thẻ vẫn bị bóp.
+                weightSum += rs.Height;
+                if (rs.Height > 0f) worst = Math.Max(worst, need / rs.Height);
+            }
+            return fixedSum + (int)Math.Ceiling(worst * weightSum) + t.Padding.Vertical;
+        }
+
+        // =====================================================================
+        // NGÔN NGỮ THIẾT KẾ MỚI (theo mockup Design/*.jpg) — bổ sung, không thay thế
+        // Các token dưới đây phục vụ bộ control vẽ tay ở UiKit.cs.
+        // =====================================================================
+
+        // ---- Nền & viền ----
+        public static readonly Color SidebarBg = Color.FromArgb(248, 250, 252);   // nền sidebar
+        public static readonly Color NavActiveBg = Color.FromArgb(232, 240, 254);  // mục sidebar đang chọn
+        public static readonly Color NavHoverBg = Color.FromArgb(241, 245, 249);   // mục sidebar rê chuột
+        public static readonly Color CardBorder = Color.FromArgb(229, 231, 235);   // viền card 1px
+        public static readonly Color Divider = Color.FromArgb(241, 245, 249);      // đường kẻ mảnh trong card
+        public static readonly Color InputBg = Color.White;
+        public static readonly Color InputBorder = Color.FromArgb(209, 213, 219);
+        public static readonly Color HeaderBg = Color.FromArgb(249, 250, 251);     // header bảng
+
+        // ---- Bán kính bo góc (một nguồn duy nhất) ----
+        public const int RadiusCard = 10;
+        public const int RadiusButton = 8;
+        public const int RadiusInput = 8;
+        public const int RadiusPill = 999;   // bo tròn hoàn toàn
+
+        // ---- Typography theo mockup ----
+        public static readonly Font H1Font = new Font("Segoe UI", 21.75F, FontStyle.Bold);   // "Chi tiết kết quả quét"
+        public static readonly Font H2Font = new Font("Segoe UI", 15F, FontStyle.Bold);      // tiêu đề khối lớn
+        public static readonly Font HeroBigFont = new Font("Segoe UI", 19.5F, FontStyle.Bold); // "Máy tính của bạn được bảo vệ"
+        public static readonly Font StatBigFont = new Font("Segoe UI", 23.25F, FontStyle.Bold); // số liệu lớn
+        public static readonly Font CardHeadFont = new Font("Segoe UI", 11.25F, FontStyle.Bold); // tiêu đề card
+        public static readonly Font FieldFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);  // nhãn/giá trị
+        public static readonly Font MonoFont = new Font("Consolas", 9.75F, FontStyle.Regular);
+
+        /// <summary>Màu chữ của một "pill" theo ngữ nghĩa (nền = bản *Tint*, chữ = bản *Text*).</summary>
+        public enum PillKind { Danger, Warn, Low, Ok, Info, Neutral }
+
+        /// <summary>Cặp (nền, chữ) của pill — một nguồn duy nhất cho mọi badge trong app.</summary>
+        public static void PillColors(PillKind kind, out Color bg, out Color fg)
+        {
+            switch (kind)
+            {
+                case PillKind.Danger: bg = RedTint; fg = RedText; break;
+                case PillKind.Warn: bg = AmberTint; fg = WarningMedium; break;
+                case PillKind.Low: bg = Color.FromArgb(254, 249, 231); fg = Amber; break;
+                case PillKind.Ok: bg = GreenTint; fg = Green; break;
+                case PillKind.Info: bg = BlueTint; fg = BlueDark; break;
+                default: bg = ChipGray; fg = TextMid; break;
+            }
+        }
+
+        /// <summary>Pill cho mức độ đe dọa (Cao/Trung bình/Thấp) — dùng chung với LevelColors.</summary>
+        public static PillKind PillOf(ThreatLevel level)
+        {
+            switch (level)
+            {
+                case ThreatLevel.High: return PillKind.Danger;
+                case ThreatLevel.Medium: return PillKind.Warn;
+                default: return PillKind.Low;
+            }
         }
     }
 }

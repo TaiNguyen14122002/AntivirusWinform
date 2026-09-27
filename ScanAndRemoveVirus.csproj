@@ -75,6 +75,7 @@
     </Compile>
     <Compile Include="Control\Theme.cs" />
     <Compile Include="Control\UiIcons.cs" />
+    <Compile Include="Control\UiKit.cs" />
     <Compile Include="Control\LoadingSpinner.cs">
       <SubType>Component</SubType>
     </Compile>

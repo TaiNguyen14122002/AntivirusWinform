@@ -17,9 +17,11 @@ namespace ScanAndRemoveVirus.Control
             Theme.ScrollablePage(this, tableLayoutPanel1, 980, 620);
             Theme.StylePageHeader(lblQuarantineTitle, lblQuarantineSubtitle);
             Theme.StyleCard(grpQuarentineList, grpQuarantineInfo);
-            // compact chuẩn Lịch sử: nút 40px thay vì band 49-61px
+            // Nút 40px nằm gọn trong hàng công cụ 40px: margin DỌC phải bằng 0, chỉ chừa
+            // 8px khe ngang. Đặt (2,8,2,8) như trước thì hàng 40px bị ăn mất 16px và nút
+            // co lại còn 24px — đúng chiều cao nút mặc định thời chưa bo góc.
             btnRestore.Margin = btnRestoreAll.Margin = btnDeletePermanent.Margin =
-                btnRefreshQuarantine.Margin = new Padding(2, 8, 2, 8);
+                btnRefreshQuarantine.Margin = new Padding(0, 0, 8, 0);
             lblTotalFilesTitle.Font = Theme.PageSubFont;
             lblTotalFilesTitle.ForeColor = Theme.TextGray;
             lblTotalFilesValue.Font = Theme.TitleFont;

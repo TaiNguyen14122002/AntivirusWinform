@@ -73,7 +73,7 @@ namespace ScanAndRemoveVirus.Control
         private int lastScannedFiles;
         private int detailRowIndex = -1;    // dòng đang chọn ở trang (c)
         private const int MaxActivityRows = 100;   // trần số dòng nạp vào bảng "Hoạt động gần đây"
-        private const float HeroHeight = 164F;     // hàng hero (a)/(b) của tableLayoutPanel12: panel 160 + 2 lề 2px
+        private const float HeroHeight = 320F;     // hàng hero (a)/(b) của tableLayoutPanel12: panel 316 + 2 lề 2px
         private const float ThongKeHeight = 104F;  // hàng 3 thẻ số liệu của tableLayoutPanel12: panel 100 + 2 lề 2px (chỉ ở (a)/(b))
         private const float LoadingHeight = 46F;   // hàng 0 của tableLayoutPanel11 — dải loading quét (lần 9): panel 46px khi quét, 0px khi rảnh
         private const int RongToiThieu = 980;      // (Theme.ScrollablePage) bề rộng tối thiểu vùng Tổng quan ở (a)/(b)/(c)
@@ -123,7 +123,7 @@ namespace ScanAndRemoveVirus.Control
         {
             InitializeComponent();
             // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung (ngưỡng 980x640; trạng thái (a) cần tối
-            // thiểu 164+104+303 = 571px + lề nên ở ngưỡng này vẫn thấy đủ 4 khối, không cắt ngang nút).
+            // thiểu hero 320 + hàng 3 thẻ số liệu 104 = 424px + lề, phần còn lại là thẻ "Hoạt động gần đây").
             // Riêng trang (d) tự xếp lại theo bề rộng nên HienThi() hạ bề rộng tối thiểu (lần 7).
             Theme.ScrollablePage(this, tableLayoutPanel11, RongToiThieu, CaoToiThieu);
             ApplyTheme();
@@ -139,17 +139,61 @@ namespace ScanAndRemoveVirus.Control
         private void ApplyTheme()
         {
 
-            // (25/09/2026) Thẻ "4. Đang cách ly" (grpQuarantine) đã bị bỏ khỏi tab Tổng quan
-            Theme.StyleCard(grpThreats, grpScannedFiles, grpLastScan,
-                grpAction, grpActivity);
+            // ===== ĐẦU TRANG (chuẩn chung 5 tab — Tests\UiEndToEnd.cs §9b) =====
+            Theme.StylePageHeader(lblOverviewTitle, lblOverviewSubtitle);
+            lblOverviewSubtitle.Text = "Tình trạng bảo vệ và hoạt động gần đây của máy tính.";
+
+            // ===== HERO (a)/(b): khiên lớn canh giữa + 2 nút bo góc =====
+            picShield.Image = UiIcons.HeroBadge(140, true);
+            picCanhBao.Image = UiIcons.HeroBadge(140, false);
+            lblProtectionStatus.Font = Theme.HeroBigFont;
+            lblPhatHienTitle.Font = Theme.HeroBigFont;
+            lblAnToanSub.Font = Theme.BodyBigFont;
+            lblPhatHienSub.Font = Theme.BodyBigFont;
+            UiKit.Apply(btnScanNow, Theme.BtnRole.Primary);
+            UiKit.Apply(btnQuetNangCao, Theme.BtnRole.Neutral);
+            UiKit.Apply(btnXemChiTiet, Theme.BtnRole.Primary);
+            UiKit.Apply(btnQuetLai, Theme.BtnRole.Neutral);
+            btnScanNow.Icon = UiIcons.Play(13, Color.White);
+            btnQuetNangCao.Icon = UiIcons.Gear(15, Theme.TextMid);
+            btnXemChiTiet.Icon = UiIcons.External(13, Color.White);
+            btnQuetLai.Icon = UiIcons.Refresh(13, Theme.TextMid);
+
+            // ===== HÀNG 3 THẺ SỐ LIỆU: Panel trơn, vạch chia do PnlThongKe_Paint vẽ =====
+            lblThreatTitle.Font = Theme.BoldFont;
+            lblScannedTitle.Font = Theme.BoldFont;
+            lblLastScanTitle.Font = Theme.BoldFont;
+            lblThreatCount.Font = Theme.StatBigFont;
+            lblScannedCount.Font = Theme.StatBigFont;
+            lblLastScanDate.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            lblThreatText.Font = Theme.SmallFont;
+            lblScannedUnit.Font = Theme.SmallFont;
+            lblLastScanType.Font = Theme.SmallFont;
+            lblThreatCount.ForeColor = Theme.Green;
+            lblThreatText.ForeColor = Theme.Green;
+            lblScannedCount.ForeColor = Theme.Blue;
+
+            // ===== 2 THẺ LỚN (UiCard): header do UiCard lo, ruột gắn vào Body() ở đây vì Designer
+            // không gọi được phương thức — cùng lý do đã ghi ở UcTongQuan.ChiTiet.cs =====
+            grpAction.SetHeader("Mối đe dọa được phát hiện", UiIcons.AlertCircle(18));
+            grpAction.AddHeaderAction(lnkXemTatCa);
+            grpAction.AddHeaderAction(lblThreatSummary);
+            grpAction.Body().Controls.Add(tableLayoutPanel18);
+
+            // Mockup 10: "Hoạt động gần đây" là MỘT MỤC TRƠ trên nền trắng — không viền card, không
+            // icon tiêu đề, và tiêu đề canh thẳng hàng với "Tổng quan" ở đầu trang. Bỏ luôn lề ngang
+            // của card để chữ không thụt vào 20px; phần thụt của icon/dòng do chính ô lưới lo.
+            grpActivity.ShowBorder = false;
+            grpActivity.Padding = new Padding(0, 12, 0, 0);
+            grpActivity.SetHeader("Hoạt động gần đây", null);
+            grpActivity.AddHeaderAction(lnkXemLichSu);
+            grpActivity.AddHeaderAction(lblActivitySummary);
+            grpActivity.Body().Controls.Add(tlpActivity);
+
             Theme.StyleGrid(dgvActions);
             Theme.StyleGrid(dgvActivity);
             Theme.StyleLinkLabel(lnkXemTatCa);
             Theme.StyleLinkLabel(lnkXemLichSu);
-            Theme.StyleButton(btnScanNow, Theme.BtnRole.Primary);
-            Theme.StyleButton(btnQuetNangCao, Theme.BtnRole.Secondary);
-            Theme.StyleButton(btnXemChiTiet, Theme.BtnRole.Primary);
-            Theme.StyleButton(btnQuetLai, Theme.BtnRole.Secondary);
             Theme.StyleButton(btnQuarantineSelected, Theme.BtnRole.Action);
             Theme.StyleButton(btnQuarantineAll, Theme.BtnRole.Action);
             Theme.StyleButton(btnDeleteSelected, Theme.BtnRole.Danger);
@@ -159,21 +203,43 @@ namespace ScanAndRemoveVirus.Control
                 btnHuyQuetLoading);
             btnHuyQuetLoading.Image = UiIcons.Stop(12, Color.White);
             btnHuyQuetLoading.TextImageRelation = TextImageRelation.ImageBeforeText;
-            btnScanNow.Image = UiIcons.Play(13, Color.White);
-            btnScanNow.TextImageRelation = TextImageRelation.ImageBeforeText;
-            btnQuetNangCao.Image = UiIcons.Gear(15, Theme.BlueDark);
-            btnQuetNangCao.TextImageRelation = TextImageRelation.ImageBeforeText;
-            btnXemChiTiet.Image = UiIcons.External(13, Color.White);
-            btnQuetLai.Image = UiIcons.Refresh(13, Theme.BlueDark);
-            picShield.Image = UiIcons.ShieldOk(72);
-            picCanhBao.Image = UiIcons.AlertCircle(72);
-            lblThreatCount.ForeColor = Theme.Green;
-            lblThreatText.ForeColor = Theme.Green;
-            lblScannedCount.ForeColor = Theme.Blue;
+
+            // ===== BẢNG "HOẠT ĐỘNG GẦN ĐÂY" theo mockup: không tiêu đề cột, không kẻ ô, dòng cao,
+            // icon thật thay cho chấm màu =====
+            dgvActivity.ColumnHeadersVisible = false;
+            dgvActivity.CellBorderStyle = DataGridViewCellBorderStyle.None;
+            dgvActivity.RowTemplate.Height = 52;
+            dgvActivity.DefaultCellStyle.Font = Theme.BodyBigFont;
+            dgvActivity.DefaultCellStyle.BackColor = Color.White;
+            dgvActivity.AlternatingRowsDefaultCellStyle.BackColor = Color.White;
+            dgvActivity.DefaultCellStyle.SelectionBackColor = Color.White;   // mockup: không tô nền dòng đang chọn
+            dgvActivity.DefaultCellStyle.SelectionForeColor = Theme.TextDark;
+            // StyleGrid đặt AutoSizeColumnsMode=Fill toàn cục; riêng 3 cột này phải chia lại tỉ lệ,
+            // nếu không cột "Thời gian" giữ nguyên Width=150 của Designer và bị ép về AutoSizeMode.None.
+            foreach (DataGridViewColumn c in dgvActivity.Columns)
+            {
+                c.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                c.MinimumWidth = 2;   // 2 = sàn hợp lệ của DataGridView; bỏ MinimumWidth=200 của colActDesc
+            }
+            // Cột icon là hằng số thiết kế (22px + lề 16), KHÔNG phải tỉ lệ cửa sổ: để chế độ Fill
+            // thì bề rộng phụ thuộc cách WinForms chia lại phần trăm, icon bị bóp lại thành chấm.
+            // Cố định bề rộng, nhường toàn bộ phần co giãn cho 2 cột chữ.
+            colActMark.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            colActMark.Width = 54;   // 16 lề + 22 icon + 16 lề
+            colActDesc.FillWeight = 76F;
+            colActTime.FillWeight = 24F;
+            colActMark.ImageLayout = DataGridViewImageCellLayout.Normal;
+            colActMark.DefaultCellStyle.Padding = new Padding(16, 15, 0, 0);   // icon 22px canh giữa dòng 52px
+            colActTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            colActTime.DefaultCellStyle.Padding = new Padding(0, 0, 16, 0);
+            colActDesc.DefaultCellStyle.ForeColor = Theme.TextMid;
         }
 
         private void WireEvents()
         {
+            // Hàng 3 thẻ số liệu là 3 Panel trơn (không phải GroupBox) — vạch chia do handler này vẽ,
+            // nhờ vậy không phải thêm cột/khung vào pnlThongKe (Tests §3e đòi ColumnCount == 3).
+            pnlThongKe.Paint += PnlThongKe_Paint;
             btnScanNow.Click += BtnScanNow_Click;
             btnQuetNangCao.Click += BtnQuetNangCao_Click;
             btnXemChiTiet.Click += delegate { MoChiTietKetQua(); };
@@ -237,7 +303,7 @@ namespace ScanAndRemoveVirus.Control
             // Tổng quan; (a)/(b)/(c) giữ nguyên ngưỡng 980 như trước.
             CapNhatRongToiThieu(view == TongQuanView.QuetNangCao ? RongToiThieuTrangNangCao : RongToiThieu);
             // Chiều cao hàng của tableLayoutPanel12 (6 hàng, đúng số của Designer):
-            // 0=hero (a)/(b) 164 (đủ cho khiên 72 + 3 dòng chữ + hàng 2 nút quét) · 1=3 thẻ số liệu 104
+            // 0=hero (a)/(b) 320 (khiên lớn 140 + tiêu đề + mô tả + hàng 2 nút quét, canh giữa) · 1=3 thẻ số liệu 104
             // 2=bảng đe dọa 400 (CHỈ ở trạng thái (b); (a) hạ hàng về 0 + ẩn)
             // 3="Hoạt động gần đây" 400 ở (a) / 0 ở (b) — (b) nhường chỗ cho bảng đe dọa
             // 4=(c) 620 · 5=(d) 640
@@ -257,6 +323,10 @@ namespace ScanAndRemoveVirus.Control
             else if (view == TongQuanView.ChiTiet) SetRowFill(pnlChiTietKetQua);
             else SetRowFill(pnlQuetNangCao);
 
+            // Đầu trang "Tổng quan" CHỈ thuộc 2 màn Tổng quan: (c) và (d) là màn hình riêng, mỗi màn
+            // có đầu trang của chính nó ("← Quay lại" + tiêu đề lớn), nên đầu trang này phải ẩn hẳn —
+            // nếu không sẽ thấy tiêu đề "Tổng quan" nằm đè lên trên đầu trang của (c)/(d).
+            pnlPageHead.Visible = trangChinh;
             pnlAnToan.Visible = view == TongQuanView.AnToan;
             pnlPhatHienDeDoa.Visible = view == TongQuanView.PhatHienDeDoa;
             // Hàng 3 thẻ số liệu cũng biến mất ở trang (d) "Quét nâng cao" (màn hình riêng, xem SetRowHeight ở trên)
@@ -538,15 +608,18 @@ namespace ScanAndRemoveVirus.Control
         {
             isScanning = scanning;
             btnScanNow.Text = scanning ? "Hủy quét" : "Quét ngay";
-            btnScanNow.Image = scanning ? UiIcons.Stop(13, Color.White) : UiIcons.Play(13, Color.White);
-            Theme.StyleButton(btnScanNow, scanning ? Theme.BtnRole.Cancel : Theme.BtnRole.Primary);
+            btnScanNow.Icon = scanning ? UiIcons.Stop(13, Color.White) : UiIcons.Play(13, Color.White);
+            UiKit.Apply(btnScanNow, scanning ? Theme.BtnRole.Cancel : Theme.BtnRole.Primary);
             // (25/09/2026, lần 4) 2 nút "Quét ngay"/"Quét nâng cao" nay nằm TRONG khối (a) pnlAnToan, nên khi
             // người dùng đang ở trạng thái (b) thì nút "Quét lại" đảm nhiệm luôn vai trò "Hủy quét" —
             // không mất đường hủy phiên quét giữa chừng.
             btnQuetLai.Text = scanning ? "Hủy quét" : "Quét lại";
-            btnQuetLai.Image = scanning ? UiIcons.Stop(13, Color.White) : UiIcons.Refresh(13, Theme.BlueDark);
-            Theme.StyleButton(btnQuetLai, scanning ? Theme.BtnRole.Cancel : Theme.BtnRole.Secondary);
-            // Dòng trạng thái quét nay nằm trong khối (a) pnlAnToan, ngay cạnh 2 nút quét
+            btnQuetLai.Icon = scanning ? UiIcons.Stop(13, Color.White) : UiIcons.Refresh(13, Theme.TextMid);
+            UiKit.Apply(btnQuetLai, scanning ? Theme.BtnRole.Cancel : Theme.BtnRole.Neutral);
+            // Dòng trạng thái quét nay nằm trong khối (a) pnlAnToan, ngay cạnh 2 nút quét. Designer để nó
+            // ẩn ("Sẵn sàng quét" làm bẩn hero canh giữa của mockup); có phiên quét là hiện, và ở lại
+            // cùng kết quả ("Hoàn tất…"/"Đã hủy…") sau khi phiên kết thúc.
+            lblScanProgress.Visible = true;
             lblScanProgress.ForeColor = Theme.Blue;
             if (scanning)
                 lblScanProgress.Text = "Đang quét...";
@@ -871,6 +944,7 @@ namespace ScanAndRemoveVirus.Control
             btnVirusTotal.Enabled = false;
             lblScanProgress.Text = "Đang tính hash + tra cứu VirusTotal...";
             lblScanProgress.ForeColor = Theme.Blue;
+            lblScanProgress.Visible = true;
             try
             {
                 VirusTotalReport report = await Task.Run(() =>
@@ -1037,7 +1111,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 if (h == null) continue;
                 if (shown >= MaxActivityRows) break;
-                dgvActivity.Rows.Add(UiIcons.Dot(12, MauSuKien(h)), MoTaSuKien(h),
+                dgvActivity.Rows.Add(BieuTuongSuKien(h), MoTaSuKien(h),
                     h.Time.ToString("dd/MM/yyyy HH:mm"));
                 shown++;
             }
@@ -1045,6 +1119,19 @@ namespace ScanAndRemoveVirus.Control
                 ? "Chưa có hoạt động nào được ghi trong scanhistory.log."
                 : string.Format("{0} hoạt động gần nhất — mới nhất ở trên.", shown);
             lnkXemLichSu.Visible = shown > 0;
+        }
+
+        /// <summary>
+        /// Icon của một dòng "Hoạt động gần đây". Mockup dùng icon theo loại sự kiện (không phải chấm
+        /// màu) nên mỗi loại có hình riêng; màu vẫn theo <see cref="MauSuKien"/> để giữ tín hiệu cũ.
+        /// </summary>
+        private static Bitmap BieuTuongSuKien(HistoryEntry h)
+        {
+            if (h.Type != null && h.Type.StartsWith("Cập nhật"))
+                return UiIcons.Refresh(22, MauSuKien(h));
+            if (h.Type != null && h.Type.StartsWith("Bảo vệ"))
+                return UiIcons.ShieldOk(22);
+            return UiIcons.Search(22, MauSuKien(h));
         }
 
         private static Color MauSuKien(HistoryEntry h)
@@ -1082,7 +1169,25 @@ namespace ScanAndRemoveVirus.Control
                 ? "Không phát hiện mối đe dọa."
                 : "Không phát hiện mối đe dọa, nhưng bảo vệ thời gian thực đang tắt — hãy bật lại ở tab Bảo vệ.";
             if (currentView == TongQuanView.AnToan)
-                picShield.Image = running ? UiIcons.ShieldOk(72) : UiIcons.AlertCircle(72);
+                picShield.Image = UiIcons.HeroBadge(140, running);
+        }
+
+        /// <summary>
+        /// Vạch chia của hàng 3 thẻ số liệu. Ba thẻ là Panel trơn (không viền) nên pnlThongKe tự vẽ:
+        /// 1 đường ngang trên + 1 dưới, 2 đường dọc ở ranh giới cột — đúng kiểu "dải số liệu" của mockup.
+        /// Vẽ ở đây (không thêm cột/khung vào pnlThongKe) để giữ ColumnCount == 3 như Tests §3e yêu cầu.
+        /// </summary>
+        private void PnlThongKe_Paint(object sender, PaintEventArgs e)
+        {
+            int w = pnlThongKe.ClientSize.Width, h = pnlThongKe.ClientSize.Height;
+            if (w < 6 || h < 6) return;
+            using (var pen = new Pen(Theme.Divider))
+            {
+                e.Graphics.DrawLine(pen, 0, 0, w, 0);
+                e.Graphics.DrawLine(pen, 0, h - 1, w, h - 1);
+                e.Graphics.DrawLine(pen, w / 3, 6, w / 3, h - 7);
+                e.Graphics.DrawLine(pen, (w * 2) / 3, 6, (w * 2) / 3, h - 7);
+            }
         }
 
         // (25/09/2026) Đã bỏ khỏi tab Tổng quan: nút "Kiểm tra cập nhật" + BtnCheckUpdate_Click/MarkDbUpdated

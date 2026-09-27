@@ -36,15 +36,15 @@ namespace ScanAndRemoveVirus.Control
 
         // ---- trạng thái trang (d) ----
         private CheDoQuetNangCao cheDo = CheDoQuetNangCao.FullSystem;
+        // UiRadioCard kế thừa RadioButton nên giữ nguyên Checked/CheckedChanged/phím mũi tên.
         private RadioButton[] theCheDo;
-        private Label[] theCheDoMoTa;
         private bool dangChonTheCheDo;          // chặn chạy lại khi tự đồng bộ trạng thái 4 thẻ chế độ
-        private Label lblCheDoTomTat;
         private Button btnQuayLaiNangCao;
         private TableLayoutPanel pnlNoiDungPhai;
         private Panel pnlFullSystem, pnlFolder, pnlFiles, pnlCustom;
         private Panel pnlLuuY;
-        private Label lblLuuY;
+        private Label lblLuuY;          // tiêu đề "Lưu ý"
+        private Label lblLuuYThan;      // các dòng gạch đầu dòng bên dưới
         private Button btnBatDauQuet;
         private ToolTip tips;
 
@@ -60,20 +60,19 @@ namespace ScanAndRemoveVirus.Control
         private TableLayoutPanel tlpThanNangCao;     // thân: 2 cột (rộng) hay 1 cột xếp dọc (hẹp)
         private TableLayoutPanel pnlCheDoTrai;       // lưới 4 thẻ: dọc (rộng) / 1 hàng ngang / lưới 2x2
         private TableLayoutPanel tlpChanNangCao;
-        private TableLayoutPanel[] oTheCheDo;        // khung từng thẻ (hàng 0 = tiêu đề, hàng 1 = mô tả)
         private bool dangXepBoCuc;                   // chặn đệ quy khi tự xếp lại bố cục
         private bool dangXepDoc;                     // bố cục đang áp: true = thẻ trên / nội dung dưới
         private bool dangTheMotHang;                 // (chỉ khi xếp dọc) true = 4 thẻ 1 hàng, false = lưới 2x2
 
-        private const int RongNhanTomTat = 420;      // bề rộng nhãn "Đang chọn: …" khi đủ chỗ (SPEC §3.4)
-        private const float CaoHeaderRong = 62F;     // hàng header khi 2 cột (nút · tiêu đề · nhãn tóm tắt cùng hàng)
-        private const float CaoHeaderHep = 82F;      // hàng header khi hẹp: 52 (nút + tiêu đề) + 26 (tóm tắt) + lề 4
-        private const float CaoChanRong = 66F;       // hàng chân trang khi 2 cột: hộp "Lưu ý" | nút "Bắt đầu quét"
-        private const float CaoChanHep = 112F;       // hàng chân trang khi hẹp: "Lưu ý" (60) + 6 + nút (42) + lề 4
-        private const float CaoTheDoc = 86F;         // thẻ chế độ khi xếp dọc (như thiết kế cũ)
-        private const float CaoTheNgang = 74F;       // thẻ khi 4 thẻ nằm 1 hàng ngang
-        private const float CaoTheNho = 74F;         // thẻ trong lưới 2x2 (2 hàng = 148)
-        private const float RongCotCheDo = 300F;     // cột trái (4 thẻ xếp dọc) của bố cục 2 cột
+        private const float CaoHeaderRong = 96F;     // hàng header: 28 ("← Quay lại") + 38 (tiêu đề) + mô tả + lề
+        private const float CaoChanRong = 78F;       // hàng chân trang khi 2 cột: hộp "Lưu ý" | nút "Bắt đầu quét"
+        private const float CaoChanHep = 124F;       // hàng chân trang khi hẹp: "Lưu ý" (72) + 6 + nút (42) + lề 4
+        // Thẻ chế độ cao 104px: 1 dòng tiêu đề (22) + 2 dòng mô tả (34) + lề — mockup vẽ
+        // mô tả dài ("Kiểm tra tất cả ổ đĩa và tệp trên máy tính của bạn.") xuống 2 dòng.
+        private const float CaoTheDoc = 104F;        // thẻ chế độ khi xếp dọc
+        private const float CaoTheNgang = 104F;      // thẻ khi 4 thẻ nằm 1 hàng ngang
+        private const float CaoTheNho = 104F;        // thẻ trong lưới 2x2 (2 hàng = 208)
+        private const float RongCotCheDo = 340F;     // cột trái (4 thẻ xếp dọc) của bố cục 2 cột
         private const int NguongHaiCot = 1000;       // >= 1000px: 2 cột — nhỏ hơn: thẻ lên trên, nội dung xuống dưới
         private const int NguongMotHang = 800;       // >= 800px (khi đã xếp dọc): 4 thẻ 1 hàng — nhỏ hơn: lưới 2x2
 
@@ -271,11 +270,10 @@ namespace ScanAndRemoveVirus.Control
                 dangTheMotHang = theMotHang;
                 XepTheCheDo(xepDoc, theMotHang);
                 XepThanTrangNangCao(xepDoc, theMotHang);
-                XepHeaderNangCao(xepDoc);
                 XepChanTrangNangCao(xepDoc);
                 // 3 hàng của root: header · thân (giãn hết phần còn lại) · chân trang — cao theo bố cục đang áp
                 DatHang(tlpTrangNangCao,
-                    new[] { xepDoc ? CaoHeaderHep : CaoHeaderRong, 100F, xepDoc ? CaoChanHep : CaoChanRong },
+                    new[] { CaoHeaderRong, 100F, xepDoc ? CaoChanHep : CaoChanRong },
                     new[] { SizeType.Absolute, SizeType.Percent, SizeType.Absolute });
             }
             finally { dangXepBoCuc = false; }
@@ -287,12 +285,12 @@ namespace ScanAndRemoveVirus.Control
         /// </summary>
         private void XepTheCheDo(bool xepDoc, bool theMotHang)
         {
-            if (pnlCheDoTrai == null || oTheCheDo == null) return;
+            if (pnlCheDoTrai == null || theCheDo == null) return;
             NoiLuoi(pnlCheDoTrai, 4, 5);   // nới tạm đủ chỗ cho mọi vị trí bên dưới
             if (!xepDoc)
             {
                 // 2 cột: 4 thẻ xếp dọc + hàng cuối giãn hết phần còn lại (như thiết kế cũ)
-                for (int i = 0; i < oTheCheDo.Length; i++) DatOViTri(oTheCheDo[i], 0, i, new Padding(0, 0, 0, 8));
+                for (int i = 0; i < theCheDo.Length; i++) DatOViTri(theCheDo[i], 0, i, new Padding(0, 0, 0, 8));
                 DatCot(pnlCheDoTrai, new[] { 100F }, new[] { SizeType.Percent });
                 DatHang(pnlCheDoTrai, new[] { CaoTheDoc, CaoTheDoc, CaoTheDoc, CaoTheDoc, 100F },
                     new[] { SizeType.Absolute, SizeType.Absolute, SizeType.Absolute, SizeType.Absolute, SizeType.Percent });
@@ -300,8 +298,8 @@ namespace ScanAndRemoveVirus.Control
             else if (theMotHang)
             {
                 // 1 hàng ngang: 4 thẻ chia đều bề ngang trên đầu vùng nội dung
-                for (int i = 0; i < oTheCheDo.Length; i++)
-                    DatOViTri(oTheCheDo[i], i, 0, new Padding(0, 0, i == oTheCheDo.Length - 1 ? 0 : 8, 0));
+                for (int i = 0; i < theCheDo.Length; i++)
+                    DatOViTri(theCheDo[i], i, 0, new Padding(0, 0, i == theCheDo.Length - 1 ? 0 : 8, 0));
                 DatCot(pnlCheDoTrai, new[] { 25F, 25F, 25F, 25F },
                     new[] { SizeType.Percent, SizeType.Percent, SizeType.Percent, SizeType.Percent });
                 DatHang(pnlCheDoTrai, new[] { 100F }, new[] { SizeType.Percent });
@@ -309,8 +307,8 @@ namespace ScanAndRemoveVirus.Control
             else
             {
                 // Lưới 2x2: mỗi thẻ ~nửa bề ngang -> tiêu đề + mô tả vẫn đủ chỗ đọc
-                for (int i = 0; i < oTheCheDo.Length; i++)
-                    DatOViTri(oTheCheDo[i], i % 2, i / 2, new Padding(0, 0, i % 2 == 0 ? 8 : 0, 8));
+                for (int i = 0; i < theCheDo.Length; i++)
+                    DatOViTri(theCheDo[i], i % 2, i / 2, new Padding(0, 0, i % 2 == 0 ? 8 : 0, 8));
                 DatCot(pnlCheDoTrai, new[] { 50F, 50F }, new[] { SizeType.Percent, SizeType.Percent });
                 DatHang(pnlCheDoTrai, new[] { CaoTheNho, CaoTheNho }, new[] { SizeType.Absolute, SizeType.Absolute });
             }
@@ -341,40 +339,6 @@ namespace ScanAndRemoveVirus.Control
         private static float CaoHangThe(bool theMotHang)
         {
             return theMotHang ? CaoTheNgang : CaoTheNho * 2F;
-        }
-
-        /// <summary>
-        /// Header: hẹp thì nhãn "Đang chọn: …" xuống hàng dưới và trải hết bề ngang
-        /// (bỏ bề rộng cứng 420px vốn làm tràn chữ khi cửa sổ hẹp).
-        /// </summary>
-        private void XepHeaderNangCao(bool xepDoc)
-        {
-            if (tlpHeaderNangCao == null) return;
-            if (xepDoc)
-            {
-                if (lblCheDoTomTat != null)
-                {
-                    tlpHeaderNangCao.SetColumnSpan(lblCheDoTomTat, 3);
-                    DatOViTri(lblCheDoTomTat, 0, 1, new Padding(0, 0, 0, 4));
-                    if (lblCheDoTomTat.Dock != DockStyle.Fill) lblCheDoTomTat.Dock = DockStyle.Fill;
-                    if (lblCheDoTomTat.TextAlign != ContentAlignment.MiddleLeft)
-                        lblCheDoTomTat.TextAlign = ContentAlignment.MiddleLeft;
-                }
-                DatHang(tlpHeaderNangCao, new[] { 52F, 26F }, new[] { SizeType.Absolute, SizeType.Absolute });
-            }
-            else
-            {
-                if (lblCheDoTomTat != null)
-                {
-                    tlpHeaderNangCao.SetColumnSpan(lblCheDoTomTat, 1);
-                    DatOViTri(lblCheDoTomTat, 2, 0, new Padding(0));
-                    if (lblCheDoTomTat.Dock != DockStyle.None) lblCheDoTomTat.Dock = DockStyle.None;
-                    if (lblCheDoTomTat.TextAlign != ContentAlignment.MiddleRight)
-                        lblCheDoTomTat.TextAlign = ContentAlignment.MiddleRight;
-                    if (lblCheDoTomTat.Width != RongNhanTomTat) lblCheDoTomTat.Width = RongNhanTomTat;
-                }
-                DatHang(tlpHeaderNangCao, new[] { 100F }, new[] { SizeType.Percent });
-            }
         }
 
         /// <summary>
@@ -447,37 +411,26 @@ namespace ScanAndRemoveVirus.Control
 
         private System.Windows.Forms.Control DungHeaderNangCao()
         {
-            var head = new TableLayoutPanel { ColumnCount = 3, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 4) };
-            head.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 128F));
+            // Một cột: "← Quay lại" · tiêu đề · mô tả. Nhãn "Đang chọn: …" đã bỏ — mockup
+            // không vẽ nó, và số lượng vị trí đã hiện ngay trên tiêu đề từng mục
+            // ("Danh sách thư mục đã chọn (3)", "Vị trí quét (2)").
+            var head = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 4) };
             head.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            head.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             head.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tlpHeaderNangCao = head;
 
-            btnQuayLaiNangCao = Nut("Quay lại", Theme.BtnRole.Secondary, 118, 36);
-            btnQuayLaiNangCao.Dock = DockStyle.Left;
-            btnQuayLaiNangCao.Image = UiIcons.ArrowLeft(14, Theme.BlueDark);
-            btnQuayLaiNangCao.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnQuayLaiNangCao = NutQuayLai("Quay lại");
             btnQuayLaiNangCao.Click += delegate
             {
                 HienThi(dgvActions.Rows.Count > 0 ? TongQuanView.PhatHienDeDoa : TongQuanView.AnToan);
             };
 
-            var text = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0) };
-            text.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            text.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            text.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            text.Controls.Add(NhanNangCao("Quét nâng cao", Theme.PageTitleFont, Theme.TextDark, ContentAlignment.MiddleLeft), 0, 0);
-            text.Controls.Add(NhanNangCao("Chọn chế độ quét phù hợp với nhu cầu của bạn để kiểm tra và phát hiện các mối đe dọa.",
-                Theme.PageSubFont, Theme.TextGray, ContentAlignment.MiddleLeft), 0, 1);
+            var tieuDe = NhanNangCao("Quét nâng cao", Theme.PageTitleFont, Theme.TextDark, ContentAlignment.MiddleLeft);
+            var moTa = NhanNangCao("Chọn chế độ quét phù hợp với nhu cầu của bạn để kiểm tra và phát hiện các mối đe dọa.",
+                Theme.PageSubFont, Theme.TextGray, ContentAlignment.MiddleLeft);
+            var text = DungKhoiTieuDe(btnQuayLaiNangCao, tieuDe, moTa);
 
-            lblCheDoTomTat = NhanNangCao(string.Empty, Theme.SmallFont, Theme.TextMid, ContentAlignment.MiddleRight);
-            lblCheDoTomTat.AutoSize = false;
-            lblCheDoTomTat.Width = RongNhanTomTat;   // bố cục hẹp sẽ chuyển nhãn này xuống hàng riêng (XepHeaderNangCao)
-
-            head.Controls.Add(btnQuayLaiNangCao, 0, 0);
-            head.Controls.Add(text, 1, 0);
-            head.Controls.Add(lblCheDoTomTat, 2, 0);
+            head.Controls.Add(text, 0, 0);
             return head;
         }
 
@@ -493,71 +446,37 @@ namespace ScanAndRemoveVirus.Control
 
             string[] tieuDe = { "Quét toàn bộ hệ thống", "Quét thư mục", "Quét tệp", "Quét tùy chỉnh" };
             string[] moTa = {
-                "Kiểm tra tất cả ổ đĩa và tệp",
-                "Chọn thư mục để quét",
-                "Chọn một hoặc nhiều tệp để quét",
-                "Cấu hình vị trí và loại tệp quét"
+                "Kiểm tra tất cả ổ đĩa và tệp trên máy tính của bạn.",
+                "Chọn thư mục cụ thể để quét.",
+                "Chọn một hoặc nhiều tệp để quét.",
+                "Cấu hình vị trí và loại tệp quét."
+            };
+            Bitmap[] bieuTuong = {
+                UiIcons.Monitor(18, Theme.Blue),
+                UiIcons.Folder(18, Theme.Blue),
+                UiIcons.FileIcon(18, ".txt"),
+                UiIcons.Gear(18, Theme.Blue)
             };
             theCheDo = new RadioButton[4];
-            theCheDoMoTa = new Label[4];
-            oTheCheDo = new TableLayoutPanel[4];
             for (int i = 0; i < 4; i++)
             {
                 CheDoQuetNangCao mode = (CheDoQuetNangCao)i;
-                var o = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 8) };
-                o.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-                o.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
-                o.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-                var rdo = new RadioButton
+                var card = new UiRadioCard
                 {
-                    Text = tieuDe[i], Dock = DockStyle.Fill, Margin = new Padding(0),
+                    Text = tieuDe[i], Desc = moTa[i], Icon = bieuTuong[i],
+                    Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 8),
                     Name = "rdoCheDo" + mode
                 };
                 CheDoQuetNangCao chotMode = mode;
-                RadioButton chotThe = rdo;
-                // 4 thẻ nằm trong 4 container riêng -> WinForms KHÔNG tự bỏ chọn thẻ cũ (radio chỉ loại
-                // trừ trong cùng parent), nên MỌI thay đổi trạng thái đều phải đi qua ChonTheCheDo().
-                rdo.CheckedChanged += delegate(object s, EventArgs ev)
+                // 4 thẻ nay là anh em CÙNG một parent nên RadioButton tự bỏ chọn thẻ cũ; vẫn phải
+                // đi qua ChonTheCheDo() để cột phải và hộp "Lưu ý" đổi theo. Điều hướng bằng phím
+                // mũi tên do RadioButton lo sẵn (ProcessDialogKey) — không cần tự bắt KeyDown nữa.
+                card.CheckedChanged += delegate(object s, EventArgs ev)
                 {
                     if (((RadioButton)s).Checked) ChonTheCheDo(chotMode);
                 };
-                // Bấm vào bất kỳ đâu trên thẻ (dòng tiêu đề hoặc dòng mô tả) cũng chọn thẻ đó.
-                EventHandler chonThe = delegate
-                {
-                    if (chotThe.Enabled && !chotThe.Checked) chotThe.Checked = true;
-                };
-                // Bàn phím: ↑/↓ (và ←/→) đi qua lại giữa 4 thẻ. Mũi tên là "dialog key" nên phải khai
-                // báo IsInputKey ở PreviewKeyDown thì KeyDown mới nhận được.
-                int chiSo = i;
-                rdo.PreviewKeyDown += delegate(object s, PreviewKeyDownEventArgs ev)
-                {
-                    if (ev.KeyCode == Keys.Up || ev.KeyCode == Keys.Down
-                        || ev.KeyCode == Keys.Left || ev.KeyCode == Keys.Right)
-                        ev.IsInputKey = true;
-                };
-                rdo.KeyDown += delegate(object s, KeyEventArgs ev)
-                {
-                    int buoc = (ev.KeyCode == Keys.Up || ev.KeyCode == Keys.Left) ? -1
-                             : (ev.KeyCode == Keys.Down || ev.KeyCode == Keys.Right) ? 1 : 0;
-                    if (buoc == 0 || theCheDo == null) return;
-                    int ke = (chiSo + buoc + theCheDo.Length) % theCheDo.Length;
-                    if (theCheDo[ke] != null && !theCheDo[ke].Checked) theCheDo[ke].Checked = true;
-                    if (theCheDo[ke] != null) theCheDo[ke].Focus();
-                    ev.Handled = true;
-                    ev.SuppressKeyPress = true;
-                };
-                Theme.StyleRadioCard(rdo, false);
-                var sub = NhanNangCao(moTa[i], Theme.SmallFont, Theme.TextGray, ContentAlignment.TopLeft);
-                sub.Padding = new Padding(12, 0, 0, 0);
-                sub.Cursor = Cursors.Hand;
-                sub.Click += chonThe;
-                o.Click += chonThe;
-                o.Controls.Add(rdo, 0, 0);
-                o.Controls.Add(sub, 0, 1);
-                theCheDo[i] = rdo;
-                theCheDoMoTa[i] = sub;
-                oTheCheDo[i] = o;
-                t.Controls.Add(o, 0, i);
+                theCheDo[i] = card;
+                t.Controls.Add(card, 0, i);
             }
             return t;
         }
@@ -571,12 +490,36 @@ namespace ScanAndRemoveVirus.Control
             chan.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tlpChanNangCao = chan;
 
+            // Hộp "Lưu ý" như mockup: icon ⓘ · tiêu đề "Lưu ý" đậm · các dòng gạch đầu dòng.
+            // Trước đây là MỘT Label gộp cả tiêu đề lẫn nội dung nên "Lưu ý:" lẫn vào câu chữ.
             pnlLuuY = new Panel { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 8, 0) };
-            lblLuuY = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, AutoEllipsis = true };
+            var luuYTrong = new TableLayoutPanel { ColumnCount = 2, RowCount = 2, Dock = DockStyle.Fill, Margin = new Padding(0) };
+            luuYTrong.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 26F));
+            luuYTrong.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            luuYTrong.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            luuYTrong.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            var icLuuY = new PictureBox
+            {
+                Image = UiIcons.Info(16, Theme.Blue), SizeMode = PictureBoxSizeMode.CenterImage,
+                Dock = DockStyle.Fill, Margin = new Padding(0)
+            };
+            lblLuuY = new Label
+            {
+                Text = "Lưu ý", Font = Theme.BoldFont, ForeColor = Theme.TextDark,
+                Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(0)
+            };
+            lblLuuYThan = new Label
+            {
+                Font = Theme.SmallFont, ForeColor = Theme.TextMid, Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.TopLeft, Margin = new Padding(0), AutoEllipsis = true
+            };
+            luuYTrong.Controls.Add(icLuuY, 0, 0);
+            luuYTrong.Controls.Add(lblLuuY, 1, 0);
+            luuYTrong.Controls.Add(lblLuuYThan, 1, 1);
             Theme.StyleInfoBox(pnlLuuY, lblLuuY);
-            pnlLuuY.Controls.Add(lblLuuY);
+            pnlLuuY.Controls.Add(luuYTrong);
 
-            btnBatDauQuet = Nut("Bắt đầu quét", Theme.BtnRole.Primary, 176, 42);
+            btnBatDauQuet = Nut("Bắt đầu quét", Theme.BtnRole.Primary, 190, 42);
             btnBatDauQuet.Image = UiIcons.Play(13, Color.White);
             btnBatDauQuet.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnBatDauQuet.Dock = DockStyle.Right;
@@ -1044,10 +987,7 @@ namespace ScanAndRemoveVirus.Control
             if (btnBatDauQuet != null) btnBatDauQuet.Enabled = !scanning;
             if (theCheDo == null) return;
             for (int i = 0; i < theCheDo.Length; i++)
-            {
                 if (theCheDo[i] != null) theCheDo[i].Enabled = !scanning;
-                if (theCheDoMoTa != null && theCheDoMoTa[i] != null) theCheDoMoTa[i].Enabled = !scanning;
-            }
         }
 
         /// <summary>
@@ -1081,15 +1021,9 @@ namespace ScanAndRemoveVirus.Control
             pnlFolder.Visible = mode == CheDoQuetNangCao.Folder;
             pnlFiles.Visible = mode == CheDoQuetNangCao.Files;
             pnlCustom.Visible = mode == CheDoQuetNangCao.Custom;
+            // Thẻ chế độ tự vẽ lại theo Checked (nền xanh nhạt + viền xanh + chấm radio đặc).
             for (int i = 0; i < 4; i++)
-            {
-                bool chon = i == (int)mode;
-                if (theCheDo != null && theCheDo[i] != null) Theme.StyleRadioCard(theCheDo[i], chon);
-                // Tô cả dòng mô tả theo trạng thái chọn -> nhìn là biết ngay đang ở chế độ nào.
-                if (theCheDoMoTa == null || theCheDoMoTa[i] == null) continue;
-                theCheDoMoTa[i].ForeColor = chon ? Theme.BlueDark : Theme.TextGray;
-                theCheDoMoTa[i].BackColor = chon ? Theme.BlueTint : Theme.PageBg;
-            }
+                if (theCheDo != null && theCheDo[i] != null) theCheDo[i].Invalidate();
             CapNhatLuuY();
             CapNhatTrangThaiNutBatDauQuet();
         }
@@ -1097,30 +1031,30 @@ namespace ScanAndRemoveVirus.Control
         /// <summary>Hộp "Lưu ý" đổi câu chữ theo chế độ (README mục d).</summary>
         private void CapNhatLuuY()
         {
-            if (lblLuuY == null) return;
+            if (lblLuuYThan == null) return;
             switch (cheDo)
             {
+                // Chế độ "toàn bộ hệ thống" đã có sẵn hộp thông tin y hệt ở đầu thẻ nội dung
+                // (mockup 1790330256050 vẽ đúng như vậy và chân trang chỉ còn nút "Bắt đầu quét"),
+                // nên giấu hộp "Lưu ý" đi thay vì lặp lại cùng một câu hai lần.
                 case CheDoQuetNangCao.FullSystem:
-                    lblLuuY.Text = "Lưu ý: thời gian quét phụ thuộc vào dung lượng và số lượng tệp.\n"
-                        + "Bạn có thể tiếp tục sử dụng máy tính trong khi quét.";
+                    lblLuuYThan.Text = "• Thời gian quét phụ thuộc vào dung lượng và số lượng tệp.\n"
+                        + "• Bạn có thể tiếp tục sử dụng máy tính trong khi quét.";
                     break;
                 case CheDoQuetNangCao.Folder:
-                    lblLuuY.Text = "Lưu ý: thời gian quét phụ thuộc vào dung lượng và số lượng tệp trong thư mục.\n"
-                        + "Bạn có thể tiếp tục sử dụng máy tính trong khi quét.";
+                    lblLuuYThan.Text = "• Thời gian quét phụ thuộc vào dung lượng và số lượng tệp.\n"
+                        + "• Bạn có thể tiếp tục sử dụng máy tính trong khi quét.";
                     break;
                 case CheDoQuetNangCao.Files:
-                    lblLuuY.Text = "Lưu ý: bạn có thể chọn nhiều tệp cùng lúc để quét (hoặc kéo–thả vào khung).\n"
-                        + "Hỗ trợ các định dạng phổ biến: exe, dll, doc, pdf, zip, rar…";
+                    lblLuuYThan.Text = "• Bạn có thể chọn nhiều tệp cùng lúc để quét.\n"
+                        + "• Hỗ trợ các định dạng tệp phổ biến (exe, dll, doc, pdf, zip, rar, …).";
                     break;
                 default:
-                    lblLuuY.Text = "Lưu ý: bạn có thể thêm nhiều thư mục và tệp cùng lúc để quét.\n"
-                        + "Thời gian quét phụ thuộc vào dung lượng dữ liệu và tùy chọn bạn chọn.";
+                    lblLuuYThan.Text = "• Bạn có thể thêm nhiều thư mục và tệp cùng lúc để quét.\n"
+                        + "• Thời gian quét phụ thuộc vào dung lượng dữ liệu và tùy chọn bạn chọn.";
                     break;
             }
-            if (lblCheDoTomTat != null)
-                lblCheDoTomTat.Text = string.Format("Đang chọn: {0}  ·  {1} vị trí",
-                    theCheDo != null && theCheDo[(int)cheDo] != null ? theCheDo[(int)cheDo].Text : "—",
-                    DemSoViTri());
+            if (pnlLuuY != null) pnlLuuY.Visible = cheDo != CheDoQuetNangCao.FullSystem;
         }
 
         private int DemSoViTri()
