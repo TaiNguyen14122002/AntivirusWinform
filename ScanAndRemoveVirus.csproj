@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Control\ScanActionButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Control\UcBaoVe.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -102,6 +105,7 @@
     <Compile Include="Control\UcTongQuan.Designer.cs">
       <DependentUpon>UcTongQuan.cs</DependentUpon>
     </Compile>
+    <Compile Include="Database\DbConnection.cs" />
     <Compile Include="FrmMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -126,6 +130,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Control\UcCachLy.resx">
       <DependentUpon>UcCachLy.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Control\UcCaiDat.resx">
+      <DependentUpon>UcCaiDat.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Control\UcLichSu.resx">
       <DependentUpon>UcLichSu.cs</DependentUpon>

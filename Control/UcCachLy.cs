@@ -15,7 +15,7 @@ namespace ScanAndRemoveVirus.Control
             BackColor = Theme.PageBg;
             // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung
             Theme.ScrollablePage(this, tableLayoutPanel1, 980, 620);
-            Theme.StylePageHeader(lblQuarantineTitle, lblQuarantineSubtitle);
+            //Theme.StylePageHeader(lblQuarantineTitle, lblQuarantineSubtitle);
             Theme.StyleCard(grpQuarentineList, grpQuarantineInfo);
             // Nút 40px nằm gọn trong hàng công cụ 40px: margin DỌC phải bằng 0, chỉ chừa
             // 8px khe ngang. Đặt (2,8,2,8) như trước thì hàng 40px bị ăn mất 16px và nút

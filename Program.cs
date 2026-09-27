@@ -40,7 +40,15 @@ namespace ScanAndRemoveVirus
             f.Show();
             if (!string.IsNullOrEmpty(view)) f.ShowForShot(view);
             for (int i = 0; i < 40; i++) { Application.DoEvents(); System.Threading.Thread.Sleep(25); }
-            using (var bmp = new System.Drawing.Bitmap(f.ClientSize.Width, f.ClientSize.Height))
+            // ẢNH NGHIỆM THU PHẢI LÀ 24bpp (KHÔNG có kênh alpha):
+            //   • Nền của trang do GDI vẽ (WM_ERASEBKGND) KHÔNG ghi kênh alpha;
+            //   • Thẻ/nút bo góc do GDI+ FillPath vẽ thì ghi alpha=255.
+            // Với bitmap mặc định (32bppArgb) ảnh lưu ra có alpha=0 ở mọi pixel nền nhưng alpha=255
+            // ở trong thẻ -> trình xem ảnh ghép trên nền đen (hoặc công cụ chuyển ảnh) sẽ thấy "vùng
+            // đen" đúng ở 4 góc thẻ bo góc, dù trên màn hình 4 góc đó chỉ là nền trắng/xanh nhạt.
+            // 24bpp ghi đúng màu người dùng nhìn thấy.
+            using (var bmp = new System.Drawing.Bitmap(f.ClientSize.Width, f.ClientSize.Height,
+                       System.Drawing.Imaging.PixelFormat.Format24bppRgb))
             {
                 f.DrawToBitmap(bmp, new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height));
                 bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);

@@ -15,7 +15,11 @@ namespace ScanAndRemoveVirus.Control
     /// </summary>
     public static class UiKit
     {
-        /// <summary>Đường bo góc dùng chung cho mọi control (một nguồn duy nhất).</summary>
+        /// <summary>
+        /// Đường bo góc dùng chung cho MỌI control (một nguồn duy nhất — <c>Theme.RoundedPath</c> và
+        /// <c>UiKit.Fill</c> đều gọi vào đây, không nơi nào tự AddArc).
+        /// radius = bán kính góc (px); radius &lt;= 0 hoặc hình không hợp lệ -> trả về hình chữ nhật.
+        /// </summary>
         public static GraphicsPath Round(Rectangle r, int radius)
         {
             var p = new GraphicsPath();
@@ -92,8 +96,14 @@ namespace ScanAndRemoveVirus.Control
 
         public UiCard()
         {
+            // UiCard là Panel nên trước đây cờ nền trong suốt CHỈ được THỪA HƯỞNG từ lớp cơ sở: bất biến ở
+            // README §1 ("mọi control tự vẽ bo góc phải bật cờ này") và §9d.2 vì thế chỉ đúng nhờ Panel,
+            // không nhờ chính control. Đổi lớp cơ sở (hoặc thêm một Panel cấm nền trong suốt) là
+            // BackColor = Color.Transparent ở dưới ném ArgumentException / 4 góc thẻ thành ĐEN mà không
+            // thấy trước. Bật tường minh cho đồng nhất với 6 control tự vẽ còn lại trong file này.
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
-                   | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+                   | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
+                   | ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
             Padding = new Padding(20, 16, 20, 16);
 
@@ -102,9 +112,13 @@ namespace ScanAndRemoveVirus.Control
             headTitle = new Label { AutoSize = true, Location = new Point(26, 5), Font = Theme.CardHeadFont, ForeColor = Theme.TextDark, BackColor = Color.Transparent };
             headRight = new FlowLayoutPanel
             {
-                Dock = DockStyle.Right, FlowDirection = FlowDirection.RightToLeft,
-                WrapContents = false, AutoSize = true, BackColor = Color.Transparent,
-                Padding = new Padding(0), Margin = new Padding(0)
+                Dock = DockStyle.Right,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                AutoSize = true,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
             };
             header.Controls.Add(headTitle);
             header.Controls.Add(headIcon);
@@ -187,9 +201,19 @@ namespace ScanAndRemoveVirus.Control
                    | ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
             Padding = CardPadding;
-            // KHÔNG đặt Font ở đây: Font của GroupBox là thứ các control con THỪA HƯỞNG
-            // (nhãn trong thẻ "Thông tin bảo vệ" không tự đặt Font). Gán Font tiêu đề lên
-            // đây sẽ biến toàn bộ nội dung thẻ thành đậm — tiêu đề đã có HeadFont riêng.
+            // Font nội dung thẻ = font mà MỌI control con THỪA HƯỞNG (GroupBox truyền Font
+            // xuống con — nhãn trong thẻ "Thông tin bảo vệ" không tự đặt Font). Designer cũ
+            // vẫn gán Font ở đây: 11.25 Bold cho "Các tính năng bảo vệ", 11.25 Regular cho
+            // "Thông tin bảo vệ", 9.75 Bold (tab Cách ly) / 10.125 Bold (tab Cài đặt) cho các
+            // thẻ còn lại — mà InitializeComponent() chạy SAU hàm dựng nên nó LUÔN đè giá trị
+            // của kit: nội dung thẻ to bằng tiêu đề (thậm chí đậm) trong khi mọi nhãn nội dung
+            // khác của app đều là 9.75 Regular (UcCachLy lblInfo1/label1, UcCaiDat 10 nhãn,
+            // UcTongQuan.ChiTiet dùng Theme.FieldFont) và ảnh tham chiếu cũng vẽ nhãn trong
+            // thẻ đúng cỡ chữ của bảng. Nay MỘT nguồn duy nhất: Theme.BodyFont. Designer không
+            // còn được phép gán Font/Padding cho UiGroup (xem Tests/UiEndToEnd.cs §9b).
+            // KHÔNG dùng HeadFont ở đây: tiêu đề đã có HeadFont riêng (OnPaint vẽ), gán font
+            // đậm lên Font của thẻ sẽ làm đậm toàn bộ nội dung.
+            Font = Theme.BodyFont;
         }
 
         /// <summary>
@@ -271,144 +295,451 @@ namespace ScanAndRemoveVirus.Control
     // =====================================================================
     // UiButton — nút bo góc, có biến thể + icon tuỳ chọn (thay Theme.StyleButton cho UI mới)
     // =====================================================================
+
     public class UiButton : Button
     {
         public enum Variant { Primary, Outline, OutlineGray, Danger, Cancel, Ghost }
 
-        public Variant Kind = Variant.Primary;
-        public Bitmap Icon;
-        public int Radius = Theme.RadiusButton;
-        public int IconGap = 8;
+        private Variant _kind = Variant.Primary;
+        private Bitmap _icon;
+        private int _radius = Theme.RadiusButton;
+        private int _iconGap = 8;
+        private bool hover;
+        private bool down;
+        private int regionRadius = -1;
+        private Size regionSize = Size.Empty;
 
-        bool hover, down;
+        public Variant Kind
+        {
+            get { return _kind; }
+            set { _kind = value; Invalidate(); }
+        }
+
+        public Bitmap Icon
+        {
+            get { return _icon; }
+            set { _icon = value; Invalidate(); }
+        }
+
+        public int Radius
+        {
+            get { return _radius; }
+            set
+            {
+                _radius = Math.Max(0, value);
+                UpdateRoundedRegion();
+                Invalidate();
+            }
+        }
+
+        public int IconGap
+        {
+            get { return _iconGap; }
+            set { _iconGap = Math.Max(0, value); Invalidate(); }
+        }
 
         public UiButton()
         {
-            // SupportsTransparentBackColor: Button không hỗ trợ nền trong suốt mặc định,
-            // thiếu cờ này BackColor=Transparent sẽ bị vẽ thành đen.
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
-                   | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
-                   | ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.UserPaint |
+                     ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.ResizeRedraw |
+                     ControlStyles.SupportsTransparentBackColor, true);
+            DoubleBuffered = true;
+            // Không để Windows vẽ viền nổi mặc định bên dưới nút tự vẽ.
             FlatStyle = FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
+            FlatAppearance.CheckedBackColor = Color.Transparent;
+            FlatAppearance.MouseDownBackColor = Color.Transparent;
+            FlatAppearance.MouseOverBackColor = Color.Transparent;
             UseVisualStyleBackColor = false;
+            BackColor = Color.Transparent;
             Font = Theme.ButtonFont;
             Cursor = Cursors.Hand;
-            BackColor = Color.Transparent;
+            Margin = Padding.Empty;
         }
+
+
 
         public UiButton With(string label, Variant kind, Bitmap icon)
         {
-            Text = label; Kind = kind; Icon = icon;
+            Text = label;
+            Kind = kind;
+            Icon = icon;
             return this;
         }
 
-        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
-        protected override void OnMouseLeave(EventArgs e) { hover = false; down = false; Invalidate(); base.OnMouseLeave(e); }
-        protected override void OnMouseDown(MouseEventArgs e) { down = true; Invalidate(); base.OnMouseDown(e); }
-        protected override void OnMouseUp(MouseEventArgs e) { down = false; Invalidate(); base.OnMouseUp(e); }
-
-        void Palette(out Color bg, out Color fg, out Color border)
+        private void UpdateRoundedRegion()
         {
-            if (!Enabled) { bg = Theme.ChipGray; fg = Theme.ChipGrayText; border = Theme.Line; return; }
+            if (Width <= 0 || Height <= 0) return;
+            if (regionSize == Size && regionRadius == _radius) return;
+            using (GraphicsPath path = UiKit.Round(
+                new Rectangle(0, 0, Width - 1, Height - 1), _radius))
+            {
+                Region previous = Region;
+                Region = new Region(path);
+                if (previous != null) previous.Dispose();
+            }
+            regionSize = Size;
+            regionRadius = _radius;
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            UpdateRoundedRegion();
+        }
+
+        protected override void OnParentChanged(EventArgs e)
+        {
+            base.OnParentChanged(e);
+            Invalidate();
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            hover = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            hover = false;
+            down = false;
+            Invalidate();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (e.Button == MouseButtons.Left) down = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            down = false;
+            Invalidate();
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Invalidate();
+        }
+
+        protected override void OnTextChanged(EventArgs e)
+        {
+            base.OnTextChanged(e);
+            Invalidate();
+        }
+
+        private void Palette(out Color bg, out Color fg, out Color border)
+        {
+            if (!Enabled)
+            {
+                bg = Theme.ChipGray;
+                fg = Theme.ChipGrayText;
+                border = Theme.Line;
+                return;
+            }
+
             switch (Kind)
             {
                 case Variant.Primary:
-                    bg = down ? Color.FromArgb(9, 68, 172) : hover ? Color.FromArgb(9, 74, 186) : Theme.Blue;
-                    fg = Color.White; border = bg; break;
+                    bg = down ? Color.FromArgb(9, 68, 172)
+                         : hover ? Color.FromArgb(9, 74, 186) : Theme.Blue;
+                    fg = Color.White;
+                    border = bg;
+                    break;
                 case Variant.Outline:
-                    bg = hover ? Theme.BlueTint : Color.White; fg = Theme.BlueDark;
-                    border = hover ? Theme.Blue : Theme.BlueSoft; break;
+                    bg = hover ? Theme.BlueTint : Color.White;
+                    fg = Theme.BlueDark;
+                    border = hover ? Theme.Blue : Theme.BlueSoft;
+                    break;
                 case Variant.Danger:
-                    bg = hover ? Color.FromArgb(253, 226, 226) : Color.White; fg = Theme.Red;
-                    border = Theme.RedSoft; break;
-                case Variant.Cancel: // nền đỏ đặc — hành động dừng/hủy (tương ứng Theme.BtnRole.Cancel)
-                    bg = down ? Color.FromArgb(176, 28, 28) : hover ? Color.FromArgb(196, 32, 32) : Theme.Red;
-                    fg = Color.White; border = bg; break;
+                    bg = hover ? Color.FromArgb(253, 226, 226) : Color.White;
+                    fg = Theme.Red;
+                    border = Theme.RedSoft;
+                    break;
+                case Variant.Cancel:
+                    bg = down ? Color.FromArgb(176, 28, 28)
+                         : hover ? Color.FromArgb(196, 32, 32) : Theme.Red;
+                    fg = Color.White;
+                    border = bg;
+                    break;
                 case Variant.Ghost:
-                    bg = hover ? Theme.ChipGray : Color.Transparent; fg = Theme.TextMid;
-                    border = Color.Transparent; break;
-                default: // OutlineGray — nút phụ viền xám
-                    bg = hover ? Theme.ChipGray : Color.White; fg = Theme.TextMid;
-                    border = Theme.InputBorder; break;
+                    bg = hover ? Theme.ChipGray : Color.Transparent;
+                    fg = Theme.TextMid;
+                    border = Color.Transparent;
+                    break;
+                default:
+                    bg = hover ? Theme.ChipGray : Color.White;
+                    fg = Theme.TextMid;
+                    border = Theme.InputBorder;
+                    break;
             }
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            // WinForms giả lập trong suốt bằng cách vẽ lại nền cha.
+            // Không tự tô màu trắng: cha có thể là UiCard/Panel trong suốt.
+            base.OnPaintBackground(e);
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            if (Width < 4 || Height < 4) return;
+            UpdateRoundedRegion();
+
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
             Color bg, fg, border;
             Palette(out bg, out fg, out border);
-            UiKit.Fill(e.Graphics, new Rectangle(0, 0, Width, Height), Radius, bg, border, 1f);
 
-            // Bố cục: [icon] khoảng cách [chữ] — cả cụm canh giữa theo chiều ngang
-            Size ts = TextRenderer.MeasureText(Text, Font);
-            int iw = Icon != null ? Icon.Width : 0;
-            int total = ts.Width + (iw > 0 ? iw + IconGap : 0);
-            int x = Math.Max(6, (Width - total) / 2);
-            if (iw > 0)
+            // Vùng vẽ trùng với Region; không chừa dải 1-2 px ở mép phải/dưới.
+            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (GraphicsPath path = UiKit.Round(rect, Radius))
             {
-                e.Graphics.DrawImage(Icon, x, (Height - Icon.Height) / 2, Icon.Width, Icon.Height);
-                x += iw + IconGap;
+                if (bg.A > 0)
+                    using (SolidBrush brush = new SolidBrush(bg))
+                        g.FillPath(brush, path);
+
+                if (border.A > 0)
+                    using (Pen pen = new Pen(border, 1f))
+                    {
+                        pen.Alignment = PenAlignment.Inset;
+                        g.DrawPath(pen, path);
+                    }
             }
-            TextRenderer.DrawText(e.Graphics, Text, Font,
-                new Rectangle(x, 0, Math.Max(0, Width - x - 4), Height), fg,
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding
-                | TextFormatFlags.EndEllipsis);
+
+            string caption = Text ?? string.Empty;
+            Size textSize = TextRenderer.MeasureText(
+                caption, Font, Size.Empty, TextFormatFlags.NoPadding);
+            int iconWidth = Icon == null ? 0 : Icon.Width;
+            int gap = iconWidth == 0 ? 0 : IconGap;
+            int totalWidth = iconWidth + gap + textSize.Width;
+            int x = Math.Max(8, (Width - totalWidth) / 2);
+
+            if (Icon != null)
+            {
+                int y = (Height - Icon.Height) / 2;
+                g.DrawImage(Icon, x, y, Icon.Width, Icon.Height);
+                x += iconWidth + gap;
+            }
+
+            Rectangle textRect = new Rectangle(
+                x, 0, Math.Max(0, Width - x - 8), Height);
+            TextRenderer.DrawText(g, caption, Font, textRect, fg,
+                TextFormatFlags.Left |
+                TextFormatFlags.VerticalCenter |
+                TextFormatFlags.SingleLine |
+                TextFormatFlags.NoPadding |
+                TextFormatFlags.EndEllipsis);
         }
     }
+
 
     // =====================================================================
     // UiNavItem — mục sidebar: icon + nhãn, trạng thái chọn (nền xanh nhạt) / rê chuột
     // =====================================================================
-    public class UiNavItem : Button
-    {
-        public Bitmap Icon;
-        public bool Active;
 
-        bool hover;
+    public class UiNavItem : System.Windows.Forms.Control
+    {
+        private Bitmap _icon;
+        private bool _active;
+        private bool _hover;
+
+        public Bitmap Icon
+        {
+            get { return _icon; }
+            set
+            {
+                _icon = value;
+                Invalidate();
+            }
+        }
+
+        public bool Active
+        {
+            get { return _active; }
+            set
+            {
+                if (_active == value)
+                    return;
+
+                _active = value;
+                Invalidate();
+            }
+        }
 
         public UiNavItem(string text, Bitmap icon)
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
-                   | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
-                   | ControlStyles.SupportsTransparentBackColor, true);
-            FlatStyle = FlatStyle.Flat;
-            FlatAppearance.BorderSize = 0;
-            UseVisualStyleBackColor = false;
-            BackColor = Color.Transparent;
-            Text = text;
+            SetStyle(
+                ControlStyles.UserPaint |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor |
+                ControlStyles.Selectable,
+                true
+            );
+
+            DoubleBuffered = true;
+
+            Text = text ?? string.Empty;
             Icon = icon;
-            Height = 44;
+
+            Size = new Size(200, 44);
+            MinimumSize = new Size(100, 44);
+
+            BackColor = Color.Transparent;
+            ForeColor = Theme.TextMid;
+            Font = Theme.NavFont;
+
             Cursor = Cursors.Hand;
-            Font = new Font("Segoe UI", 10.125F, FontStyle.Regular);
+            TabStop = true;
         }
 
-        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
-        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+
+            _hover = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+
+            _hover = false;
+            Invalidate();
+        }
+
+        protected override void OnTextChanged(EventArgs e)
+        {
+            base.OnTextChanged(e);
+            Invalidate();
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            // Xóa vùng vẽ cũ trước mỗi lần vẽ lại.
+            base.OnPaintBackground(e);
+        }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            Color bg = Active ? Theme.NavActiveBg : hover ? Theme.NavHoverBg : Color.Transparent;
+            if (Width <= 0 || Height <= 0)
+                return;
+
+            Graphics g = e.Graphics;
+
+            g.SmoothingMode =
+                SmoothingMode.AntiAlias;
+
+            g.PixelOffsetMode =
+                PixelOffsetMode.HighQuality;
+
+            // 1. Vẽ nền.
+            Color bg = _active
+                ? Theme.NavActiveBg
+                : _hover
+                    ? Theme.NavHoverBg
+                    : Color.Transparent;
+
             if (bg.A > 0)
-                UiKit.Fill(e.Graphics, new Rectangle(0, 0, Width, Height), Theme.RadiusButton, bg, bg, 0f);
+            {
+                UiKit.Fill(
+                    g,
+                    ClientRectangle,
+                    Theme.RadiusButton,
+                    bg,
+                    bg,
+                    0f
+                );
+            }
 
-            Color fg = Active ? Theme.BlueDark : Theme.TextMid;
-            // Icon đổi màu theo trạng thái: vẽ lại bitmap cùng hình dạng nhưng màu khác
-            Bitmap ico = Icon;
-            if (Icon != null && Active) ico = UiIcons.Recolor(Icon, Theme.Blue);
-            int ix = 14;
-            if (ico != null) e.Graphics.DrawImage(ico, ix, (Height - ico.Height) / 2, ico.Width, ico.Height);
+            // 2. Xác định màu chữ.
+            Color fg = _active
+                ? Theme.BlueDark
+                : Theme.TextMid;
 
-            var font = Active ? new Font(Font, FontStyle.Bold) : Font;
-            TextRenderer.DrawText(e.Graphics, Text, font,
-                new Rectangle(ix + 26, 0, Width - ix - 30, Height), fg,
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding
-                | TextFormatFlags.EndEllipsis);
-            if (font != Font) font.Dispose();
+            // 3. Vẽ biểu tượng.
+            int iconX = 14;
+            int iconSize = 18;
+
+            if (_icon != null)
+            {
+                Bitmap displayIcon = _active
+                    ? UiIcons.Recolor(_icon, Theme.Blue)
+                    : _icon;
+
+                if (displayIcon != null)
+                {
+                    int iconY = (Height - iconSize) / 2;
+
+                    g.DrawImage(
+                        displayIcon,
+                        new Rectangle(
+                            iconX,
+                            iconY,
+                            iconSize,
+                            iconSize
+                        )
+                    );
+                }
+            }
+
+            // 4. Vẽ chữ.
+            int textX = iconX + iconSize + 12;
+
+            Rectangle textRect = new Rectangle(
+                textX,
+                0,
+                Math.Max(0, Width - textX - 10),
+                Height
+            );
+
+            Font displayFont = _active
+                ? Theme.NavBoldFont
+                : Theme.NavFont;
+
+            TextRenderer.DrawText(
+                g,
+                Text,
+                displayFont,
+                textRect,
+                fg,
+                TextFormatFlags.Left |
+                TextFormatFlags.VerticalCenter |
+                TextFormatFlags.SingleLine |
+                TextFormatFlags.NoPadding |
+                TextFormatFlags.EndEllipsis
+            );
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (e.KeyCode == Keys.Enter ||
+                e.KeyCode == Keys.Space)
+            {
+                OnClick(EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
         }
     }
+
 
     // =====================================================================
     // UiRadioCard — thẻ chọn chế độ quét (Quét toàn bộ / thư mục / tệp / tuỳ chỉnh)
@@ -428,64 +759,143 @@ namespace ScanAndRemoveVirus.Control
         public Bitmap Icon;
         public string Desc = "";
 
-        bool hover;
+        private bool hover;
+        private Size lastRegionSize = Size.Empty;
+        private int lastRegionRadius = -1;
+
+        private void UpdateRoundedRegion()
+        {
+            if (Width < 4 || Height < 4) return;
+            int radius = Theme.RadiusCard;
+            if (lastRegionSize == Size && lastRegionRadius == radius) return;
+            // Use the same inset rectangle for both the hit-test region and painting.
+            using (GraphicsPath path = UiKit.Round(
+                new Rectangle(1, 1, Width - 3, Height - 3), radius))
+            {
+                Region previous = Region;
+                Region = new Region(path);
+                if (previous != null) previous.Dispose();
+            }
+            lastRegionSize = Size;
+            lastRegionRadius = radius;
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            UpdateRoundedRegion();
+        }
+
+        protected override void OnParentChanged(EventArgs e)
+        {
+            base.OnParentChanged(e);
+            Invalidate();
+        }
 
         public UiRadioCard()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
-                   | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
-                   | ControlStyles.SupportsTransparentBackColor, true);
-            // Appearance.Normal + FlatStyle.Flat: tắt hết phần vẽ chuẩn của RadioButton.
+            // Giữ RadioButton để không thay đổi Checked, CheckedChanged và điều hướng bàn phím.
+            // Dùng nền ĐỤC: bốn góc ngoài đường bo tròn phải có màu nền thật,
+            // không dựa vào giả lập Transparent của WinForms/RadioButton.
+            SetStyle(ControlStyles.UserPaint |
+                     ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.SupportsTransparentBackColor, false);
+            DoubleBuffered = true;
             Appearance = Appearance.Normal;
             FlatStyle = FlatStyle.Flat;
             UseVisualStyleBackColor = false;
-            BackColor = Color.Transparent;
+            BackColor = Color.White;
             Cursor = Cursors.Hand;
             Font = Theme.BoldFont;
             Height = 104;
+            UpdateRoundedRegion();
         }
 
-        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
-        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
-        protected override void OnCheckedChanged(EventArgs e) { Invalidate(); base.OnCheckedChanged(e); }
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            // Xóa TOÀN BỘ nền control trước khi vẽ hình bo tròn.
+            // Nền của cột chế độ cũng được đặt trắng trong UcTongQuan.QuetNangCao.cs.
+            using (var brush = new SolidBrush(Color.White))
+                e.Graphics.FillRectangle(brush, ClientRectangle);
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            hover = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            hover = false;
+            Invalidate();
+        }
+
+        protected override void OnCheckedChanged(EventArgs e)
+        {
+            base.OnCheckedChanged(e);
+            Invalidate();
+        }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            Color fill = Checked ? Theme.BlueTint : hover ? Color.FromArgb(252, 253, 255) : Color.White;
+            if (Width < 4 || Height < 4) return;
+
+            UpdateRoundedRegion();
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+            Color fill = Checked ? Theme.BlueTint
+                : hover ? Color.FromArgb(252, 253, 255) : Color.White;
             Color border = Checked ? Theme.Blue : Theme.CardBorder;
-            UiKit.Fill(e.Graphics, new Rectangle(0, 0, Width, Height), Theme.RadiusCard,
-                fill, border, Checked ? 1.6f : 1f);
 
-            // Ô icon tròn — cách lề trái 45px như mockup (đo trên Design/179033025*.jpg)
-            int cx = 45 + 17, cy = Height / 2;
-            using (var b = new SolidBrush(Checked ? Theme.BlueFaint : Theme.ChipGray))
-                e.Graphics.FillEllipse(b, cx - 17, cy - 17, 34, 34);
+            // Viền và nền được vẽ cùng một GraphicsPath, nằm trọn trong ClientRectangle.
+            // Region and drawing use exactly the same path.
+            Rectangle rect = new Rectangle(1, 1, Width - 3, Height - 3);
+            using (GraphicsPath path = UiKit.Round(rect, Theme.RadiusCard))
+            {
+                using (var brush = new SolidBrush(fill))
+                    g.FillPath(brush, path);
+                using (var pen = new Pen(border, Checked ? 1.6f : 1f))
+                {
+                    pen.Alignment = PenAlignment.Inset;
+                    g.DrawPath(pen, path);
+                }
+            }
+
+            // Icon tròn và nội dung giữ nguyên tọa độ, kích thước của thiết kế cũ.
+            int cx = 62, cy = Height / 2;
+            using (var brush = new SolidBrush(Checked ? Theme.BlueFaint : Theme.ChipGray))
+                g.FillEllipse(brush, cx - 17, cy - 17, 34, 34);
             if (Icon != null)
-                e.Graphics.DrawImage(Icon, cx - Icon.Width / 2, cy - Icon.Height / 2, Icon.Width, Icon.Height);
+                g.DrawImage(Icon, cx - Icon.Width / 2, cy - Icon.Height / 2,
+                    Icon.Width, Icon.Height);
 
-            // Khối chữ: tiêu đề 1 dòng + mô tả 2 dòng, canh giữa theo chiều dọc
             int tx = 90, textW = Math.Max(0, Width - tx - 46);
             const int caoTieuDe = 22, caoMoTa = 34, khe = 2;
             int top = Math.Max(4, (Height - (caoTieuDe + khe + caoMoTa)) / 2);
-            TextRenderer.DrawText(e.Graphics, Text, Theme.BoldFont,
-                new Rectangle(tx, top, textW, caoTieuDe), Checked ? Theme.BlueDark : Theme.TextDark,
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding
-                | TextFormatFlags.EndEllipsis);
-            // WordBreak: mô tả dài ("Kiểm tra tất cả ổ đĩa và tệp trên máy tính của bạn.")
-            // xuống 2 dòng như mockup — cắt bằng EndEllipsis thì mất nửa câu.
-            TextRenderer.DrawText(e.Graphics, Desc, Theme.SmallFont,
-                new Rectangle(tx, top + caoTieuDe + khe, textW, caoMoTa), Theme.TextGray,
-                TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.WordBreak
-                | TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(g, Text, Theme.BoldFont,
+                new Rectangle(tx, top, textW, caoTieuDe),
+                Checked ? Theme.BlueDark : Theme.TextDark,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
+                TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis);
+            TextRenderer.DrawText(g, Desc, Theme.SmallFont,
+                new Rectangle(tx, top + caoTieuDe + khe, textW, caoMoTa),
+                Theme.TextGray,
+                TextFormatFlags.Left | TextFormatFlags.Top |
+                TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
 
-            // Nút radio — cách lề phải 30px
             int rx = Width - 30, ry = cy;
             using (var pen = new Pen(Checked ? Theme.Blue : Theme.InputBorder, 1.6f))
-                e.Graphics.DrawEllipse(pen, rx - 9, ry - 9, 18, 18);
+                g.DrawEllipse(pen, rx - 9, ry - 9, 18, 18);
             if (Checked)
-                using (var b = new SolidBrush(Theme.Blue))
-                    e.Graphics.FillEllipse(b, rx - 5, ry - 5, 10, 10);
+                using (var brush = new SolidBrush(Theme.Blue))
+                    g.FillEllipse(brush, rx - 5, ry - 5, 10, 10);
         }
     }
 

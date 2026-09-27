@@ -122,6 +122,8 @@ namespace ScanAndRemoveVirus.Control
         public UcTongQuan()
         {
             InitializeComponent();
+
+
             // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung (ngưỡng 980x640; trạng thái (a) cần tối
             // thiểu hero 320 + hàng 3 thẻ số liệu 104 = 424px + lề, phần còn lại là thẻ "Hoạt động gần đây").
             // Riêng trang (d) tự xếp lại theo bề rộng nên HienThi() hạ bề rộng tối thiểu (lần 7).
@@ -140,8 +142,8 @@ namespace ScanAndRemoveVirus.Control
         {
 
             // ===== ĐẦU TRANG (chuẩn chung 5 tab — Tests\UiEndToEnd.cs §9b) =====
-            Theme.StylePageHeader(lblOverviewTitle, lblOverviewSubtitle);
-            lblOverviewSubtitle.Text = "Tình trạng bảo vệ và hoạt động gần đây của máy tính.";
+            //Theme.StylePageHeader(lblOverviewTitle, lblOverviewSubtitle);
+            //lblOverviewSubtitle.Text = "Tình trạng bảo vệ và hoạt động gần đây của máy tính.";
 
             // ===== HERO (a)/(b): khiên lớn canh giữa + 2 nút bo góc =====
             picShield.Image = UiIcons.HeroBadge(140, true);
@@ -165,7 +167,9 @@ namespace ScanAndRemoveVirus.Control
             lblLastScanTitle.Font = Theme.BoldFont;
             lblThreatCount.Font = Theme.StatBigFont;
             lblScannedCount.Font = Theme.StatBigFont;
-            lblLastScanDate.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            // Token chung (trước đây new Font("Segoe UI", 18F, Bold) tại đây: hằng số cỡ chữ nằm rải
+            // ngoài Theme và GDI font tạo ra không bao giờ được giải phóng).
+            lblLastScanDate.Font = Theme.StatValueFont;
             lblThreatText.Font = Theme.SmallFont;
             lblScannedUnit.Font = Theme.SmallFont;
             lblLastScanType.Font = Theme.SmallFont;
@@ -233,6 +237,15 @@ namespace ScanAndRemoveVirus.Control
             colActTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             colActTime.DefaultCellStyle.Padding = new Padding(0, 0, 16, 0);
             colActDesc.DefaultCellStyle.ForeColor = Theme.TextMid;
+
+
+
+
+
+            
+
+
+
         }
 
         private void WireEvents()
@@ -1318,6 +1331,21 @@ namespace ScanAndRemoveVirus.Control
                 Size = host.Size
             };
             ctxQuetNangCao.Items.Add(item);
+        }
+
+        private void pnlPageHead_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void btnScanNow_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnScanNow_Click_2(object sender, EventArgs e)
+        {
+
         }
     }
 }
