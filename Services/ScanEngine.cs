@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using ScanAndRemoveVirus.Database;
 
 namespace ScanAndRemoveVirus.Services
 {
@@ -131,9 +133,12 @@ namespace ScanAndRemoveVirus.Services
             }
         }
 
+        private static readonly ThreatDetectionRepository ThreatRepository = new ThreatDetectionRepository();
+
         public static int CountQuarantined()
         {
-            return Directory.Exists(QuarantineDir) ? Directory.GetFiles(QuarantineDir).Length : 0;
+            try { return ThreatRepository.CountQuarantined(); }
+            catch { return 0; }
         }
 
         public static bool Quarantine(string filePath)
@@ -148,33 +153,92 @@ namespace ScanAndRemoveVirus.Services
             return Quarantine(filePath, reason, out id);
         }
 
-        // Cách ly 1 đe dọa: dời tệp vào Quarantine (đổi tên GUID.qtn) và ghi sổ để khôi phục/xóa sau này.
+        // SQL là nguồn metadata; file vật lý vẫn nằm trong thư mục Quarantine dưới dạng DetectionID.qtn.
         public static bool Quarantine(string filePath, string reason, out string storedId)
         {
             storedId = null;
+            long detectionId = 0;
+            string originalPath = null;
+            string quarantinePath = null;
+            bool moved = false;
+
             try
             {
+                if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) return false;
                 Directory.CreateDirectory(QuarantineDir);
-                string id = Guid.NewGuid().ToString("N") + ".qtn";
-                string dest = Path.Combine(QuarantineDir, id);
-                File.Move(filePath, dest);
-                storedId = id;
-                string name = Path.GetFileName(filePath);
-                string size = new FileInfo(dest).Length.ToString();
-                QuarantineLedger.Record(id, filePath, DateTime.Now, reason ?? "", name, size);
-                Action h = QuarantineChanged;
-                if (h != null) h();
+
+                FileInfo info = new FileInfo(filePath);
+                originalPath = info.FullName;
+                string sha256 = ComputeFileSha256(originalPath);
+
+                detectionId = ThreatRepository.Add(null, null, info.Name, originalPath,
+                    string.IsNullOrWhiteSpace(reason) ? "Không rõ" : reason,
+                    info.Length, null, null, sha256);
+                if (detectionId <= 0) return false;
+
+                quarantinePath = Path.Combine(QuarantineDir, detectionId + ".qtn");
+                if (File.Exists(quarantinePath)) return false;
+
+                File.Move(originalPath, quarantinePath);
+                moved = true;
+
+                if (!ThreatRepository.MarkQuarantined(detectionId, quarantinePath))
+                {
+                    try
+                    {
+                        if (File.Exists(quarantinePath) && !File.Exists(originalPath))
+                        {
+                            File.Move(quarantinePath, originalPath);
+                            moved = false;
+                        }
+                    }
+                    catch { }
+                    return false;
+                }
+
+                storedId = detectionId.ToString();
+                CacheEntry removed;
+                Cache.TryRemove(originalPath, out removed);
+                RaiseQuarantineChanged();
                 return true;
             }
-            catch (Exception)
+            catch
             {
+                if (moved && !string.IsNullOrWhiteSpace(quarantinePath) && !string.IsNullOrWhiteSpace(originalPath))
+                {
+                    try
+                    {
+                        if (File.Exists(quarantinePath) && !File.Exists(originalPath))
+                            File.Move(quarantinePath, originalPath);
+                    }
+                    catch { }
+                }
                 return false;
             }
         }
 
         public static List<QuarantinedItem> ListQuarantined()
         {
-            return QuarantineLedger.ReadAll();
+            var result = new List<QuarantinedItem>();
+            try
+            {
+                DataTable table = ThreatRepository.GetQuarantined();
+                foreach (DataRow row in table.Rows)
+                {
+                    result.Add(new QuarantinedItem
+                    {
+                        Id = Convert.ToString(row["DetectionID"]),
+                        OriginalPath = DbString(row, "OriginalPath"),
+                        Name = DbString(row, "FileName"),
+                        Threat = DbString(row, "ThreatName"),
+                        DetectedTime = row["DetectedAt"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(row["DetectedAt"]),
+                        Size = row["FileSizeBytes"] == DBNull.Value ? null : Convert.ToString(row["FileSizeBytes"]),
+                        QuarantinePath = DbString(row, "QuarantinePath")
+                    });
+                }
+            }
+            catch { }
+            return result;
         }
 
         public class QuarantinedItem
@@ -185,76 +249,101 @@ namespace ScanAndRemoveVirus.Services
             public string Threat { get; set; }
             public DateTime DetectedTime { get; set; }
             public string Size { get; set; }
+            public string QuarantinePath { get; set; }
         }
 
-        /// <summary>Khôi phục: trả tệp về đường dẫn gốc rồi gỡ khỏi sổ. Trả về false nếu tệp đã mất.</summary>
         public static bool RestoreQuarantined(string id)
         {
-            string stored = Path.Combine(QuarantineDir, id);
-            if (!File.Exists(stored)) return false;
-            QuarantinedItem item = null;
-            foreach (var q in QuarantineLedger.ReadAll())
-                if (q.Id == id) { item = q; break; }
+            long detectionId;
+            return long.TryParse(id, out detectionId) && RestoreQuarantined(detectionId);
+        }
+
+        public static bool RestoreQuarantined(long detectionId)
+        {
             try
             {
-                if (item != null && !string.IsNullOrEmpty(item.OriginalPath))
+                DataRow row = ThreatRepository.GetById(detectionId);
+                if (row == null || !string.Equals(DbString(row, "Status"), "Quarantined", StringComparison.OrdinalIgnoreCase)) return false;
+
+                string originalPath = DbString(row, "OriginalPath");
+                string quarantinePath = DbString(row, "QuarantinePath");
+                if (string.IsNullOrWhiteSpace(originalPath) || string.IsNullOrWhiteSpace(quarantinePath) || !File.Exists(quarantinePath)) return false;
+
+                string dir = Path.GetDirectoryName(originalPath);
+                if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
+                string dest = GetAvailableRestorePath(originalPath);
+                File.Move(quarantinePath, dest);
+
+                if (!ThreatRepository.MarkRestored(detectionId))
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(item.OriginalPath));
-                    // Không đè tệp gốc hiện có: thêm hậu tố " (n)"
-                    string dest = item.OriginalPath;
-                    string dir = Path.GetDirectoryName(dest);
-                    string stem = Path.GetFileNameWithoutExtension(dest);
-                    string ext = Path.GetExtension(dest);
-                    int n = 1;
-                    while (File.Exists(dest) && n < 1000)
-                    {
-                        dest = Path.Combine(dir, stem + " (" + n + ")" + ext);
-                        n++;
-                    }
-                    File.Move(stored, dest);
+                    try { if (File.Exists(dest) && !File.Exists(quarantinePath)) File.Move(dest, quarantinePath); } catch { }
+                    return false;
                 }
-                else
-                {
-                    File.Delete(stored);
-                }
-                QuarantineLedger.Remove(id);
-                Action h = QuarantineChanged;
-                if (h != null) h();
+
+                CacheEntry removed;
+                Cache.TryRemove(originalPath, out removed);
+                Cache.TryRemove(dest, out removed);
+                RaiseQuarantineChanged();
                 return true;
             }
-            catch (Exception) { return false; }
+            catch { return false; }
         }
 
-        /// <summary>Xóa vĩnh viễn tệp đang cách ly.</summary>
-        public static bool DeleteQuarantined(string id)
-        {
-            return DeleteQuarantined(id, true);
-        }
-
-        /// <summary>
-        /// Xóa tệp đang cách ly: permanent = true thì xóa vĩnh viễn khỏi đĩa;
-        /// permanent = false thì đưa vào THÙNG RÁC (có thể khôi phục lại được).
-        /// </summary>
+        public static bool DeleteQuarantined(string id) { return DeleteQuarantined(id, true); }
         public static bool DeleteQuarantined(string id, bool permanent)
         {
-            string stored = Path.Combine(QuarantineDir, id);
+            long detectionId;
+            return long.TryParse(id, out detectionId) && DeleteQuarantined(detectionId, permanent);
+        }
+        public static bool DeleteQuarantined(long detectionId) { return DeleteQuarantined(detectionId, true); }
+
+        public static bool DeleteQuarantined(long detectionId, bool permanent)
+        {
             try
             {
-                if (File.Exists(stored))
+                DataRow row = ThreatRepository.GetById(detectionId);
+                if (row == null || !string.Equals(DbString(row, "Status"), "Quarantined", StringComparison.OrdinalIgnoreCase)) return false;
+                string quarantinePath = DbString(row, "QuarantinePath");
+
+                if (!string.IsNullOrWhiteSpace(quarantinePath) && File.Exists(quarantinePath))
                 {
-                    if (permanent)
-                        File.Delete(stored);
-                    else
-                        Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(stored,
-                            Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
-                            Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+                    if (permanent) File.Delete(quarantinePath);
+                    else Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(quarantinePath,
+                        Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                        Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
                 }
-                QuarantineLedger.Remove(id);
-                Action h = QuarantineChanged;
-                if (h != null) h();
+
+                if (!ThreatRepository.MarkDeleted(detectionId)) return false;
+                RaiseQuarantineChanged();
                 return true;
             }
-            catch (Exception) { return false; }
+            catch { return false; }
+        }
+
+        private static string GetAvailableRestorePath(string originalPath)
+        {
+            if (!File.Exists(originalPath)) return originalPath;
+            string dir = Path.GetDirectoryName(originalPath);
+            string stem = Path.GetFileNameWithoutExtension(originalPath);
+            string ext = Path.GetExtension(originalPath);
+            for (int i = 1; i < 1000; i++)
+            {
+                string candidate = Path.Combine(dir, stem + " (" + i + ")" + ext);
+                if (!File.Exists(candidate)) return candidate;
+            }
+            return Path.Combine(dir, stem + "_" + Guid.NewGuid().ToString("N") + ext);
+        }
+
+        private static string DbString(DataRow row, string columnName)
+        {
+            if (row == null || !row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value) return null;
+            return Convert.ToString(row[columnName]);
+        }
+
+        private static void RaiseQuarantineChanged()
+        {
+            Action h = QuarantineChanged;
+            if (h != null) try { h(); } catch { }
         }
 
         // Báo cho UI (tab Tổng quan + tab Cách ly) khi danh sách cách ly thay đổi.
@@ -386,91 +475,229 @@ namespace ScanAndRemoveVirus.Services
 
         private static void RunWorker(ScanState state)
         {
-            // Worker chạy trên ThreadPool: MỌI exception lọt ra ngoài sẽ giết cả app.
-            // Khi hủy giữa chừng, main thread có thể đã CompleteAdding() trong khi worker
-            // đang giữa ScanDirectory -> Work.Add bắn InvalidOperationException: phải nuốt ở đây.
             try
             {
                 foreach (WorkItem item in state.Work.GetConsumingEnumerable(state.Cancellation))
                 {
                     try
                     {
+                        state.Cancellation.ThrowIfCancellationRequested();
+
                         if (item.IsDirectory)
                             ScanDirectory(item.Path, state);
-                        else
+                        else if (item.Files != null)
                             ScanFileChunk(item.Files, state);
                     }
                     catch (OperationCanceledException) { }
-                    catch (InvalidOperationException) { } // CompleteAdding/ODE (ODE là subclass)
+                    catch (InvalidOperationException) { }
+                    catch (UnauthorizedAccessException) { }
+                    catch (IOException) { }
+                    catch (Exception) { }
                     finally
                     {
                         try { state.Completion.Signal(); }
-                        catch (InvalidOperationException) { } // event đã đạt 0 (vừa hủy xong)
+                        catch (InvalidOperationException) { }
                     }
                 }
             }
             catch (OperationCanceledException) { }
-            catch (InvalidOperationException) { } // swallowing ODE: ObjectDisposedException phái sinh từ nó
+            catch (InvalidOperationException) { }
+            catch (Exception) { }
         }
 
+        /// <summary>
+        /// Quét sâu một thư mục. Mỗi thư mục con được đưa trở lại hàng đợi nên
+        /// engine có thể đi xuống không giới hạn số cấp. Lỗi ở một nhánh không
+        /// làm dừng các nhánh còn lại.
+        /// </summary>
         private static void ScanDirectory(string folder, ScanState state)
         {
+            state.Cancellation.ThrowIfCancellationRequested();
+
+            if (string.IsNullOrEmpty(folder)) return;
+
             try
             {
-                var dir = new DirectoryInfo(folder);
-                foreach (var sub in dir.EnumerateDirectories())
-                {
-                    if ((sub.Attributes & FileAttributes.ReparsePoint) != 0) continue; // bỏ junction, tránh lặp vô hạn
-                    // Check hủy TRƯỚC khi nhận việc mới: giảm cửa sổ race với CompleteAdding()
-                    state.Cancellation.ThrowIfCancellationRequested();
-                    state.Completion.AddCount();
-                    state.Work.Add(new WorkItem { Path = sub.FullName, IsDirectory = true });
-                }
+                if (!Directory.Exists(folder)) return;
+            }
+            catch (Exception)
+            {
+                return;
+            }
 
-                // DirectoryInfo nạp WIN32_FIND_DATA thẳng vào FileInfo:
-                // Name/Length/LastWriteTime/Attributes không tốn thêm syscall.
-                FileInfo[] chunk = null;
-                int chunkFill = 0;
-                foreach (FileInfo file in dir.EnumerateFiles())
+            // 1) Tìm và xếp hàng các thư mục con.
+            // Tách riêng khỏi phần liệt kê file để lỗi ở một phần không làm bỏ phần kia.
+            try
+            {
+                foreach (string subDirectory in Directory.EnumerateDirectories(folder))
                 {
                     state.Cancellation.ThrowIfCancellationRequested();
-                    if (chunk == null) chunk = new FileInfo[FileChunkSize];
-                    chunk[chunkFill++] = file;
-                    if (chunkFill == FileChunkSize)
+
+                    try
                     {
+                        FileAttributes attributes = File.GetAttributes(subDirectory);
+
+                        // Bỏ junction/symbolic link để tránh vòng lặp vô hạn.
+                        if ((attributes & FileAttributes.ReparsePoint) != 0)
+                            continue;
+
                         state.Completion.AddCount();
-                        state.Work.Add(new WorkItem { Files = chunk });
-                        chunk = null;
-                        chunkFill = 0;
+                        try
+                        {
+                            state.Work.Add(new WorkItem
+                            {
+                                Path = subDirectory,
+                                IsDirectory = true
+                            }, state.Cancellation);
+                        }
+                        catch
+                        {
+                            // AddCount đã tăng nhưng Work.Add thất bại -> phải trả count lại.
+                            try { state.Completion.Signal(); }
+                            catch (InvalidOperationException) { }
+                            throw;
+                        }
                     }
-                }
-                if (chunkFill > 0)
-                {
-                    if (chunkFill < FileChunkSize) Array.Resize(ref chunk, chunkFill);
-                    state.Completion.AddCount();
-                    state.Work.Add(new WorkItem { Files = chunk });
+                    catch (OperationCanceledException) { throw; }
+                    catch (UnauthorizedAccessException) { }
+                    catch (IOException) { }
+                    catch (Exception) { }
                 }
             }
             catch (OperationCanceledException) { throw; }
             catch (UnauthorizedAccessException) { }
             catch (IOException) { }
+            catch (Exception) { }
+
+            // 2) Liệt kê file trong chính thư mục hiện tại và chia thành từng chunk.
+            try
+            {
+                var chunk = new List<FileInfo>(FileChunkSize);
+
+                foreach (string filePath in Directory.EnumerateFiles(folder))
+                {
+                    state.Cancellation.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        chunk.Add(new FileInfo(filePath));
+
+                        if (chunk.Count >= FileChunkSize)
+                        {
+                            QueueFileChunk(chunk, state);
+                            chunk = new List<FileInfo>(FileChunkSize);
+                        }
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (UnauthorizedAccessException) { }
+                    catch (IOException) { }
+                    catch (Exception) { }
+                }
+
+                if (chunk.Count > 0)
+                    QueueFileChunk(chunk, state);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (UnauthorizedAccessException) { }
+            catch (IOException) { }
+            catch (Exception) { }
+        }
+
+        /// <summary>
+        /// Đưa một nhóm file vào hàng đợi quét. Nếu thêm thất bại thì hoàn lại
+        /// CountdownEvent để phiên quét không bị chờ vô hạn.
+        /// </summary>
+        private static void QueueFileChunk(List<FileInfo> files, ScanState state)
+        {
+            if (files == null || files.Count == 0) return;
+
+            state.Cancellation.ThrowIfCancellationRequested();
+
+            FileInfo[] array = files.ToArray();
+            state.Completion.AddCount();
+
+            try
+            {
+                state.Work.Add(new WorkItem
+                {
+                    Files = array,
+                    IsDirectory = false
+                }, state.Cancellation);
+            }
+            catch
+            {
+                try { state.Completion.Signal(); }
+                catch (InvalidOperationException) { }
+                throw;
+            }
         }
 
         private static void ScanFileChunk(FileInfo[] files, ScanState state)
         {
+            if (files == null) return;
+
             for (int i = 0; i < files.Length; i++)
-                InspectOneFile(files[i], state);
+            {
+                state.Cancellation.ThrowIfCancellationRequested();
+
+                FileInfo file = files[i];
+                if (file == null) continue;
+
+                try
+                {
+                    InspectOneFile(file, state);
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (UnauthorizedAccessException) { }
+                catch (IOException) { }
+                catch (Exception) { }
+            }
         }
 
         private static void InspectOneFile(FileInfo file, ScanState state)
         {
             state.Cancellation.ThrowIfCancellationRequested();
-            string kind, reason;
-            if (Evaluate(file, out kind, out reason))
-                state.Threats.Enqueue(new ThreatFound { FilePath = file.FullName, Kind = kind, Reason = reason });
-            int scanned = Interlocked.Increment(ref state.Scanned);
-            if (state.Progress != null && scanned % ProgressEveryNFiles == 0)
-                state.Progress(scanned, file.Name);
+            if (file == null) return;
+
+            string fullPath;
+            try
+            {
+                fullPath = file.FullName;
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            try
+            {
+                string kind, reason;
+                if (Evaluate(file, out kind, out reason))
+                {
+                    state.Threats.Enqueue(new ThreatFound
+                    {
+                        FilePath = fullPath,
+                        Kind = kind,
+                        Reason = reason
+                    });
+                }
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception)
+            {
+                // Một file lỗi không được làm dừng phần còn lại của chunk.
+            }
+            finally
+            {
+                // File đã được engine thử xử lý, kể cả khi file bị khóa/lỗi đọc.
+                int scanned = Interlocked.Increment(ref state.Scanned);
+
+                if (state.Progress != null && scanned % ProgressEveryNFiles == 0)
+                {
+                    try { state.Progress(scanned, Path.GetFileName(fullPath)); }
+                    catch (Exception) { }
+                }
+            }
         }
 
         /// <summary>

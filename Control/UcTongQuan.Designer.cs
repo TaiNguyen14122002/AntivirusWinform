@@ -153,6 +153,7 @@ namespace ScanAndRemoveVirus.Control
             this.btnScanNow.TabIndex = 0;
             this.btnScanNow.Text = "Quét ngay";
             this.btnScanNow.UseVisualStyleBackColor = false;
+            this.btnScanNow.Click += new System.EventHandler(this.btnScanNow_Click_3);
             // 
             // btnQuetNangCao
             // 

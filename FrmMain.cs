@@ -58,6 +58,11 @@ namespace ScanAndRemoveVirus
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
 
+            var repo = new VirusSignatureRepository();
+            long total = repo.CountActive();
+            MessageBox.Show(
+                "SQL Server dang co " + total + " chu ky virus.");
+
             // Bật DoubleBuffered cho Form.
             DoubleBuffered = true;
 
@@ -586,6 +591,11 @@ namespace ScanAndRemoveVirus
             {
                 host.ResumeLayout(true);
             }
+        }
+
+        private void pnlContent_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
