@@ -15,7 +15,7 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -106,6 +106,11 @@
       <DependentUpon>UcTongQuan.cs</DependentUpon>
     </Compile>
     <Compile Include="Database\DbConnection.cs" />
+    <Compile Include="Database\ScanHistoryRepository.cs" />
+    <Compile Include="Database\SettingsRepository.cs" />
+    <Compile Include="Database\ThreatDatectionRepository.cs" />
+    <Compile Include="Database\VirusSignature.cs" />
+    <Compile Include="Database\VirusSignatureRepository.cs" />
     <Compile Include="FrmMain.cs">
       <SubType>Form</SubType>
     </Compile>

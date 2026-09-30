@@ -1347,6 +1347,11 @@ namespace ScanAndRemoveVirus.Control
         {
 
         }
+
+        private void btnScanNow_Click_3(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 
