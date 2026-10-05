@@ -82,6 +82,7 @@ namespace ScanAndRemoveVirus.Control
             dgvQuarantine.CellFormatting += Grid_CellFormatting;
 
             ScanEngine.QuarantineChanged += OnQuarantineChanged;
+            BuildSketchQuarantine();
             RefreshData();
         }
 
@@ -137,14 +138,20 @@ namespace ScanAndRemoveVirus.Control
 
                 lblTotalFilesValue.Text = table.Rows.Count.ToString();
                 SyncButtons();
+                SyncSketchQuarantine();
             }
             catch (Exception ex)
             {
                 dgvQuarantine.Rows.Clear();
                 lblTotalFilesValue.Text = "0";
                 SyncButtons();
-                MessageBox.Show("Không thể tải danh sách tệp cách ly từ SQL Server.\n\n" + ex.Message,
-                    "Cách ly", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SyncSketchQuarantine();
+                if (sketchQuarantineStatus != null)
+                {
+                    sketchQuarantineStatus.Text = "Chưa kết nối được cơ sở dữ liệu. Nhấn Làm mới sau khi kiểm tra kết nối SQL Server.";
+                    sketchQuarantineStatus.ForeColor = Theme.Amber;
+                }
+                System.Diagnostics.Debug.WriteLine(ex);
             }
         }
 

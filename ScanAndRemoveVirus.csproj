@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -9,6 +9,7 @@
     <RootNamespace>ScanAndRemoveVirus</RootNamespace>
     <AssemblyName>ScanAndRemoveVirus</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>7.3</LangVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <PreferNativeArm64>true</PreferNativeArm64>
@@ -77,6 +78,14 @@
       <DependentUpon>UcLichSu.cs</DependentUpon>
     </Compile>
     <Compile Include="Control\Theme.cs" />
+    <Compile Include="FrmMain.Sketch20.cs" />
+    <Compile Include="Control\Sketch20Backend.cs" />
+    <Compile Include="Control\Sketch20Kit.cs" />
+    <Compile Include="Control\Sketch20Inputs.cs" />
+    <Compile Include="Control\Sketch20Samples.cs" />
+    <Compile Include="Control\Sketch20View.cs" />
+    <Compile Include="Control\SketchUi.cs" />
+    <Compile Include="Control\UcScreens.Sketch.cs" />
     <Compile Include="Control\UiIcons.cs" />
     <Compile Include="Control\UiKit.cs" />
     <Compile Include="Control\LoadingSpinner.cs">
@@ -96,12 +105,10 @@
              Control\UcTongQuan.cs + Control\UcTongQuan.Designer.cs + UcTongQuan.resx
              (giong 4 UserControl/UcBaoVe, UcCachLy, UcLichSu, UcCaiDat dang chay tot).
          Designer cua trang chi mo tu Control\UcTongQuan.cs. -->
-    <Compile Include="Control\UcTongQuan.ChiTiet.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Control\UcTongQuan.QuetNangCao.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Control\UcTongQuan.Dashboard.cs" />
+    <Compile Include="Control\UcTongQuan.SketchDetails.cs" />
+    <Compile Include="Control\UcTongQuan.ChiTiet.cs" />
+    <Compile Include="Control\UcTongQuan.QuetNangCao.cs" />
     <Compile Include="Control\UcTongQuan.Designer.cs">
       <DependentUpon>UcTongQuan.cs</DependentUpon>
     </Compile>

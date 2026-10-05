@@ -112,6 +112,7 @@ namespace ScanAndRemoveVirus.Control
             RealTimeProtection.ThreatDetected += OnThreatDetected;
             GuardService.ThreatDetected += OnThreatDetected;
             FeatureFlags.Changed += OnFlagsChanged;
+            BuildSketchProtection();
             SyncRealFeaturesUi();
             SyncProtectionStats();
         }
@@ -163,6 +164,7 @@ namespace ScanAndRemoveVirus.Control
 
             lblScannedFilesValue.Text = ScanHistoryStore.TotalFilesScanned().ToString("N0");
             lblBlockedThreaetsValue.Text = ScanHistoryStore.TotalThreatsDetected().ToString("N0");
+            SyncSketchProtection();
         }
 
         // Mở lại tab -> refresh (số liệu có thể đổi do quét/RT ở tab khác)
@@ -205,6 +207,7 @@ namespace ScanAndRemoveVirus.Control
                 if (string.IsNullOrEmpty(key)) continue;
                 SetFeatureState(row, IsOn(key));
             }
+            SyncSketchProtection();
         }
 
         private void SetFeatureState(DataGridViewRow row, bool on)

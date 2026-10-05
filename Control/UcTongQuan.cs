@@ -73,11 +73,11 @@ namespace ScanAndRemoveVirus.Control
         private int lastScannedFiles;
         private int detailRowIndex = -1;    // dòng đang chọn ở trang (c)
         private const int MaxActivityRows = 100;   // trần số dòng nạp vào bảng "Hoạt động gần đây"
-        private const float HeroHeight = 320F;     // hàng hero (a)/(b) của tableLayoutPanel12: panel 316 + 2 lề 2px
-        private const float ThongKeHeight = 104F;  // hàng 3 thẻ số liệu của tableLayoutPanel12: panel 100 + 2 lề 2px (chỉ ở (a)/(b))
+        private const float HeroHeight = 252F;     // hàng hero (a)/(b) của tableLayoutPanel12: panel 316 + 2 lề 2px
+        private const float ThongKeHeight = 152F;  // hàng 3 thẻ số liệu của tableLayoutPanel12: panel 100 + 2 lề 2px (chỉ ở (a)/(b))
         private const float LoadingHeight = 46F;   // hàng 0 của tableLayoutPanel11 — dải loading quét (lần 9): panel 46px khi quét, 0px khi rảnh
-        private const int RongToiThieu = 980;      // (Theme.ScrollablePage) bề rộng tối thiểu vùng Tổng quan ở (a)/(b)/(c)
-        private const int CaoToiThieu = 640;       // chiều cao tối thiểu vùng Tổng quan (mọi màn hình): nhỏ hơn -> cuộn dọc
+        private const int RongToiThieu = 700;      // (Theme.ScrollablePage) bề rộng tối thiểu vùng Tổng quan ở (a)/(b)/(c)
+        private const int CaoToiThieu = 560;       // chiều cao tối thiểu vùng Tổng quan (mọi màn hình): nhỏ hơn -> cuộn dọc
 
         /// <summary>Một dòng đe dọa hiển thị ở (b)/(c) — gộp dữ liệu ScanEngine + VirusTotal.</summary>
         internal sealed class ThreatRow
@@ -127,10 +127,11 @@ namespace ScanAndRemoveVirus.Control
             // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung (ngưỡng 980x640; trạng thái (a) cần tối
             // thiểu hero 320 + hàng 3 thẻ số liệu 104 = 424px + lề, phần còn lại là thẻ "Hoạt động gần đây").
             // Riêng trang (d) tự xếp lại theo bề rộng nên HienThi() hạ bề rộng tối thiểu (lần 7).
-            Theme.ScrollablePage(this, tableLayoutPanel11, RongToiThieu, CaoToiThieu);
+            // Dashboard tự tính vùng cuộn từ màn hình đang mở, bỏ qua các trang ẩn.
             ApplyTheme();
             BuildChiTietView();       // ruột trang (c) — UcTongQuan.ChiTiet.cs
             BuildQuetNangCaoView();   // ruột trang (d) — UcTongQuan.QuetNangCao.cs
+            BuildDashboard();
             WireEvents();
             HienThi(TongQuanView.AnToan, false);
             LoadProtectionStatus();
@@ -252,7 +253,7 @@ namespace ScanAndRemoveVirus.Control
         {
             // Hàng 3 thẻ số liệu là 3 Panel trơn (không phải GroupBox) — vạch chia do handler này vẽ,
             // nhờ vậy không phải thêm cột/khung vào pnlThongKe (Tests §3e đòi ColumnCount == 3).
-            pnlThongKe.Paint += PnlThongKe_Paint;
+            // Ba thẻ dashboard có viền riêng; không vẽ dải phân cách cũ.
             btnScanNow.Click += BtnScanNow_Click;
             btnQuetNangCao.Click += BtnQuetNangCao_Click;
             btnXemChiTiet.Click += delegate { MoChiTietKetQua(); };
@@ -293,6 +294,7 @@ namespace ScanAndRemoveVirus.Control
                 if (e.RowIndex >= 0) MoChiTietKetQua(e.RowIndex);
             };
             RealTimeProtection.StatusChanged += OnRealTimeStatus;
+            Disposed += delegate { RealTimeProtection.StatusChanged -= OnRealTimeStatus; };
         }
 
         // ================= ĐIỀU HƯỚNG GIỮA 4 MÀN HÌNH (a/b/c/d) =================
@@ -351,6 +353,7 @@ namespace ScanAndRemoveVirus.Control
             pnlQuetNangCao.Visible = view == TongQuanView.QuetNangCao;
             if (view == TongQuanView.QuetNangCao) OnMoTrangQuetNangCao();
 
+            UpdateDashboardExtent();
             if (!refresh) return;
             ApplyLastScanFromHistory();
             LoadActivity();
@@ -571,8 +574,8 @@ namespace ScanAndRemoveVirus.Control
                 result.FilesScanned, result.Duration.TotalSeconds);
             lblScanProgress.ForeColor = result.HasThreats ? Theme.Amber : Theme.Green;
 
-            lblLastScanDate.Text = lastScanTime.ToString("dd/MM/yyyy  HH:mm");
-            lblLastScanType.Text = job.DisplayName;
+            lblLastScanDate.Text = lastScanTime.ToString("dd/MM/yyyy");
+            lblLastScanType.Text = lastScanTime.ToString("HH:mm") + " · " + job.DisplayName;
 
             LoadDetectedThreats(result);   // đổ vào dgvActions + threatRows (có lọc nếu quét từ (d))
             // Quét xong -> luôn rẽ nhánh về trạng thái (a) hoặc (b) (SPEC §6.1/§6.2)
@@ -633,13 +636,14 @@ namespace ScanAndRemoveVirus.Control
             // ẩn ("Sẵn sàng quét" làm bẩn hero canh giữa của mockup); có phiên quét là hiện, và ở lại
             // cùng kết quả ("Hoàn tất…"/"Đã hủy…") sau khi phiên kết thúc.
             lblScanProgress.Visible = true;
-            lblScanProgress.ForeColor = Theme.Blue;
+            if (scanning) lblScanProgress.ForeColor = Theme.Blue;
             if (scanning)
                 lblScanProgress.Text = "Đang quét...";
             // (25/09/2026, lần 9) Dải loading quét: hiện NGAY khi phiên bắt đầu, ẩn khi phiên kết thúc
             // (xong / hủy / lỗi — `SetScanning(false)` nằm trong `finally` của ChayPhienQuet).
             HienThiDaiLoading(scanning);
             OnSetScanningAdvanced(scanning);
+            UpdateDashboardExtent();
         }
 
         // ================= DẢI LOADING QUÉT (25/09/2026, lần 9) =================
@@ -1101,13 +1105,15 @@ namespace ScanAndRemoveVirus.Control
             HistoryEntry e = ScanHistoryStore.LatestOfType("Quét");
             if (e == null)
             {
-                lblLastScanDate.Text = "Chưa có phiên quét nào";
-                lblLastScanType.Text = "—";
+                // Giữ kết quả phiên hiện tại khi SQL chưa lưu được lịch sử.
+                if (lastScanTime != DateTime.MinValue) return;
+                lblLastScanDate.Text = "Chưa quét";
+                lblLastScanType.Text = "Bắt đầu một phiên quét mới";
             }
             else
             {
-                lblLastScanDate.Text = e.Time.ToString("dd/MM/yyyy  HH:mm");
-                lblLastScanType.Text = e.Type;
+                lblLastScanDate.Text = e.Time.ToString("dd/MM/yyyy");
+                lblLastScanType.Text = e.Time.ToString("HH:mm") + " · " + e.Type;
                 // "Tệp đã quét" cũng khôi phục theo phiên gần nhất (0 lúc mới mở app là dữ liệu mẫu)
                 lblScannedCount.Text = e.Files.ToString("N0");
                 lastScannedFiles = e.Files;
@@ -1118,6 +1124,13 @@ namespace ScanAndRemoveVirus.Control
         private void LoadActivity()
         {
             List<HistoryEntry> all = ScanHistoryStore.Entries();
+            if (all.Count == 0 && lastResult != null && lastScanTime != DateTime.MinValue)
+                all.Add(new HistoryEntry
+                {
+                    Time = lastScanTime, Type = lastJob == null ? "Quét" : lastJob.DisplayName,
+                    Scope = lastJob == null ? "" : lastJob.ScopeText, Files = lastScannedFiles,
+                    Threats = lastResult.Threats.Count, Seconds = lastResult.Duration.TotalSeconds
+                });
             dgvActivity.Rows.Clear();
             int shown = 0;
             foreach (HistoryEntry h in all)
@@ -1132,6 +1145,7 @@ namespace ScanAndRemoveVirus.Control
                 ? "Chưa có hoạt động nào được ghi trong scanhistory.log."
                 : string.Format("{0} hoạt động gần nhất — mới nhất ở trên.", shown);
             lnkXemLichSu.Visible = shown > 0;
+            SyncDashboardActivity(shown);
         }
 
         /// <summary>
@@ -1181,8 +1195,7 @@ namespace ScanAndRemoveVirus.Control
             lblAnToanSub.Text = running
                 ? "Không phát hiện mối đe dọa."
                 : "Không phát hiện mối đe dọa, nhưng bảo vệ thời gian thực đang tắt — hãy bật lại ở tab Bảo vệ.";
-            if (currentView == TongQuanView.AnToan)
-                picShield.Image = UiIcons.HeroBadge(140, running);
+            SyncDashboardProtection(running);
         }
 
         /// <summary>

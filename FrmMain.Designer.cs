@@ -1,4 +1,4 @@
-namespace ScanAndRemoveVirus
+﻿namespace ScanAndRemoveVirus
 {
     partial class FrmMain
     {
@@ -13,6 +13,16 @@ namespace ScanAndRemoveVirus
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                // Các trang ẩn đã được tạo sẵn nhưng không nằm trong Controls của Form.
+                // Giải phóng cả chúng khi đóng ứng dụng.
+                if (ucTongQuan != null) ucTongQuan.Dispose();
+                if (ucBaoVe != null) ucBaoVe.Dispose();
+                if (ucLichSu != null) ucLichSu.Dispose();
+                if (ucCachLy != null) ucCachLy.Dispose();
+                if (ucCaiDat != null) ucCaiDat.Dispose();
+            }
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -54,7 +64,7 @@ namespace ScanAndRemoveVirus
             this.pnlSidebar.Dock = System.Windows.Forms.DockStyle.Left;
             this.pnlSidebar.Location = new System.Drawing.Point(0, 0);
             this.pnlSidebar.Name = "pnlSidebar";
-            this.pnlSidebar.Size = new System.Drawing.Size(250, 829);
+            this.pnlSidebar.Size = new System.Drawing.Size(208, 829);
             this.pnlSidebar.TabIndex = 0;
             // 
             // pnlNavHost
@@ -64,7 +74,7 @@ namespace ScanAndRemoveVirus
             this.pnlNavHost.Location = new System.Drawing.Point(0, 92);
             this.pnlNavHost.Name = "pnlNavHost";
             this.pnlNavHost.Padding = new System.Windows.Forms.Padding(14, 6, 14, 6);
-            this.pnlNavHost.Size = new System.Drawing.Size(250, 621);
+            this.pnlNavHost.Size = new System.Drawing.Size(208, 621);
             this.pnlNavHost.TabIndex = 1;
             // 
             // pnlSidebarBottom
@@ -74,7 +84,7 @@ namespace ScanAndRemoveVirus
             this.pnlSidebarBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlSidebarBottom.Location = new System.Drawing.Point(0, 713);
             this.pnlSidebarBottom.Name = "pnlSidebarBottom";
-            this.pnlSidebarBottom.Size = new System.Drawing.Size(250, 116);
+            this.pnlSidebarBottom.Size = new System.Drawing.Size(208, 116);
             this.pnlSidebarBottom.TabIndex = 2;
             // 
             // lblVersion
@@ -98,7 +108,7 @@ namespace ScanAndRemoveVirus
             this.pnlBrand.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlBrand.Location = new System.Drawing.Point(0, 0);
             this.pnlBrand.Name = "pnlBrand";
-            this.pnlBrand.Size = new System.Drawing.Size(250, 92);
+            this.pnlBrand.Size = new System.Drawing.Size(208, 92);
             this.pnlBrand.TabIndex = 0;
             // 
             // picBrand
@@ -117,7 +127,7 @@ namespace ScanAndRemoveVirus
             this.lblBrandName.BackColor = System.Drawing.Color.Transparent;
             this.lblBrandName.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Bold);
             this.lblBrandName.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(86)))), ((int)(((byte)(216)))));
-            this.lblBrandName.Location = new System.Drawing.Point(66, 24);
+            this.lblBrandName.Location = new System.Drawing.Point(62, 24);
             this.lblBrandName.Name = "lblBrandName";
             this.lblBrandName.Size = new System.Drawing.Size(92, 25);
             this.lblBrandName.TabIndex = 1;
@@ -129,7 +139,7 @@ namespace ScanAndRemoveVirus
             this.lblBrandTag.BackColor = System.Drawing.Color.Transparent;
             this.lblBrandTag.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.lblBrandTag.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(107)))), ((int)(((byte)(114)))), ((int)(((byte)(128)))));
-            this.lblBrandTag.Location = new System.Drawing.Point(67, 51);
+            this.lblBrandTag.Location = new System.Drawing.Point(62, 51);
             this.lblBrandTag.Name = "lblBrandTag";
             this.lblBrandTag.Size = new System.Drawing.Size(132, 13);
             this.lblBrandTag.TabIndex = 2;
@@ -137,9 +147,9 @@ namespace ScanAndRemoveVirus
             // 
             // pnlContent
             // 
-            this.pnlContent.BackColor = System.Drawing.Color.White;
+            this.pnlContent.BackColor = ScanAndRemoveVirus.Control.Theme.DashboardBg;
             this.pnlContent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlContent.Location = new System.Drawing.Point(250, 0);
+            this.pnlContent.Location = new System.Drawing.Point(208, 0);
             this.pnlContent.Name = "pnlContent";
             this.pnlContent.Padding = new System.Windows.Forms.Padding(30, 20, 30, 20);
             this.pnlContent.Size = new System.Drawing.Size(1164, 829);
