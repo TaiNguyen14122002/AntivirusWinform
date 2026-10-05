@@ -29,5 +29,9 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.2.0")]
-[assembly: AssemblyFileVersion("1.0.2.0")]
+[assembly: AssemblyVersion("1.0.4.0")]
+[assembly: AssemblyFileVersion("1.0.4.0")]
+
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("sketch20-test")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("typography-test")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("windows-ui-evidence")]

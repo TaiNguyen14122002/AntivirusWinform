@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Reflection;
@@ -16,15 +16,22 @@ namespace ScanAndRemoveVirus.Control
     /// </summary>
     public static class Theme
     {
+        public static readonly Color DashboardBg = Color.FromArgb(244, 247, 251);
+        public static readonly Color DashboardHeroBg = Color.FromArgb(236, 248, 241);
+        public static readonly Color DashboardHeroBorder = Color.FromArgb(207, 232, 219);
+        public static readonly Font DashboardHeroFont = new Font("Segoe UI", 20F, FontStyle.Bold);
+        public static readonly Font DashboardDateFont = new Font("Segoe UI", 17F, FontStyle.Bold);
+        public static readonly Font DashboardCaptionFont = new Font("Segoe UI", 8.25F, FontStyle.Bold);
+
         // ---- Brand blue scale (#0A56D8) ----
-        public static readonly Color Blue = Color.FromArgb(10, 86, 216);        // primary
-        public static readonly Color BlueDark = Color.FromArgb(10, 62, 140);    // header text / brand title
+        public static readonly Color Blue = Color.FromArgb(33, 105, 220);        // primary
+        public static readonly Color BlueDark = Color.FromArgb(33, 105, 220);    // header text / brand title
         public static readonly Color BlueSoft = Color.FromArgb(205, 224, 250);  // border / hover
-        public static readonly Color BlueFaint = Color.FromArgb(232, 241, 252); // sidebar idle / grid header bg
+        public static readonly Color BlueFaint = Color.FromArgb(234, 242, 255); // sidebar idle / grid header bg
         public static readonly Color BlueTint = Color.FromArgb(240, 246, 254);  // chip nền xanh nhạt
 
         // ---- Trạng thái ----
-        public static readonly Color Green = Color.FromArgb(22, 163, 74);
+        public static readonly Color Green = Color.FromArgb(22, 115, 76);
         public static readonly Color Red = Color.FromArgb(220, 38, 38);
         public static readonly Color RedText = Color.FromArgb(185, 28, 28);
         public static readonly Color RedSoft = Color.FromArgb(252, 210, 210);
@@ -40,10 +47,10 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color WarningLow = Color.FromArgb(241, 196, 15);    // badge "Thấp"
 
         // ---- Trung tính ----
-        public static readonly Color TextDark = Color.FromArgb(31, 41, 55);
+        public static readonly Color TextDark = Color.FromArgb(24, 40, 62);
         public static readonly Color TextMid = Color.FromArgb(55, 65, 81);
-        public static readonly Color TextGray = Color.FromArgb(107, 114, 128);
-        public static readonly Color Line = Color.FromArgb(229, 231, 235);
+        public static readonly Color TextGray = Color.FromArgb(101, 117, 139);
+        public static readonly Color Line = Color.FromArgb(227, 234, 243);
         public static readonly Color ChipGray = Color.FromArgb(243, 244, 246);
         // (170,174,180) trên nền ChipGray chỉ đạt ~2:1 — chữ nút bị vô hiệu gần như tàng hình
         // (thấy rõ ở 3 nút "Khôi phục/Khôi phục tất cả/Xóa vĩnh viễn" khi chưa chọn dòng nào).
@@ -496,9 +503,21 @@ namespace ScanAndRemoveVirus.Control
                     errorText, cellStyle, advancedBorderStyle,
                     paintParts & ~(DataGridViewPaintParts.ContentForeground | DataGridViewPaintParts.Focus));
                 int st = state();
-                TextRenderer.DrawText(g, st == 2 ? PickBoxChecked : st == 1 ? PickBoxPartial : PickBoxEmpty,
-                    PickGlyphFont, cellBounds, st == 0 ? TextGray : Blue,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+                var box = new Rectangle(cellBounds.Left + (cellBounds.Width - 14) / 2,
+                    cellBounds.Top + (cellBounds.Height - 14) / 2, 14, 14);
+                using (var brush = new SolidBrush(st == 0 ? Color.White : Blue))
+                    g.FillRectangle(brush, box);
+                using (var pen = new Pen(st == 0 ? TextGray : Blue))
+                    g.DrawRectangle(pen, box);
+                if (st > 0)
+                {
+                    using (var pen = new Pen(Color.White, 1.8F))
+                    {
+                        if (st == 1) g.DrawLine(pen, box.Left + 3, box.Top + 7, box.Right - 3, box.Top + 7);
+                        else g.DrawLines(pen, new[] { new Point(box.Left + 3, box.Top + 7),
+                            new Point(box.Left + 6, box.Top + 10), new Point(box.Left + 11, box.Top + 4) });
+                    }
+                }
             }
         }
 
@@ -731,17 +750,17 @@ namespace ScanAndRemoveVirus.Control
         // =====================================================================
 
         // ---- Nền & viền ----
-        public static readonly Color SidebarBg = Color.FromArgb(248, 250, 252);   // nền sidebar
-        public static readonly Color NavActiveBg = Color.FromArgb(232, 240, 254);  // mục sidebar đang chọn
+        public static readonly Color SidebarBg = Color.FromArgb(250, 251, 253);   // nền sidebar
+        public static readonly Color NavActiveBg = Color.FromArgb(234, 242, 255);  // mục sidebar đang chọn
         public static readonly Color NavHoverBg = Color.FromArgb(241, 245, 249);   // mục sidebar rê chuột
-        public static readonly Color CardBorder = Color.FromArgb(229, 231, 235);   // viền card 1px
+        public static readonly Color CardBorder = Color.FromArgb(227, 234, 243);   // viền card 1px
         public static readonly Color Divider = Color.FromArgb(241, 245, 249);      // đường kẻ mảnh trong card
         public static readonly Color InputBg = Color.White;
         public static readonly Color InputBorder = Color.FromArgb(209, 213, 219);
         public static readonly Color HeaderBg = Color.FromArgb(249, 250, 251);     // header bảng
 
         // ---- Bán kính bo góc (một nguồn duy nhất) ----
-        public const int RadiusCard = 10;
+        public const int RadiusCard = 12;
         public const int RadiusButton = 8;
         public const int RadiusInput = 8;
         public const int RadiusPill = 999;   // bo tròn hoàn toàn

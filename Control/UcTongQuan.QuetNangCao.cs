@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.IO;
@@ -40,7 +40,7 @@ namespace ScanAndRemoveVirus.Control
         private RadioButton[] theCheDo;
         private bool dangChonTheCheDo;          // chặn chạy lại khi tự đồng bộ trạng thái 4 thẻ chế độ
         private Button btnQuayLaiNangCao;
-        private TableLayoutPanel pnlNoiDungPhai;
+        private Panel pnlNoiDungPhai;
         private Panel pnlFullSystem, pnlFolder, pnlFiles, pnlCustom;
         private Panel pnlLuuY;
         private Label lblLuuY;          // tiêu đề "Lưu ý"
@@ -61,8 +61,6 @@ namespace ScanAndRemoveVirus.Control
         private TableLayoutPanel pnlCheDoTrai;       // lưới 4 thẻ: dọc (rộng) / 1 hàng ngang / lưới 2x2
         private TableLayoutPanel tlpChanNangCao;
         private bool dangXepBoCuc;                   // chặn đệ quy khi tự xếp lại bố cục
-        private bool dangXepDoc;                     // bố cục đang áp: true = thẻ trên / nội dung dưới
-        private bool dangTheMotHang;                 // (chỉ khi xếp dọc) true = 4 thẻ 1 hàng, false = lưới 2x2
 
         private const float CaoHeaderRong = 96F;     // hàng header: 28 ("← Quay lại") + 38 (tiêu đề) + mô tả + lề
         private const float CaoChanRong = 78F;       // hàng chân trang khi 2 cột: hộp "Lưu ý" | nút "Bắt đầu quét"
@@ -212,75 +210,62 @@ namespace ScanAndRemoveVirus.Control
 
         /// <summary>
         /// Dựng ruột trang (d): header · thân (thẻ chế độ + nội dung) · chân trang ("Lưu ý" + nút).
-        /// Bố cục ở đây là bố cục RỘNG (2 cột) như thiết kế; bố cục hẹp do XepBoCucNangCao() xếp lại
-        /// ngay sau đó và mỗi lần bề rộng vùng trang đổi (resize cửa sổ).
+        /// Bốn thẻ chế độ theo lưới 2x2; vùng phạm vi có đủ chiều cao để xem các lựa chọn.
         /// </summary>
         private void BuildQuetNangCaoView()
         {
-            var root = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, BackColor = Color.White, Name = "tlpQuetNangCao" };
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, CaoHeaderRong));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, CaoChanRong));
+            var root = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Top, Height = 738,
+                BackColor = Theme.DashboardBg, Name = "tlpQuetNangCao", Margin = Padding.Empty };
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 96));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
             tlpTrangNangCao = root;
             root.Controls.Add(DungHeaderNangCao(), 0, 0);
-
-            var body = new TableLayoutPanel { ColumnCount = 2, Dock = DockStyle.Fill, Margin = new Padding(0), BackColor = Color.White, Name = "tlpThanNangCao" };
-            body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, RongCotCheDo));
-            body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            body.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            var body = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill,
+                Margin = Padding.Empty, BackColor = Theme.DashboardBg, Name = "tlpThanNangCao" };
+            body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            body.RowStyles.Add(new RowStyle(SizeType.Absolute, 206));
+            body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             tlpThanNangCao = body;
             body.Controls.Add(DungCotCheDo(), 0, 0);
-
-            pnlNoiDungPhai = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(8, 0, 0, 0), Name = "pnlNoiDungPhai" };
-            pnlNoiDungPhai.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            pnlNoiDungPhai.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            pnlFullSystem = DungFullSystem();
-            pnlFolder = DungFolder();
-            pnlFiles = DungFiles();
-            pnlCustom = DungCustom();
-            pnlNoiDungPhai.Controls.Add(pnlCustom, 0, 0);
-            pnlNoiDungPhai.Controls.Add(pnlFiles, 0, 0);
-            pnlNoiDungPhai.Controls.Add(pnlFolder, 0, 0);
-            pnlNoiDungPhai.Controls.Add(pnlFullSystem, 0, 0);
-            foreach (Panel p in new[] { pnlFullSystem, pnlFolder, pnlFiles, pnlCustom }) p.Visible = false;
-            body.Controls.Add(pnlNoiDungPhai, 1, 0);
+            var scope = SketchUi.Card("advancedScope");
+            scope.Dock = DockStyle.Fill;
+            scope.Padding = new Padding(18);
+            scope.Margin = new Padding(0, 12, 0, 12);
+            pnlNoiDungPhai = new Panel { Dock = DockStyle.Fill,
+                Margin = Padding.Empty, BackColor = Color.White, Name = "pnlNoiDungPhai" };
+            pnlFullSystem = DungFullSystem(); pnlFolder = DungFolder();
+            pnlFiles = DungFiles(); pnlCustom = DungCustom();
+            foreach (Panel panel in new[] { pnlCustom, pnlFiles, pnlFolder, pnlFullSystem })
+            { panel.BackColor = Color.White; pnlNoiDungPhai.Controls.Add(panel); panel.Visible = false; }
+            scope.Controls.Add(pnlNoiDungPhai);
+            body.Controls.Add(scope, 0, 1);
             root.Controls.Add(body, 0, 1);
             root.Controls.Add(DungChanTrang(), 0, 2);
-            // RESPONSIVE (lần 7): bề rộng vùng trang đổi (kéo cửa sổ, hiện/ẩn thanh cuộn) -> xếp lại bố cục
-            pnlQuetNangCao.Resize += delegate { XepBoCucNangCao(); };
-            pnlQuetNangCao.BackColor = Color.White;
+            pnlQuetNangCao.BackColor = Theme.DashboardBg;
+            pnlQuetNangCao.AutoScroll = true;
             pnlQuetNangCao.Controls.Add(root);
-            XepBoCucNangCao();   // áp bố cục đúng với bề rộng hiện tại ngay từ lần dựng đầu
+            pnlQuetNangCao.Resize += delegate { XepBoCucNangCao(); };
+            XepBoCucNangCao();
         }
 
         // ================= RESPONSIVE: XẾP LẠI BỐ CỤC TRANG (d) =================
 
         /// <summary>
-        /// Xếp lại bố cục trang (d) theo bề rộng của pnlQuetNangCao (2 cột / 1 hàng / lưới 2x2).
-        /// Chỉ ghi khi bố cục ĐỔI nên kéo cửa sổ liên tục cũng không giật; mọi thay đổi chỉ là vị trí +
-        /// kích thước ô của TableLayoutPanel, KHÔNG tạo lại control (giữ trạng thái chọn + dữ liệu).
+        /// Giữ lưới chế độ 2x2 và chiều cao tối thiểu theo nội dung từng chế độ.
         /// </summary>
         private void XepBoCucNangCao()
         {
-            if (pnlCheDoTrai == null || tlpThanNangCao == null || tlpTrangNangCao == null || dangXepBoCuc) return;
-            int rong = pnlQuetNangCao == null ? 0 : pnlQuetNangCao.ClientSize.Width;
-            if (rong <= 0) return;                       // trang chưa có bề rộng thật -> lần Resize/Layout sau xếp tiếp
-            bool xepDoc = rong < NguongHaiCot;           // hẹp: thẻ lên trên, nội dung xuống dưới
-            bool theMotHang = rong >= NguongMotHang;     // (chỉ có nghĩa khi xếp dọc) 1 hàng ngang thay vì lưới 2x2
-            if (xepDoc == dangXepDoc && theMotHang == dangTheMotHang) return;
+            if (tlpTrangNangCao == null || dangXepBoCuc) return;
             dangXepBoCuc = true;
             try
             {
-                dangXepDoc = xepDoc;
-                dangTheMotHang = theMotHang;
-                XepTheCheDo(xepDoc, theMotHang);
-                XepThanTrangNangCao(xepDoc, theMotHang);
-                XepChanTrangNangCao(xepDoc);
-                // 3 hàng của root: header · thân (giãn hết phần còn lại) · chân trang — cao theo bố cục đang áp
-                DatHang(tlpTrangNangCao,
-                    new[] { CaoHeaderRong, 100F, xepDoc ? CaoChanHep : CaoChanRong },
-                    new[] { SizeType.Absolute, SizeType.Percent, SizeType.Absolute });
+                // Cùng lưới 2x2 với phác thảo ở mọi kích thước cửa sổ.
+                XepTheCheDo(true, false);
+                XepChanTrangNangCao(false);
+                int minimumHeight = cheDo == CheDoQuetNangCao.Custom ? 942 : 810;
+                tlpTrangNangCao.Height = Math.Max(minimumHeight, pnlQuetNangCao.ClientSize.Height);
             }
             finally { dangXepBoCuc = false; }
         }
@@ -425,14 +410,14 @@ namespace ScanAndRemoveVirus.Control
             head.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tlpHeaderNangCao = head;
 
-            btnQuayLaiNangCao = NutQuayLai("Quay lại");
+            btnQuayLaiNangCao = NutQuayLai("Về Tổng quan");
             btnQuayLaiNangCao.Click += delegate
             {
                 HienThi(dgvActions.Rows.Count > 0 ? TongQuanView.PhatHienDeDoa : TongQuanView.AnToan);
             };
 
             var tieuDe = NhanNangCao("Quét nâng cao", Theme.PageTitleFont, Theme.TextDark, ContentAlignment.MiddleLeft);
-            var moTa = NhanNangCao("Chọn chế độ quét phù hợp với nhu cầu của bạn để kiểm tra và phát hiện các mối đe dọa.",
+            var moTa = NhanNangCao("Chọn chế độ và phạm vi quét.",
                 Theme.PageSubFont, Theme.TextGray, ContentAlignment.MiddleLeft);
             var text = DungKhoiTieuDe(btnQuayLaiNangCao, tieuDe, moTa);
 
@@ -444,7 +429,7 @@ namespace ScanAndRemoveVirus.Control
         private System.Windows.Forms.Control DungCotCheDo()
         {
             
-            var t = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0), BackColor = Color.White, Name = "pnlCheDoTrai" };
+            var t = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Margin = new Padding(0), BackColor = Theme.DashboardBg, Name = "pnlCheDoTrai" };
             t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             t.RowCount = 5;
             for (int i = 0; i < 4; i++) t.RowStyles.Add(new RowStyle(SizeType.Absolute, CaoTheDoc));
@@ -632,7 +617,8 @@ namespace ScanAndRemoveVirus.Control
         {
             if (dgvODia == null) return;
             dgvODia.Rows.Clear();
-            string systemDrive = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+            string windowsFolder = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            string systemDrive = string.IsNullOrEmpty(windowsFolder) ? null : Path.GetPathRoot(windowsFolder);
             try
             {
                 foreach (DriveInfo d in DriveInfo.GetDrives())
@@ -861,7 +847,7 @@ namespace ScanAndRemoveVirus.Control
             t.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));   // nút vị trí
             t.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));   // bảng vị trí
             t.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));   // "Loại tệp quét"
-            t.RowStyles.Add(new RowStyle(SizeType.Absolute, 58F));   // 5 radio loại tệp
+            t.RowStyles.Add(new RowStyle(SizeType.Absolute, 82F));   // đủ ba hàng radio loại tệp
             t.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));   // ô phần mở rộng
             t.RowStyles.Add(new RowStyle(SizeType.Absolute, 82F));   // 5 tuỳ chọn
             t.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));   // bỏ qua tệp lớn
@@ -1102,6 +1088,7 @@ namespace ScanAndRemoveVirus.Control
                 if (theCheDo != null && theCheDo[i] != null) theCheDo[i].Invalidate();
             CapNhatLuuY();
             CapNhatTrangThaiNutBatDauQuet();
+            XepBoCucNangCao();
         }
 
         /// <summary>Hộp "Lưu ý" đổi câu chữ theo chế độ (README mục d).</summary>

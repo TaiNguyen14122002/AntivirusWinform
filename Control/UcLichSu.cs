@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 //  Tab Lịch sử — giao diện dựng lại theo ảnh tham chiếu 26/09/2026 (README §3).
 //  Bố cục nằm ở Control\UcLichSu.Designer.cs; file này chỉ lo: nạp dữ liệu THẬT
 //  từ ScanHistoryStore (AppData\scanhistory.log), lọc ngày/loại quét, định dạng
@@ -109,6 +109,7 @@ namespace ScanAndRemoveVirus.Control
             miXemCapNhat.Click += delegate { SetKieuXem(KieuXem.CapNhat); };
             menuLichSu.Opening += MiOpening;
 
+            BuildSketchHistory();
             LoadRealData();
         }
 

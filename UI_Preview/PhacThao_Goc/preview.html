@@ -1,0 +1,489 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ScannerVirus · Phác thảo giao diện</title><style>html{color-scheme:light}body{margin:0;padding:20px;background:#edf2f8;font-family:"Segoe UI",Arial,sans-serif}.cursor-interaction{cursor:pointer}#sv-screen-preview .sv-app{min-height:740px}#sv-screen-preview .sv-preview-bar{padding-top:0;padding-bottom:16px}</style><script src="lucide.min.js"></script></head><body><div id="sv-screen-preview" lang="vi">
+  <div class="sv-preview-bar">
+    <span class="sv-preview-label"><i data-lucide="panels-top-left" aria-hidden="true"></i> Phác thảo <span class="sv-sample-label">· Dữ liệu mẫu</span></span>
+    <div class="sv-screen-picker">
+      <label for="sv-screen-select">Xem màn</label>
+      <select id="sv-screen-select" class="cursor-interaction" aria-label="Chọn màn phác thảo">
+        <option value="overview">Tổng quan</option>
+        <option value="protection">Bảo vệ</option>
+        <option value="quarantine">Cách ly</option>
+        <option value="history">Lịch sử</option>
+        <option value="settings">Cài đặt</option>
+        <option value="advanced">Quét nâng cao</option>
+        <option value="details">Chi tiết kết quả</option>
+      </select>
+    </div>
+  </div>
+  <div class="sv-app">
+    <aside class="sv-sidebar">
+      <div class="sv-brand"><span class="sv-logo"><i data-lucide="shield-check" aria-hidden="true"></i></span><div><strong>Antivirus</strong><small>Bảo vệ máy tính của bạn</small></div></div>
+      <nav class="sv-nav" aria-label="Điều hướng Antivirus">
+        <button type="button" class="sv-nav-item cursor-interaction" data-page="overview" aria-current="page"><i data-lucide="house" aria-hidden="true"></i><span>Tổng quan</span></button>
+        <button type="button" class="sv-nav-item cursor-interaction" data-page="protection"><i data-lucide="shield" aria-hidden="true"></i><span>Bảo vệ</span></button>
+        <button type="button" class="sv-nav-item cursor-interaction" data-page="quarantine"><i data-lucide="archive" aria-hidden="true"></i><span>Cách ly</span><span class="sv-nav-count" id="sv-quarantine-count">4</span></button>
+        <button type="button" class="sv-nav-item cursor-interaction" data-page="history"><i data-lucide="history" aria-hidden="true"></i><span>Lịch sử</span></button>
+      </nav>
+      <div class="sv-sidebar-footer"><span class="sv-status-dot"></span>Bảo vệ đang hoạt động<small>Phiên bản 1.0.4</small></div>
+    </aside>
+    <main class="sv-main" id="sv-page-content" aria-label="Màn phác thảo"></main>
+  </div>
+  <div class="sv-announcement" id="sv-announcement" role="status" aria-live="polite" aria-atomic="true"></div>
+</div>
+<style>
+#sv-screen-preview {
+  --sv-background: light-dark(#f4f7fb,#121a28); --sv-panel: light-dark(#ffffff,#1b2535); --sv-sidebar: light-dark(#fafbfd,#172131);
+  --sv-ink: light-dark(#18283e,#edf3ff); --sv-muted: light-dark(#65758b,#a6b6ce); --sv-border: light-dark(#e3eaf3,#334057);
+  --sv-blue: light-dark(#2169dc,#8db8ff); --sv-blue-fill: light-dark(#2169dc,#3478e4); --sv-blue-soft: light-dark(#eaf2ff,#233954); --sv-button-ink: light-dark(#ffffff,#ffffff);
+  --sv-green: light-dark(#16734c,#83d7ad); --sv-green-soft: light-dark(#ecf8f1,#1b352e); --sv-green-border: light-dark(#cfe8db,#365746);
+  --sv-red: light-dark(#b83943,#ffacb2); --sv-red-soft: light-dark(#fff0f1,#3c2631); --sv-red-border: light-dark(#f1d0d4,#614049);
+  --sv-amber: light-dark(#976019,#efc583); --sv-amber-soft: light-dark(#fff6e8,#3a3023); --sv-amber-border: light-dark(#efdfc4,#62513a);
+  --sv-track: light-dark(#e4eaf2,#354154); --sv-shadow: light-dark(#142c4b08,#00000020);
+  width:100%; font:14px/1.5 "Segoe UI",Arial,sans-serif; color:var(--sv-ink); background:transparent; color-scheme:inherit;
+}
+#sv-screen-preview * {box-sizing:border-box;}
+#sv-screen-preview button,#sv-screen-preview input,#sv-screen-preview select {font:inherit;}
+#sv-screen-preview button {color:inherit;}
+#sv-screen-preview button:disabled {opacity:.45;cursor:default;}
+#sv-screen-preview [hidden] {display:none!important;}
+#sv-screen-preview svg {flex-shrink:0;}
+#sv-screen-preview h1,#sv-screen-preview h2,#sv-screen-preview h3,#sv-screen-preview p {margin:0;}
+#sv-screen-preview h1 {font-size:26px;line-height:1.25;font-weight:650;letter-spacing:-.55px;}
+#sv-screen-preview h2 {font-size:17px;line-height:1.4;font-weight:600;}
+#sv-screen-preview h3 {font-size:14px;line-height:1.4;font-weight:600;}
+#sv-screen-preview .sv-preview-bar {display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:10px 104px 12px 2px;}
+#sv-screen-preview .sv-preview-label {display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sv-muted);}
+#sv-screen-preview .sv-preview-label svg {width:15px;height:15px;}
+#sv-screen-preview .sv-screen-picker {display:flex;align-items:center;gap:8px;font-size:12px;}
+#sv-screen-preview .sv-screen-picker select {width:177px;padding:6px 8px;border:1px solid var(--sv-border);border-radius:7px;background:var(--sv-panel);color:var(--sv-ink);font-size:13px;}
+#sv-screen-preview .sv-app {display:grid;grid-template-columns:208px minmax(0,1fr);background:var(--sv-background);border:1px solid var(--sv-border);border-radius:14px;overflow:clip;}
+#sv-screen-preview .sv-sidebar {display:flex;flex-direction:column;background:var(--sv-sidebar);border-right:1px solid var(--sv-border);padding:29px 15px 22px;min-width:0;}
+#sv-screen-preview .sv-brand {display:flex;align-items:center;gap:10px;margin:0 7px 36px;}
+#sv-screen-preview .sv-logo {width:37px;height:42px;display:grid;place-items:center;color:var(--sv-blue);}
+#sv-screen-preview .sv-logo svg {width:35px;height:35px;}
+#sv-screen-preview .sv-brand strong {font-size:23px;font-weight:650;letter-spacing:-.6px;}
+#sv-screen-preview .sv-brand small {display:block;font-size:11px;color:var(--sv-muted);}
+#sv-screen-preview .sv-nav {display:flex;flex-direction:column;gap:7px;flex:1;}
+#sv-screen-preview .sv-nav-item {display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;border:0;border-radius:9px;background:transparent;min-height:46px;font-size:14px;}
+#sv-screen-preview .sv-nav-item svg {width:19px;height:19px;color:var(--sv-muted);}
+#sv-screen-preview .sv-nav-item:hover {background:var(--sv-blue-soft);}
+#sv-screen-preview .sv-nav-item[aria-current="page"] {background:var(--sv-blue-soft);color:var(--sv-blue);font-weight:600;}
+#sv-screen-preview .sv-nav-item[aria-current="page"] svg {color:var(--sv-blue);}
+#sv-screen-preview .sv-nav-count {margin-left:auto;background:var(--sv-track);padding:1px 7px;border-radius:5px;font-size:11px;color:var(--sv-muted);}
+#sv-screen-preview .sv-sidebar-footer {font-size:11px;color:var(--sv-green);margin:42px 8px 0;line-height:1.7;}
+#sv-screen-preview .sv-sidebar-footer small {display:block;color:var(--sv-muted);font-size:11px;margin-top:4px;}
+#sv-screen-preview .sv-sidebar-footer.sv-paused {color:var(--sv-amber);}
+#sv-screen-preview .sv-sidebar-footer.sv-paused .sv-status-dot {background:var(--sv-amber);}
+#sv-screen-preview .sv-status-dot {display:inline-block;width:6px;height:6px;background:var(--sv-green);border-radius:50%;margin-right:7px;vertical-align:middle;}
+#sv-screen-preview .sv-main {padding:29px 26px 22px;min-width:0;}
+#sv-screen-preview .sv-page-tools {display:flex;justify-content:flex-end;align-items:center;gap:12px;min-height:40px;margin-bottom:16px;}
+#sv-screen-preview .sv-page-tools > .sv-back {margin-right:auto;padding:0;min-height:40px;}
+#sv-screen-preview .sv-settings-button {display:inline-grid;place-items:center;width:40px;height:40px;flex-shrink:0;border:1px solid var(--sv-border);border-radius:10px;background:var(--sv-panel);color:var(--sv-muted);}
+#sv-screen-preview .sv-settings-button svg {width:20px;height:20px;}
+#sv-screen-preview .sv-settings-button:hover,#sv-screen-preview .sv-settings-button[aria-current="page"] {background:var(--sv-blue-soft);color:var(--sv-blue);border-color:var(--sv-blue);}
+#sv-screen-preview .sv-settings-button:focus-visible {outline:2px solid var(--sv-blue);outline-offset:3px;}
+#sv-screen-preview .sv-local-label {display:flex;align-items:center;gap:7px;color:var(--sv-muted);font-size:12px;}
+#sv-screen-preview .sv-local-label select {max-width:165px;}
+#sv-screen-preview .sv-action {display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:var(--sv-panel);border:1px solid var(--sv-border);border-radius:8px;min-height:40px;font-size:13px;line-height:1.35;font-weight:600;}
+#sv-screen-preview .sv-action:hover {background:var(--sv-blue-soft);}
+#sv-screen-preview .sv-action.sv-primary {background:var(--sv-blue-fill);border-color:var(--sv-blue-fill);color:var(--sv-button-ink);}
+#sv-screen-preview .sv-action.sv-primary:hover {filter:brightness(.94);}
+#sv-screen-preview .sv-action.sv-danger {border-color:var(--sv-red-border);color:var(--sv-red);}
+#sv-screen-preview .sv-action.sv-small {font-size:12px;padding:7px 10px;min-height:33px;}
+#sv-screen-preview .sv-link {display:inline-flex;align-items:center;gap:5px;background:transparent;border:0;padding:5px 0;font-size:12px;font-weight:600;color:var(--sv-blue);}
+#sv-screen-preview .sv-link:hover {text-decoration:underline;}
+#sv-screen-preview .sv-back {display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;padding:0 0 14px;color:var(--sv-blue);font-size:12px;}
+#sv-screen-preview .sv-box {background:var(--sv-panel);border:1px solid var(--sv-border);border-radius:12px;box-shadow:0 2px 5px var(--sv-shadow);}
+#sv-screen-preview .sv-box-head {display:flex;justify-content:space-between;align-items:center;gap:12px;padding:19px 20px;flex-wrap:wrap;}
+#sv-screen-preview .sv-heading-icon {display:flex;gap:9px;align-items:center;}
+#sv-screen-preview .sv-heading-icon svg {color:var(--sv-blue);width:18px;height:18px;}
+#sv-screen-preview .sv-hero {display:flex;align-items:center;justify-content:space-between;gap:20px;padding:27px 26px;background:var(--sv-green-soft);border:1px solid var(--sv-green-border);border-radius:13px;}
+#sv-screen-preview .sv-hero.sv-warning {background:var(--sv-amber-soft);border-color:var(--sv-amber-border);}
+#sv-screen-preview .sv-hero.sv-alert {background:var(--sv-red-soft);border-color:var(--sv-red-border);}
+#sv-screen-preview .sv-hero.sv-scanning {background:var(--sv-blue-soft);border-color:var(--sv-border);}
+#sv-screen-preview .sv-eyebrow {display:flex;align-items:center;gap:6px;color:var(--sv-green);font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;margin-bottom:11px;}
+#sv-screen-preview .sv-warning .sv-eyebrow {color:var(--sv-amber);}
+#sv-screen-preview .sv-alert .sv-eyebrow {color:var(--sv-red);}
+#sv-screen-preview .sv-scanning .sv-eyebrow {color:var(--sv-blue);}
+#sv-screen-preview .sv-hero h2 {font-size:27px;line-height:1.25;letter-spacing:-.6px;font-weight:650;max-width:445px;}
+#sv-screen-preview .sv-hero p {font-size:13px;color:var(--sv-muted);margin-top:10px;max-width:430px;}
+#sv-screen-preview .sv-hero-actions {display:flex;gap:9px;flex-wrap:wrap;margin-top:23px;}
+#sv-screen-preview .sv-hero-emblem {width:94px;height:94px;background:var(--sv-panel);border-radius:50%;display:grid;place-items:center;flex-shrink:0;color:var(--sv-green);}
+#sv-screen-preview .sv-hero-emblem svg {width:51px;height:51px;stroke-width:1.5;}
+#sv-screen-preview .sv-warning .sv-hero-emblem {color:var(--sv-amber);}
+#sv-screen-preview .sv-alert .sv-hero-emblem {color:var(--sv-red);}
+#sv-screen-preview .sv-scanning .sv-hero-emblem {color:var(--sv-blue);}
+#sv-screen-preview .sv-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:18px 0;}
+#sv-screen-preview .sv-stat {padding:17px 18px;position:relative;}
+#sv-screen-preview .sv-stat-label {color:var(--sv-muted);font-size:12px;display:flex;align-items:center;gap:6px;}
+#sv-screen-preview .sv-stat-label svg {width:15px;height:15px;}
+#sv-screen-preview .sv-stat-value {font-size:28px;line-height:1.3;font-weight:650;margin:10px 0 3px;font-variant-numeric:tabular-nums;letter-spacing:-.5px;}
+#sv-screen-preview .sv-stat-value.sv-date {font-size:20px;line-height:1.8;}
+#sv-screen-preview .sv-stat-hint {color:var(--sv-muted);font-size:11px;}
+#sv-screen-preview .sv-safe-ink {color:var(--sv-green);}
+#sv-screen-preview .sv-risk-ink {color:var(--sv-red);}
+#sv-screen-preview .sv-blue-ink {color:var(--sv-blue);}
+#sv-screen-preview .sv-activity {display:flex;gap:12px;align-items:center;padding:14px 20px;border-top:1px solid var(--sv-border);}
+#sv-screen-preview .sv-activity-icon {display:grid;place-items:center;background:var(--sv-blue-soft);color:var(--sv-blue);width:34px;height:34px;border-radius:8px;flex-shrink:0;}
+#sv-screen-preview .sv-activity-icon.sv-safe {background:var(--sv-green-soft);color:var(--sv-green);}
+#sv-screen-preview .sv-activity-icon.sv-warn {background:var(--sv-amber-soft);color:var(--sv-amber);}
+#sv-screen-preview .sv-activity-text {flex:1;min-width:0;font-size:13px;}
+#sv-screen-preview .sv-activity-text small {display:block;color:var(--sv-muted);font-size:11px;margin-top:3px;}
+#sv-screen-preview .sv-time {font-size:11px;color:var(--sv-muted);white-space:nowrap;}
+#sv-screen-preview .sv-page-footer {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;font-size:11px;color:var(--sv-muted);}
+#sv-screen-preview .sv-badge {display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:5px;white-space:nowrap;background:var(--sv-blue-soft);color:var(--sv-blue);}
+#sv-screen-preview .sv-badge.sv-safe {background:var(--sv-green-soft);color:var(--sv-green);}
+#sv-screen-preview .sv-badge.sv-warn {background:var(--sv-amber-soft);color:var(--sv-amber);}
+#sv-screen-preview .sv-badge.sv-risk {background:var(--sv-red-soft);color:var(--sv-red);}
+#sv-screen-preview .sv-progress {height:7px;border-radius:5px;background:var(--sv-track);margin-top:18px;overflow:hidden;}
+#sv-screen-preview .sv-progress span {display:block;height:100%;border-radius:5px;background:var(--sv-blue-fill);}
+#sv-screen-preview .sv-progress-label {display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--sv-muted);gap:10px;}
+#sv-screen-preview .sv-table-wrap {overflow-x:auto;}
+#sv-screen-preview .sv-data-table {width:100%;border-collapse:collapse;font-size:12px;}
+#sv-screen-preview .sv-data-table th {padding:11px 14px;text-align:left;color:var(--sv-muted);font-weight:500;background:var(--sv-sidebar);border-top:1px solid var(--sv-border);border-bottom:1px solid var(--sv-border);font-size:11px;white-space:nowrap;}
+#sv-screen-preview .sv-data-table td {padding:14px;border-bottom:1px solid var(--sv-border);vertical-align:middle;}
+#sv-screen-preview .sv-data-table tr:last-child td {border-bottom:0;}
+#sv-screen-preview .sv-data-table td strong {font-weight:600;}
+#sv-screen-preview .sv-data-table td small {display:block;color:var(--sv-muted);font-size:11px;margin-top:3px;overflow-wrap:anywhere;}
+#sv-screen-preview .sv-data-table .sv-number {text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#sv-screen-preview .sv-data-table input[type="checkbox"] {accent-color:var(--sv-blue-fill);width:15px;height:15px;vertical-align:middle;}
+#sv-screen-preview .sv-file-cell {display:flex;align-items:center;gap:10px;}
+#sv-screen-preview .sv-file-cell svg {color:var(--sv-muted);width:20px;height:20px;}
+#sv-screen-preview .sv-quarantine-table {min-width:650px;}
+#sv-screen-preview .sv-history-table {min-width:685px;}
+#sv-screen-preview .sv-table-footer {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-top:1px solid var(--sv-border);font-size:12px;color:var(--sv-muted);flex-wrap:wrap;}
+#sv-screen-preview .sv-action-group {display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+#sv-screen-preview .sv-callout {display:flex;align-items:flex-start;gap:9px;background:var(--sv-blue-soft);color:var(--sv-muted);padding:13px 16px;border-radius:9px;margin-bottom:19px;font-size:12px;}
+#sv-screen-preview .sv-callout svg {color:var(--sv-blue);margin-top:1px;}
+#sv-screen-preview .sv-callout.sv-warn {background:var(--sv-amber-soft);color:var(--sv-amber);}
+#sv-screen-preview .sv-protection-summary {display:flex;gap:17px;align-items:center;padding:21px;margin-bottom:20px;flex-wrap:wrap;}
+#sv-screen-preview .sv-summary-mark {display:grid;place-items:center;width:51px;height:51px;border-radius:12px;background:var(--sv-green-soft);color:var(--sv-green);}
+#sv-screen-preview .sv-summary-mark svg {width:27px;height:27px;}
+#sv-screen-preview .sv-summary-text {flex:1;min-width:160px;}
+#sv-screen-preview .sv-summary-text p {font-size:12px;color:var(--sv-muted);margin-top:4px;}
+#sv-screen-preview .sv-protection-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+#sv-screen-preview .sv-feature {padding:17px;display:flex;gap:12px;align-items:flex-start;}
+#sv-screen-preview .sv-feature-icon {width:30px;height:30px;display:grid;place-items:center;color:var(--sv-blue);background:var(--sv-blue-soft);border-radius:7px;flex-shrink:0;}
+#sv-screen-preview .sv-feature-text {flex:1;min-width:0;}
+#sv-screen-preview .sv-feature-text p {font-size:12px;color:var(--sv-muted);margin-top:5px;}
+#sv-screen-preview .sv-feature-state {font-size:11px;margin-top:10px;color:var(--sv-green);}
+#sv-screen-preview .sv-feature-state.sv-off {color:var(--sv-muted);}
+#sv-screen-preview .sv-toggle {position:relative;width:34px;height:21px;display:block;flex-shrink:0;margin-top:2px;}
+#sv-screen-preview .sv-toggle input {appearance:none;display:block;width:34px;height:21px;margin:0;border:0;background:var(--sv-track);border-radius:20px;}
+#sv-screen-preview .sv-toggle input:checked {background:var(--sv-blue-fill);}
+#sv-screen-preview .sv-toggle input:after {content:"";display:block;width:15px;height:15px;border-radius:50%;background:var(--sv-button-ink);position:absolute;top:3px;left:3px;transition:transform .12s;}
+#sv-screen-preview .sv-toggle input:checked:after {transform:translateX(13px);}
+#sv-screen-preview .sv-input,#sv-screen-preview .sv-select {padding:9px 11px;border:1px solid var(--sv-border);border-radius:7px;background:var(--sv-panel);color:var(--sv-ink);font-size:13px;min-height:39px;width:100%;min-width:0;}
+#sv-screen-preview .sv-filters {display:grid;grid-template-columns:1fr 1fr 1.15fr auto;align-items:end;gap:11px;padding:18px 19px;}
+#sv-screen-preview .sv-field {display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;color:var(--sv-muted);}
+#sv-screen-preview .sv-tabs {display:flex;flex-wrap:wrap;gap:5px;margin-bottom:19px;border-bottom:1px solid var(--sv-border);padding-bottom:0;}
+#sv-screen-preview .sv-tab {border:0;background:transparent;color:var(--sv-muted);padding:11px 13px;font-size:13px;border-bottom:2px solid transparent;border-radius:6px 6px 0 0;}
+#sv-screen-preview .sv-tab[aria-selected="true"] {color:var(--sv-blue);border-bottom-color:var(--sv-blue);font-weight:600;background:var(--sv-blue-soft);}
+#sv-screen-preview .sv-settings-content {padding:22px;}
+#sv-screen-preview .sv-section-note {font-size:12px;color:var(--sv-muted);margin-top:5px;}
+#sv-screen-preview .sv-setting-row {display:flex;align-items:center;gap:20px;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--sv-border);}
+#sv-screen-preview .sv-setting-row:last-child {border-bottom:0;}
+#sv-screen-preview .sv-setting-row p {font-size:12px;color:var(--sv-muted);margin-top:4px;}
+#sv-screen-preview .sv-settings-actions {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-top:18px;}
+#sv-screen-preview .sv-draft-note {font-size:11px;color:var(--sv-muted);}
+#sv-screen-preview .sv-info-list {margin:16px 0 0;}
+#sv-screen-preview .sv-info-row {display:grid;grid-template-columns:145px minmax(0,1fr);padding:13px 0;gap:14px;border-bottom:1px solid var(--sv-border);font-size:12px;}
+#sv-screen-preview .sv-info-row:last-child {border-bottom:0;}
+#sv-screen-preview .sv-info-row dt {color:var(--sv-muted);}
+#sv-screen-preview .sv-info-row dd {margin:0;overflow-wrap:anywhere;}
+#sv-screen-preview .sv-mode-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-bottom:19px;}
+#sv-screen-preview .sv-mode {display:flex;gap:13px;align-items:flex-start;text-align:left;padding:21px;border:1px solid var(--sv-border);border-radius:11px;background:var(--sv-panel);}
+#sv-screen-preview .sv-mode[aria-pressed="true"] {border-color:var(--sv-blue);background:var(--sv-blue-soft);}
+#sv-screen-preview .sv-mode-icon {display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:9px;background:var(--sv-background);color:var(--sv-blue);}
+#sv-screen-preview .sv-mode-icon svg {width:22px;height:22px;}
+#sv-screen-preview .sv-mode-title {font-size:14px;font-weight:600;display:block;}
+#sv-screen-preview .sv-mode-description {font-size:12px;color:var(--sv-muted);display:block;margin-top:5px;}
+#sv-screen-preview .sv-mode-check {display:grid;place-items:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--sv-border);margin-left:auto;flex-shrink:0;margin-top:3px;}
+#sv-screen-preview .sv-mode[aria-pressed="true"] .sv-mode-check {background:var(--sv-blue-fill);color:var(--sv-button-ink);border-color:var(--sv-blue-fill);}
+#sv-screen-preview .sv-mode-check svg {width:12px;height:12px;}
+#sv-screen-preview .sv-scope {padding:22px;}
+#sv-screen-preview .sv-path-line {display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--sv-background);border:1px solid var(--sv-border);border-radius:8px;margin:16px 0 18px;}
+#sv-screen-preview .sv-path-line span {flex:1;overflow-wrap:anywhere;font-size:12px;}
+#sv-screen-preview .sv-path-line svg {color:var(--sv-blue);}
+#sv-screen-preview .sv-check-list {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:19px 0;}
+#sv-screen-preview .sv-check-label {display:flex;align-items:center;gap:8px;font-size:13px;}
+#sv-screen-preview .sv-check-label input {accent-color:var(--sv-blue-fill);width:16px;height:16px;flex-shrink:0;}
+#sv-screen-preview .sv-file-summary {display:flex;gap:15px;align-items:center;padding:20px;margin-bottom:20px;flex-wrap:wrap;}
+#sv-screen-preview .sv-file-summary-icon {width:49px;height:55px;display:grid;place-items:center;background:var(--sv-red-soft);color:var(--sv-red);border-radius:10px;}
+#sv-screen-preview .sv-file-summary-icon svg {width:29px;height:29px;}
+#sv-screen-preview .sv-file-summary-text {flex:1;min-width:180px;}
+#sv-screen-preview .sv-file-summary-text h2 {font-size:20px;}
+#sv-screen-preview .sv-file-summary-text p {font-size:11px;color:var(--sv-muted);margin-top:3px;overflow-wrap:anywhere;}
+#sv-screen-preview .sv-detail-body {padding:22px;}
+#sv-screen-preview .sv-detail-grid {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;}
+#sv-screen-preview .sv-detail-grid .sv-info-row {grid-template-columns:100px minmax(0,1fr);}
+#sv-screen-preview .sv-analysis {padding:17px;background:var(--sv-background);border-radius:9px;}
+#sv-screen-preview .sv-analysis p {font-size:12px;color:var(--sv-muted);margin-top:8px;}
+#sv-screen-preview .sv-detection-score {display:flex;align-items:center;gap:20px;padding:2px 0 21px;flex-wrap:wrap;}
+#sv-screen-preview .sv-detection-mark {width:88px;height:88px;border:6px solid var(--sv-red-border);color:var(--sv-red);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;}
+#sv-screen-preview .sv-detection-mark strong {font-size:25px;line-height:1.25;font-weight:650;}
+#sv-screen-preview .sv-detection-mark span {font-size:11px;color:var(--sv-muted);}
+#sv-screen-preview .sv-engine-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px;}
+#sv-screen-preview .sv-engine-row {display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 0;border-top:1px solid var(--sv-border);font-size:12px;}
+#sv-screen-preview .sv-engine-row span:last-child {font-size:11px;color:var(--sv-red);}
+#sv-screen-preview .sv-code {font:12px/1.7 Consolas,monospace;overflow-wrap:anywhere;color:var(--sv-muted);}
+#sv-screen-preview .sv-string-row {display:flex;align-items:center;gap:15px;padding:13px 0;border-bottom:1px solid var(--sv-border);}
+#sv-screen-preview .sv-string-row:last-child {border-bottom:0;}
+#sv-screen-preview .sv-string-row .sv-string-number {font-size:11px;color:var(--sv-muted);width:33px;flex-shrink:0;}
+#sv-screen-preview .sv-string-row code {font:12px/1.5 Consolas,monospace;overflow-wrap:anywhere;}
+#sv-screen-preview .sv-empty {padding:45px 20px;text-align:center;color:var(--sv-muted);font-size:13px;}
+#sv-screen-preview .sv-announcement {color:var(--sv-blue);font-size:12px;padding:0 3px;overflow-wrap:anywhere;}
+#sv-screen-preview .sv-announcement:not(:empty) {padding-top:10px;}
+@media(max-width:860px) {
+  #sv-screen-preview .sv-app {grid-template-columns:174px minmax(0,1fr);}
+  #sv-screen-preview .sv-sidebar {padding-left:10px;padding-right:10px;}
+  #sv-screen-preview .sv-brand {margin-left:3px;margin-right:0;gap:6px;}
+  #sv-screen-preview .sv-brand strong {font-size:20px;}
+  #sv-screen-preview .sv-brand small {font-size:11px;max-width:106px;}
+  #sv-screen-preview .sv-main {padding:24px 19px 20px;}
+  #sv-screen-preview .sv-hero {padding:23px;gap:12px;}
+  #sv-screen-preview .sv-hero h2 {font-size:24px;}
+  #sv-screen-preview .sv-hero-emblem {width:72px;height:72px;}
+  #sv-screen-preview .sv-hero-emblem svg {width:40px;height:40px;}
+  #sv-screen-preview .sv-stat {padding:15px 12px;}
+  #sv-screen-preview .sv-stat-value.sv-date {font-size:17px;line-height:2.12;}
+  #sv-screen-preview .sv-feature {padding:15px;gap:8px;}
+  #sv-screen-preview .sv-feature-icon {display:none;}
+  #sv-screen-preview .sv-filters {grid-template-columns:repeat(2,minmax(0,1fr));}
+  #sv-screen-preview .sv-detail-grid {grid-template-columns:1fr;}
+}
+@media(max-width:600px) {
+  #sv-screen-preview .sv-preview-bar {padding-right:2px;gap:8px;}
+  #sv-screen-preview .sv-screen-picker {width:100%;}
+  #sv-screen-preview .sv-screen-picker select {flex:1;}
+  #sv-screen-preview .sv-app {display:block;border-radius:11px;}
+  #sv-screen-preview .sv-sidebar {padding:16px 13px 11px;border-right:0;border-bottom:1px solid var(--sv-border);}
+  #sv-screen-preview .sv-brand {margin:0 3px 13px;}
+  #sv-screen-preview .sv-brand small {max-width:none;}
+  #sv-screen-preview .sv-brand strong {font-size:21px;}
+  #sv-screen-preview .sv-logo {width:30px;height:33px;}
+  #sv-screen-preview .sv-logo svg {width:29px;height:29px;}
+  #sv-screen-preview .sv-nav {flex-direction:row;flex-wrap:wrap;gap:3px;}
+  #sv-screen-preview .sv-nav-item {padding:8px 9px;min-height:38px;gap:5px;font-size:12px;}
+  #sv-screen-preview .sv-nav-item svg {width:15px;height:15px;}
+  #sv-screen-preview .sv-nav-count {display:none;}
+  #sv-screen-preview .sv-settings-nav {margin-top:0;}
+  #sv-screen-preview .sv-sidebar-footer {display:none;}
+  #sv-screen-preview .sv-main {padding:22px 15px 20px;}
+  #sv-screen-preview .sv-page-tools {margin-bottom:16px;gap:10px;}
+  #sv-screen-preview h1 {font-size:24px;}
+  #sv-screen-preview .sv-hero {padding:21px 18px;}
+  #sv-screen-preview .sv-hero h2 {font-size:24px;}
+  #sv-screen-preview .sv-hero-emblem {display:none;}
+  #sv-screen-preview .sv-stats {grid-template-columns:1fr;gap:9px;margin:14px 0;}
+  #sv-screen-preview .sv-stat {display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:5px;padding:13px 16px;}
+  #sv-screen-preview .sv-stat-label {grid-column:1;grid-row:1;align-self:center;}
+  #sv-screen-preview .sv-stat-value {grid-column:2;grid-row:1 / 3;margin:0;align-self:center;font-size:25px;}
+  #sv-screen-preview .sv-stat-value.sv-date {font-size:16px;line-height:1.5;}
+  #sv-screen-preview .sv-stat-hint {grid-column:1;grid-row:2;}
+  #sv-screen-preview .sv-protection-grid,#sv-screen-preview .sv-mode-grid,#sv-screen-preview .sv-engine-grid {grid-template-columns:1fr;}
+  #sv-screen-preview .sv-feature-icon {display:grid;}
+  #sv-screen-preview .sv-box-head {padding:16px;}
+  #sv-screen-preview .sv-activity {padding:13px 15px;gap:10px;}
+  #sv-screen-preview .sv-time {display:none;}
+  #sv-screen-preview .sv-settings-content,#sv-screen-preview .sv-detail-body,#sv-screen-preview .sv-scope {padding:18px;}
+  #sv-screen-preview .sv-tab {padding:10px;font-size:12px;}
+  #sv-screen-preview .sv-info-row {grid-template-columns:105px minmax(0,1fr);gap:10px;}
+  #sv-screen-preview .sv-check-list {grid-template-columns:1fr;}
+  #sv-screen-preview .sv-path-line {flex-wrap:wrap;}
+  #sv-screen-preview .sv-path-line span {flex-basis:calc(100% - 30px);}
+  #sv-screen-preview .sv-settings-actions {align-items:flex-start;flex-direction:column;}
+}
+@media(pointer:coarse) {
+  #sv-screen-preview button,#sv-screen-preview select {min-height:44px;}
+  #sv-screen-preview input[type="text"],#sv-screen-preview input[type="date"],#sv-screen-preview input[type="password"],#sv-screen-preview select {font-size:16px;}
+  #sv-screen-preview .sv-toggle {width:44px;height:44px;display:flex;align-items:center;justify-content:center;}
+  #sv-screen-preview .sv-toggle input:after {top:14px;left:8px;}
+}
+@media(prefers-reduced-motion:reduce) {#sv-screen-preview .sv-toggle input:after {transition:none;}}
+#sv-screen-preview .sv-vt-heading,#sv-screen-preview .sv-vt-table-title {display:flex;align-items:center;justify-content:space-between;gap:16px;}
+#sv-screen-preview .sv-vt-summary {color:var(--sv-red);font-size:13px;margin:13px 0 18px;}
+#sv-screen-preview .sv-vt-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+#sv-screen-preview .sv-vt-stats > div {padding:13px 15px;border:1px solid var(--sv-border);border-radius:9px;background:var(--sv-background);}
+#sv-screen-preview .sv-vt-stats span {display:block;color:var(--sv-muted);font-size:12px;}
+#sv-screen-preview .sv-vt-stats strong {display:block;font-size:25px;margin-top:8px;}
+#sv-screen-preview .sv-vt-stats .sv-vt-date {font-size:13px;line-height:1.5;padding-top:7px;}
+#sv-screen-preview .sv-vt-table-title {margin-bottom:12px;}
+#sv-screen-preview .sv-vt-table-title span,#sv-screen-preview .sv-vt-note {color:var(--sv-muted);font-size:12px;}
+#sv-screen-preview .sv-vt-note {margin-top:12px;}
+@media(max-width:600px) {#sv-screen-preview .sv-vt-stats {grid-template-columns:1fr;}#sv-screen-preview .sv-vt-heading {align-items:flex-start;flex-wrap:wrap;}}
+</style>
+<script>
+(() => {
+  const root = document.getElementById('sv-screen-preview');
+  const content = root.querySelector('#sv-page-content');
+  const picker = root.querySelector('#sv-screen-select');
+  const announcement = root.querySelector('#sv-announcement');
+  const state = {page:'overview', overview:'safe', mode:'full', detail:'info', settings:'general', selected:new Set(), filtered:false, keySaved:false};
+  const features = [
+    {key:'realtime',name:'Bảo vệ thời gian thực',note:'Giám sát tệp mới hoặc thay đổi trong máy.',icon:'shield-check',on:true},
+    {key:'restore',name:'Bảo vệ tệp',note:'Kiểm tra lại tệp trước khi khôi phục từ cách ly.',icon:'file-check-2',on:true},
+    {key:'usb',name:'Bảo vệ USB',note:'Quét ổ USB ngay khi được kết nối.',icon:'usb',on:true},
+    {key:'download',name:'Bảo vệ tải xuống',note:'Kiểm tra tệp tải về từ Internet.',icon:'download',on:true},
+    {key:'behavior',name:'Giám sát hành vi',note:'Theo dõi tiến trình có hành vi đáng ngờ.',icon:'activity',on:true},
+    {key:'startup',name:'Bảo vệ thư mục khởi động',note:'Kiểm tra tệp mới trong thư mục Startup.',icon:'power',on:true},
+    {key:'autoquarantine',name:'Tự động cách ly',note:'Chuyển tệp nguy hiểm vào khu vực cách ly.',icon:'archive',on:true},
+    {key:'virustotal',name:'Bảo vệ web · VirusTotal',note:'Tra cứu tệp nghi ngờ bằng mã băm.',icon:'globe',on:false}
+  ];
+  const general = [
+    {key:'autostart',name:'Khởi động cùng Windows',note:'Tự mở ứng dụng sau khi đăng nhập.',on:true},
+    {key:'autoupdate',name:'Tự động cập nhật chữ ký',note:'Kiểm tra cập nhật khi mở ứng dụng.',on:true},
+    {key:'notification',name:'Hiển thị thông báo',note:'Thông báo khi phát hiện mối đe dọa.',on:true},
+    {key:'samples',name:'Gửi mẫu tệp nghi ngờ',note:'Cho phép gửi mẫu để hỗ trợ phân tích.',on:false}
+  ];
+  let quarantine = [
+    {id:1,name:'invoice_update.exe',path:'C:\\Users\\User\\Downloads',reason:'HEUR: Suspicious.PE',severity:'Cao',size:'248 KB',date:'04/10/2026',time:'09:25'},
+    {id:2,name:'startup_helper.exe',path:'C:\\Users\\User\\AppData\\Roaming',reason:'Signature: Trojan.Sample',severity:'Cao',size:'172 KB',date:'03/10/2026',time:'16:08'},
+    {id:3,name:'eicar-test.txt',path:'C:\\Users\\User\\Desktop\\Test',reason:'EICAR-Test-File',severity:'Kiểm thử',size:'68 B',date:'03/10/2026',time:'14:30'},
+    {id:4,name:'setup_script.ps1',path:'C:\\Users\\User\\Downloads',reason:'HEUR: Encoded.Script',severity:'Trung bình',size:'12 KB',date:'02/10/2026',time:'10:12'}
+  ];
+  const detectedFiles = quarantine.slice(0,3);
+  const scans = [
+    {date:'04/10/2026',time:'09:42',type:'Quét nhanh',result:'An toàn',cls:'sv-safe',files:'2.048',threats:'0',duration:'00:38',risk:false},
+    {date:'04/10/2026',time:'09:25',type:'Thời gian thực',result:'Đã cách ly',cls:'sv-warn',files:'1',threats:'1',duration:'00:01',risk:true},
+    {date:'03/10/2026',time:'16:08',type:'Quét thư mục',result:'Đã cách ly',cls:'sv-warn',files:'486',threats:'1',duration:'00:14',risk:true},
+    {date:'03/10/2026',time:'14:30',type:'Quét tệp',result:'Đã cách ly',cls:'sv-warn',files:'1',threats:'1',duration:'00:01',risk:true},
+    {date:'02/10/2026',time:'10:12',type:'Quét toàn bộ',result:'Đã cách ly',cls:'sv-warn',files:'9.950',threats:'1',duration:'04:52',risk:true}
+  ];
+  const icon = name => `<i data-lucide="${name}" aria-hidden="true"></i>`;
+  const badge = (text,kind='sv-safe') => `<span class="sv-badge ${kind}">${text}</span>`;
+  const action = (text,cmd,kind='',name='') => `<button type="button" class="sv-action ${kind} cursor-interaction" data-action="${cmd}">${name?icon(name):''}${text}</button>`;
+  const link = (text,cmd) => `<button type="button" class="sv-link cursor-interaction" data-action="${cmd}">${text}${icon('chevron-right')}</button>`;
+  const tools = (extra='') => `<div class="sv-page-tools">${extra}<button type="button" class="sv-settings-button cursor-interaction" data-page="settings" aria-label="Cài đặt" title="Cài đặt" ${state.page==='settings'?'aria-current="page"':''}>${icon('settings')}</button></div>`;
+  const foot = (left,right='CSDL chữ ký: 04/10/2026 · 09:10') => `<div class="sv-page-footer"><span>${left}</span><span>${right}</span></div>`;
+  const toggle = (key,on,name) => `<label class="sv-toggle cursor-interaction"><input type="checkbox" class="cursor-interaction" data-toggle="${key}" aria-label="${name}" ${on?'checked':''}></label>`;
+  const infoRow = (label,value) => `<div class="sv-info-row"><dt>${label}</dt><dd>${value}</dd></div>`;
+  function initIcons() { if (typeof lucide !== 'undefined') lucide.createIcons({attrs:{width:16,height:16}}); }
+  function say(message) { announcement.textContent = message; }
+  function overview() {
+    const mode = state.overview;
+    const views = {
+      safe:{cls:'',eyebrow:'Bảo vệ đang hoạt động',title:'Máy tính của bạn được bảo vệ',note:'Không phát hiện mối đe dọa trong lần quét gần nhất.',icon:'shield-check',buttons:action('Quét ngay','scan','sv-primary','scan-line')+action('Quét nâng cao','advanced','','chevron-down')},
+      warning:{cls:'sv-warning',eyebrow:'Cần chú ý',title:'Bảo vệ thời gian thực đang tắt',note:'Bật lại để tự động giám sát các tệp mới và thay đổi.',icon:'shield-alert',buttons:action('Bật bảo vệ','enable','sv-primary','shield-check')+action('Quét ngay','scan','','scan-line')},
+      scanning:{cls:'sv-scanning',eyebrow:'Đang quét',title:'Đang kiểm tra máy tính',note:'Quét nhanh các vị trí thường xuất hiện mối đe dọa.',icon:'scan-line',buttons:action('Xem kết quả mẫu','finish','sv-primary','list-checks')+action('Hủy quét','cancel','','x')},
+      threats:{cls:'sv-alert',eyebrow:'Phát hiện mối đe dọa',title:'3 tệp cần được xử lý',note:'Cách ly các tệp được phát hiện để bảo vệ máy tính.',icon:'shield-alert',buttons:action('Xem chi tiết','details','sv-primary','file-search')+action('Quét lại','scan','','scan-line')}
+    };
+    const v = views[mode];
+    const statusPicker = `<label class="sv-local-label" for="sv-state-select">Trạng thái mẫu<select id="sv-state-select" class="sv-select cursor-interaction"><option value="safe" ${mode==='safe'?'selected':''}>An toàn</option><option value="warning" ${mode==='warning'?'selected':''}>Bảo vệ tắt</option><option value="scanning" ${mode==='scanning'?'selected':''}>Đang quét</option><option value="threats" ${mode==='threats'?'selected':''}>Có mối đe dọa</option></select></label>`;
+    const hero = `<section class="sv-hero ${v.cls}"><div style="flex:1;min-width:0"><div class="sv-eyebrow">${icon('circle-check')}${v.eyebrow}</div><h2>${v.title}</h2><p>${v.note}</p>${mode==='scanning'?'<div class="sv-progress" role="progressbar" aria-label="Tiến độ quét mẫu" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100"><span style="width:64%"></span></div><div class="sv-progress-label"><span>1.310 / 2.048 tệp</span><span>64%</span></div>':''}<div class="sv-hero-actions">${v.buttons}</div></div><div class="sv-hero-emblem">${icon(v.icon)}</div></section>`;
+    const stats = `<section class="sv-stats" aria-label="Thống kê quét"><div class="sv-box sv-stat"><div class="sv-stat-label">${icon('shield-alert')}Mối đe dọa</div><div class="sv-stat-value ${mode==='threats'?'sv-risk-ink':'sv-safe-ink'}">${mode==='threats'?'3':'0'}</div><div class="sv-stat-hint">${mode==='threats'?'Cần xử lý':'Trong lần quét gần nhất'}</div></div><div class="sv-box sv-stat"><div class="sv-stat-label">${icon('files')}Tệp đã quét</div><div class="sv-stat-value sv-blue-ink">${mode==='scanning'?'1.310':'12.486'}</div><div class="sv-stat-hint">${mode==='scanning'?'Trong phiên hiện tại':'Tổng số tệp đã kiểm tra'}</div></div><div class="sv-box sv-stat"><div class="sv-stat-label">${icon('clock-3')}Lần quét gần nhất</div><div class="sv-stat-value sv-date">04/10/2026</div><div class="sv-stat-hint">09:42 · Quét nhanh</div></div></section>`;
+    const recent = `<section class="sv-box"><div class="sv-box-head"><h2 class="sv-heading-icon">${icon('history')}Hoạt động gần đây</h2>${link('Xem lịch sử','history')}</div><div class="sv-activity"><span class="sv-activity-icon sv-safe">${icon('check')}</span><div class="sv-activity-text">Hoàn tất quét nhanh<small>2.048 tệp · Không phát hiện mối đe dọa</small></div><span class="sv-time">09:42</span></div><div class="sv-activity"><span class="sv-activity-icon sv-warn">${icon('archive')}</span><div class="sv-activity-text">Đã cách ly một tệp nghi ngờ<small>invoice_update.exe · Bảo vệ thời gian thực</small></div><span class="sv-time">09:25</span></div><div class="sv-activity"><span class="sv-activity-icon">${icon('refresh-cw')}</span><div class="sv-activity-text">Cập nhật cơ sở dữ liệu chữ ký<small>Ứng dụng đang sử dụng dữ liệu mới nhất</small></div><span class="sv-time">09:10</span></div></section>`;
+    const threats = `<section class="sv-box"><div class="sv-box-head"><h2 class="sv-heading-icon">${icon('shield-alert')}Mối đe dọa được phát hiện</h2>${badge('3 tệp','sv-risk')}</div><div class="sv-table-wrap"><table class="sv-data-table"><thead><tr><th>Tệp</th><th>Mức độ</th><th>Chi tiết</th></tr></thead><tbody>${detectedFiles.map(f=>`<tr><td><strong>${f.name}</strong><small>${f.reason}</small></td><td>${badge(f.severity,f.severity==='Kiểm thử'?'':'sv-risk')}</td><td>${link('Xem','details')}</td></tr>`).join('')}</tbody></table></div><div class="sv-table-footer"><span>Chưa xử lý</span>${action('Cách ly tất cả','isolate','sv-primary sv-small','archive')}</div></section>`;
+    return tools(statusPicker)+hero+stats+(mode==='threats'?threats:recent)+foot(mode==='scanning'?'Đang quét: C:\\Users\\User\\Downloads':'Ứng dụng sẵn sàng');
+  }
+  function protection() {
+    const active = features.filter(f=>f.on).length;
+    return tools(action('Cập nhật chữ ký','update','','refresh-cw'))+`<section class="sv-box sv-protection-summary"><span class="sv-summary-mark">${icon('shield-check')}</span><div class="sv-summary-text"><h2>${features[0].on?'Bảo vệ thời gian thực đang bật':'Bảo vệ thời gian thực đang tắt'}</h2><p>${active}/${features.length} tính năng đang hoạt động · CSDL cập nhật lúc 09:10</p></div>${badge(features[0].on?'Đang bảo vệ':'Cần chú ý',features[0].on?'sv-safe':'sv-warn')}</section><div class="sv-protection-grid">${features.map(f=>`<section class="sv-box sv-feature"><span class="sv-feature-icon">${icon(f.icon)}</span><div class="sv-feature-text"><h3>${f.name}</h3><p>${f.note}</p><div class="sv-feature-state ${f.on?'':'sv-off'}">${f.on?'Đang bật':f.key==='virustotal'&&!state.keySaved?'Chưa cấu hình API key':'Đang tắt'}${f.key==='virustotal'&&!state.keySaved?` · ${link('Cấu hình','vt-settings')}`:''}</div></div>${toggle(f.key,f.on,f.name)}</section>`).join('')}</div>`+foot('Giám sát gần nhất: 04/10/2026 · 09:25','12.486 tệp đã quét · 4 tệp đã cách ly');
+  }
+  function quarantinePage() {
+    return tools(action('Làm mới','refresh','','refresh-cw'))+`<div class="sv-callout">${icon('info')}<span>Tệp cách ly không thể chạy. Chỉ khôi phục khi bạn xác định tệp an toàn.</span></div><section class="sv-box"><div class="sv-box-head"><h2 class="sv-heading-icon">${icon('archive')}Tệp đang cách ly</h2>${badge(quarantine.length+' tệp','sv-warn')}</div>${quarantine.length?`<div class="sv-table-wrap"><table class="sv-data-table sv-quarantine-table"><thead><tr><th style="width:40px"><input type="checkbox" class="cursor-interaction" id="sv-select-all" aria-label="Chọn tất cả tệp" ${state.selected.size===quarantine.length?'checked':''}></th><th>Tệp &amp; đường dẫn</th><th>Phát hiện</th><th>Thời gian cách ly</th><th></th></tr></thead><tbody>${quarantine.map(f=>`<tr><td><input type="checkbox" class="cursor-interaction" data-file="${f.id}" aria-label="Chọn ${f.name}" ${state.selected.has(f.id)?'checked':''}></td><td><div class="sv-file-cell">${icon('file-warning')}<div><strong>${f.name}</strong><small>${f.path}</small></div></div></td><td>${badge(f.severity,f.severity==='Cao'?'sv-risk':f.severity==='Kiểm thử'?'':'sv-warn')}<small>${f.reason}</small></td><td>${f.date}<small>${f.time} · ${f.size}</small></td><td>${link('Chi tiết','details')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="sv-empty">Không có tệp nào trong khu vực cách ly.</div>'}<div class="sv-table-footer"><span id="sv-selection-count">Đã chọn ${state.selected.size} tệp</span><div class="sv-action-group"><button type="button" class="sv-action sv-small cursor-interaction" data-action="restore" ${state.selected.size?'':'disabled'}>${icon('undo-2')}Khôi phục</button><button type="button" class="sv-action sv-small sv-danger cursor-interaction" data-action="delete" ${state.selected.size?'':'disabled'}>${icon('trash-2')}Xóa vĩnh viễn</button></div></div></section>`+foot('Tệp được kiểm tra lại trước khi khôi phục','Thao tác trên dữ liệu mẫu');
+  }
+  function history() {
+    const rows = state.filtered ? scans.filter(s=>s.type==='Quét nhanh') : scans;
+    return tools(action('Xuất CSV','export','','download'))+`<section class="sv-box"><div class="sv-filters"><label class="sv-field">Từ ngày<input class="sv-input" id="sv-from" type="date" value="2026-10-01"></label><label class="sv-field">Đến ngày<input class="sv-input" id="sv-to" type="date" value="2026-10-04"></label><label class="sv-field">Loại quét<select class="sv-select cursor-interaction" id="sv-scan-filter"><option value="all" ${!state.filtered?'selected':''}>Tất cả</option><option value="quick" ${state.filtered?'selected':''}>Quét nhanh</option></select></label>${action('Lọc','filter','sv-primary','list-filter')}</div><div class="sv-table-wrap"><table class="sv-data-table sv-history-table"><thead><tr><th>Thời gian</th><th>Loại quét</th><th>Kết quả</th><th class="sv-number">Tệp quét</th><th class="sv-number">Đe dọa</th><th>Thời lượng</th><th></th></tr></thead><tbody>${rows.map(s=>`<tr><td><strong>${s.date}</strong><small>${s.time}</small></td><td>${s.type}</td><td>${badge(s.result,s.cls)}</td><td class="sv-number">${s.files}</td><td class="sv-number ${s.risk?'sv-risk-ink':''}">${s.threats}</td><td>${s.duration}</td><td>${link('Xem',s.risk?'details':'safe-result')}</td></tr>`).join('')}</tbody></table></div><div class="sv-table-footer"><span>Tổng cộng: ${rows.length} lần quét</span><div class="sv-action-group"><button class="sv-action sv-small" type="button" aria-label="Trang trước" disabled>${icon('chevron-left')}</button><span>1 / 1</span><button class="sv-action sv-small" type="button" aria-label="Trang sau" disabled>${icon('chevron-right')}</button></div></div></section>`+foot('Hiển thị các phiên quét và cảnh báo thời gian thực','Dữ liệu mẫu · 01–04/10/2026');
+  }
+  function settings() {
+    const tabs = [['general','Chung'],['guards','Bảo vệ chủ động'],['virustotal','VirusTotal'],['data','Dữ liệu & công cụ']];
+    let body = '';
+    const settingRow = f => `<div class="sv-setting-row"><div><h3>${f.name}</h3><p>${f.note}</p></div>${toggle(f.key,f.on,f.name)}</div>`;
+    if (state.settings==='general') body = `<h2>Khởi động & đồng bộ</h2><p class="sv-section-note">Tùy chỉnh cách Antivirus hoạt động trên máy tính.</p>${general.map(settingRow).join('')}`;
+    if (state.settings==='guards') body = `<h2>Bảo vệ chủ động</h2><p class="sv-section-note">Thiết lập được đồng bộ với màn Bảo vệ.</p>${features.filter(f=>['restore','usb','download','behavior','startup'].includes(f.key)).map(settingRow).join('')}`;
+    if (state.settings==='virustotal') body = `<h2>Phân tích qua VirusTotal</h2><p class="sv-section-note">Tra cứu kết quả phân tích tệp bằng API key của bạn.</p>${settingRow(features.find(f=>f.key==='virustotal'))}<div style="margin-top:20px"><label class="sv-field" for="sv-api-key">API key<input type="password" id="sv-api-key" class="sv-input" placeholder="Nhập API key VirusTotal" autocomplete="off" value="${state.keySaved?'sample-preview-key':''}"></label><div class="sv-action-group" style="margin-top:12px">${action('Lưu API key','save-key','sv-primary','key-round')}${action('Gỡ API key','clear-key')}</div><p class="sv-section-note" id="sv-key-status">${state.keySaved?'Đã cấu hình API key mẫu':'Chưa cấu hình API key'}</p></div>`;
+    if (state.settings==='data') body = `<h2>Dữ liệu & công cụ</h2><p class="sv-section-note">Thông tin ứng dụng, dữ liệu quét và các công cụ kiểm thử.</p><dl class="sv-info-list">${infoRow('Phiên bản ứng dụng','1.0.0')}${infoRow('CSDL chữ ký','04/10/2026 · 09:10')}${infoRow('Đang cách ly',quarantine.length+' tệp')}${infoRow('Thư mục dữ liệu','<span class="sv-code">C:\\Users\\User\\AppData\\Local\\Antivirus</span>')}</dl><div class="sv-action-group" style="margin-top:20px">${action('Mở thư mục dữ liệu','open-data','','folder-open')}${action('Xóa cache quét','clear-cache','','trash-2')}${action('Tạo tệp mẫu','samples','','file-plus-2')}</div>`;
+    return tools()+`<div class="sv-tabs" role="tablist" aria-label="Nhóm cài đặt">${tabs.map(([id,title])=>`<button type="button" id="sv-settings-${id}" class="sv-tab cursor-interaction" role="tab" aria-controls="sv-settings-panel" aria-selected="${state.settings===id}" data-settings="${id}">${title}</button>`).join('')}</div><section class="sv-box sv-settings-content" id="sv-settings-panel" role="tabpanel" aria-labelledby="sv-settings-${state.settings}">${body}</section><div class="sv-settings-actions"><span class="sv-draft-note" id="sv-saved-label">Công tắc bảo vệ được áp dụng ngay.</span><div class="sv-action-group">${action('Khôi phục mặc định','defaults')}${action('Lưu thiết lập','save-settings','sv-primary','check')}</div></div>`+foot('Thiết lập bảo vệ được lưu trên máy','Phiên bản 1.0.4');
+  }
+  function advanced() {
+    const modes = [
+      {id:'full',title:'Quét toàn bộ hệ thống',note:'Kiểm tra tất cả ổ đĩa và thư mục.',icon:'monitor'},
+      {id:'folder',title:'Quét thư mục',note:'Chọn một thư mục cần kiểm tra.',icon:'folder-search'},
+      {id:'files',title:'Quét tệp',note:'Kiểm tra một hoặc nhiều tệp cụ thể.',icon:'file-search'},
+      {id:'custom',title:'Quét tùy chỉnh',note:'Chọn các vị trí phù hợp với bạn.',icon:'sliders-horizontal'}
+    ];
+    const selected = modes.find(m=>m.id===state.mode);
+    let scope = '';
+    if (state.mode==='full') scope = `<div class="sv-path-line">${icon('hard-drive')}<span>Ổ đĩa C:\\ và D:\\ · Bao gồm thư mục con</span>${badge('Toàn bộ')}</div><p class="sv-section-note">Thời gian quét tùy thuộc vào số lượng tệp trên máy tính.</p>`;
+    if (state.mode==='folder') scope = `<div class="sv-path-line">${icon('folder')}<span id="sv-scope-path">C:\\Users\\User\\Downloads</span>${action('Chọn thư mục','choose-folder','sv-small')}</div><label class="sv-check-label cursor-interaction"><input type="checkbox" checked>Quét cả thư mục con</label>`;
+    if (state.mode==='files') scope = `<div class="sv-path-line">${icon('files')}<span id="sv-scope-path">invoice_update.exe · setup_script.ps1</span>${action('Chọn tệp','choose-files','sv-small')}</div><p class="sv-section-note">Đã chọn 2 tệp · 260 KB</p>`;
+    if (state.mode==='custom') scope = `<div class="sv-check-list"><label class="sv-check-label cursor-interaction"><input type="checkbox" checked>Desktop</label><label class="sv-check-label cursor-interaction"><input type="checkbox" checked>Downloads</label><label class="sv-check-label cursor-interaction"><input type="checkbox" checked>Thư mục Temp</label><label class="sv-check-label cursor-interaction"><input type="checkbox">Thư mục Startup</label></div>${action('Thêm thư mục','choose-folder','','folder-plus')}`;
+    return tools(`<button type="button" class="sv-back cursor-interaction" data-page="overview">${icon('arrow-left')}Về Tổng quan</button>`)+`<div class="sv-mode-grid">${modes.map(m=>`<button type="button" class="sv-mode cursor-interaction" data-mode="${m.id}" aria-pressed="${state.mode===m.id}"><span class="sv-mode-icon">${icon(m.icon)}</span><span style="flex:1;min-width:0"><span class="sv-mode-title">${m.title}</span><span class="sv-mode-description">${m.note}</span></span><span class="sv-mode-check">${state.mode===m.id?icon('check'):''}</span></button>`).join('')}</div><section class="sv-box sv-scope"><h2>${selected.title}</h2><p class="sv-section-note">Phạm vi quét</p>${scope}<div class="sv-settings-actions"><span class="sv-draft-note">Sử dụng chữ ký và phân tích heuristic.</span>${action('Bắt đầu quét','scan','sv-primary','scan-line')}</div></section>`+foot('Sẵn sàng bắt đầu quét','CSDL chữ ký đã cập nhật');
+  }
+  function details() {
+    const tabs = [['info','Thông tin chi tiết'],['virustotal','VirusTotal'],['behavior','Hành vi'],['strings','Chuỗi ký tự'],['extra','Thông tin bổ sung']];
+    let body = '';
+    if (state.detail==='info') body = `<div class="sv-detail-grid"><section><h2>Thông tin tệp</h2><dl class="sv-info-list">${infoRow('Tên tệp','invoice_update.exe')}${infoRow('Loại tệp','Windows PE · 64 bit')}${infoRow('Kích thước','248 KB')}${infoRow('Phát hiện lúc','04/10/2026 · 09:25')}${infoRow('Nguồn phát hiện','Bảo vệ thời gian thực')}</dl></section><section><h2>Kết quả phân tích</h2><div class="sv-analysis" style="margin-top:16px">${badge('Mức độ cao','sv-risk')}<h3 style="margin-top:12px">HEUR: Suspicious.PE</h3><p>Tệp có các dấu hiệu đáng ngờ trong cấu trúc và nội dung. Cần kiểm tra trước khi chạy hoặc khôi phục.</p></div><div class="sv-callout sv-warn" style="margin-top:13px;margin-bottom:0">${icon('triangle-alert')}<span>Khuyến nghị giữ tệp trong khu vực cách ly.</span></div></section></div>`;
+    if (state.detail==='virustotal') body = `<div class="sv-vt-heading"><h2>Kết quả phân tích</h2>${action('Tra cứu lại','vt-query','sv-primary')}</div><p class="sv-vt-summary">18 trong 72 công cụ đánh dấu tệp có dấu hiệu độc hại.</p><div class="sv-vt-stats"><div><span>Công cụ cảnh báo</span><strong class="sv-risk-ink">18</strong></div><div><span>Tổng công cụ phân tích</span><strong>72</strong></div><div><span>Lần tra cứu</span><strong class="sv-vt-date">04/10/2026 · 09:27</strong></div></div><div class="sv-vt-table-title"><h3>Chi tiết theo công cụ</h3><span>4 kết quả hiển thị</span></div><div class="sv-table-wrap"><table class="sv-data-table"><thead><tr><th>Công cụ phân tích</th><th>Nhận diện / kết quả</th></tr></thead><tbody>${[['Engine A','Trojan.Generic'],['Engine B','Malware.Suspicious'],['Engine C','HEUR: Trojan.Win32'],['Engine D','Riskware.Generic']].map(([name,result])=>`<tr><td><strong>${name}</strong></td><td>${result}</td></tr>`).join('')}</tbody></table></div><p class="sv-vt-note">Dữ liệu minh họa. Tra cứu thật sẽ dùng mã băm của tệp.</p>`;
+    if (state.detail==='behavior') body = `<h2>Dấu hiệu hành vi</h2><p class="sv-section-note">Các chỉ dấu minh họa từ quá trình phân tích tệp.</p><dl class="sv-info-list">${infoRow('Tiến trình','invoice_update.exe')}${infoRow('Khởi động cùng máy',badge('Cần kiểm tra','sv-warn')+'<p class="sv-section-note">Tham chiếu đến thư mục Startup.</p>')}${infoRow('Thực thi lệnh',badge('Đáng ngờ','sv-risk')+'<p class="sv-section-note">Có chuỗi lệnh PowerShell được mã hóa.</p>')}${infoRow('Kết nối mạng','Có chuỗi địa chỉ trong nội dung tệp')}${infoRow('Kết luận','Giữ cách ly và đối chiếu với kết quả chữ ký.')}</dl>`;
+    if (state.detail==='strings') body = `<div class="sv-box-head" style="padding:0 0 13px"><h2>Chuỗi ký tự trích xuất</h2>${badge('6 chuỗi mẫu')}</div>${['This program cannot be run in DOS mode.','kernel32.dll','CreateProcessW','powershell -EncodedCommand ...','Software\\Microsoft\\Windows\\CurrentVersion\\Run','https://sample.invalid/update'].map((text,i)=>`<div class="sv-string-row"><span class="sv-string-number">${String(i+1).padStart(3,'0')}</span><code>${text.replaceAll('&','&amp;').replaceAll('<','&lt;')}</code></div>`).join('')}`;
+    if (state.detail==='extra') body = `<h2>Thông tin bổ sung</h2><dl class="sv-info-list">${infoRow('Đường dẫn gốc','<span class="sv-code">C:\\Users\\User\\Downloads\\invoice_update.exe</span>')}${infoRow('SHA-256','<span class="sv-code">9b72c1f43a61b7e71f04c6492c30c88e765241a19a2fd583fdd160fd8bc4f614</span>')}${infoRow('MD5','<span class="sv-code">3e7653b2b6f8b32212b0acb80cd7ab89</span>')}${infoRow('Chữ ký số',badge('Chưa xác thực','sv-warn'))}${infoRow('Ngày tạo tệp','04/10/2026 · 09:24')}${infoRow('Trạng thái','Đang cách ly')}${infoRow('Mã mục cách ly','QTN-20261004-001')}</dl>`;
+    return tools(`<button type="button" class="sv-back cursor-interaction" data-page="quarantine">${icon('arrow-left')}Về danh sách tệp</button>`)+`<section class="sv-box sv-file-summary"><span class="sv-file-summary-icon">${icon('file-warning')}</span><div class="sv-file-summary-text"><h2>invoice_update.exe</h2><p>C:\\Users\\User\\Downloads · 248 KB</p></div>${badge('Đang cách ly','sv-warn')}</section><div class="sv-tabs" role="tablist" aria-label="Phân tích tệp">${tabs.map(([id,title])=>`<button type="button" id="sv-detail-${id}" role="tab" class="sv-tab cursor-interaction" aria-controls="sv-detail-panel" aria-selected="${state.detail===id}" data-detail="${id}">${title}</button>`).join('')}</div><section class="sv-box sv-detail-body" id="sv-detail-panel" role="tabpanel" aria-labelledby="sv-detail-${state.detail}">${body}</section>`+foot('Phân tích tệp mẫu','Chi tiết · VirusTotal · Hành vi · Chuỗi · Metadata');
+  }
+  const pages = {overview,protection,quarantine:quarantinePage,history,settings,advanced,details};
+  function render() {
+    picker.value = state.page;
+    root.querySelectorAll('.sv-nav-item').forEach(el=>{
+      const active = el.dataset.page === state.page || el.dataset.page==='overview'&&state.page==='advanced' || el.dataset.page==='quarantine'&&state.page==='details';
+      if (active) el.setAttribute('aria-current','page'); else el.removeAttribute('aria-current');
+    });
+    root.querySelector('#sv-quarantine-count').textContent = quarantine.length;
+    const sidebarFooter = root.querySelector('.sv-sidebar-footer');
+    sidebarFooter.classList.toggle('sv-paused',!features[0].on);
+    sidebarFooter.innerHTML = `<span class="sv-status-dot"></span>${features[0].on?'Bảo vệ đang hoạt động':'Bảo vệ thời gian thực tắt'}<small>Phiên bản 1.0.4</small>`;
+    content.innerHTML = pages[state.page]();
+    initIcons();
+  }
+  function navigate(page) {state.page=page;say('');render();}
+  function updateSelection() {
+    root.querySelector('#sv-selection-count').textContent = `Đã chọn ${state.selected.size} tệp`;
+    root.querySelector('#sv-select-all').checked = state.selected.size===quarantine.length;
+    root.querySelectorAll('[data-action="restore"],[data-action="delete"]').forEach(b=>b.disabled=state.selected.size===0);
+  }
+  root.addEventListener('change',event=>{
+    const el = event.target;
+    if (el===picker) navigate(el.value);
+    if (el.id==='sv-state-select') {state.overview=el.value;features[0].on=el.value!=='warning';render();root.querySelector('#sv-state-select').focus();say('Trạng thái mẫu: '+el.options[el.selectedIndex].text);}
+    if (el.dataset.file) {const id=Number(el.dataset.file);el.checked?state.selected.add(id):state.selected.delete(id);updateSelection();}
+    if (el.id==='sv-select-all') {state.selected=new Set(el.checked?quarantine.map(f=>f.id):[]);root.querySelectorAll('[data-file]').forEach(c=>c.checked=el.checked);updateSelection();}
+    if (el.dataset.toggle) {
+      const f = [...features,...general].find(item=>item.key===el.dataset.toggle);
+      if (f.key==='virustotal'&&el.checked&&!state.keySaved) {el.checked=false;say('Dữ liệu mẫu: hãy cấu hình API key trong Cài đặt → VirusTotal.');return;}
+      f.on=el.checked;
+      if (f.key==='realtime') state.overview=f.on?'safe':'warning';
+      if (state.page==='protection') {render();const replacement=root.querySelector(`[data-toggle="${f.key}"]`);if(replacement) replacement.focus();}
+      say(`${f.name}: ${f.on?'đã bật':'đã tắt'} trong phác thảo.`);
+    }
+  });
+  root.addEventListener('click',event=>{
+    const button = event.target.closest('button');
+    if (!button || !root.contains(button) || button.disabled) return;
+    if (button.dataset.page) return navigate(button.dataset.page);
+    if (button.dataset.mode) {state.mode=button.dataset.mode;render();root.querySelector(`[data-mode="${state.mode}"]`).focus();return;}
+    if (button.dataset.detail) {state.detail=button.dataset.detail;render();root.querySelector(`[data-detail="${state.detail}"]`).focus();return;}
+    if (button.dataset.settings) {state.settings=button.dataset.settings;render();root.querySelector(`[data-settings="${state.settings}"]`).focus();return;}
+    const cmd = button.dataset.action;
+    if (pages[cmd]) return navigate(cmd);
+    if (cmd==='scan') {state.overview='scanning';navigate('overview');say('Đang hiển thị trạng thái quét mẫu.');}
+    if (cmd==='finish') {state.overview='threats';render();say('Kết quả mẫu: 3 tệp cần xử lý.');}
+    if (cmd==='cancel'||cmd==='safe-result') {state.overview='safe';navigate('overview');}
+    if (cmd==='enable') {features[0].on=true;state.overview='safe';render();say('Đã bật bảo vệ trong phác thảo.');}
+    if (cmd==='isolate') {state.overview='safe';render();say('Đã hiển thị kết quả cách ly trong phác thảo.');}
+    if (cmd==='vt-settings') {state.settings='virustotal';navigate('settings');}
+    if (cmd==='filter') {state.filtered=root.querySelector('#sv-scan-filter').value==='quick';render();say('Đã cập nhật danh sách lịch sử mẫu.');}
+    if (cmd==='restore'||cmd==='delete') {const count=state.selected.size;quarantine=quarantine.filter(f=>!state.selected.has(f.id));state.selected.clear();render();say(`Dữ liệu mẫu: ${cmd==='restore'?'đã khôi phục':'đã xóa'} ${count} tệp.`);}
+    if (cmd==='save-settings') {root.querySelector('#sv-saved-label').textContent='Đã lưu thiết lập mẫu.';say('Đã lưu thiết lập trong phác thảo.');}
+    if (cmd==='defaults') {general.forEach(f=>f.on=f.key!=='samples');features.forEach(f=>f.on=f.key!=='virustotal');render();say('Đã hiển thị thiết lập mặc định mẫu.');}
+    if (cmd==='save-key') {const input=root.querySelector('#sv-api-key');if(!input.value.trim()){say('Nhập API key mẫu để xem trạng thái đã cấu hình.');input.focus();return;}state.keySaved=true;render();say('Đã cấu hình API key mẫu. Không có kết nối API.');}
+    if (cmd==='clear-key') {state.keySaved=false;features.find(f=>f.key==='virustotal').on=false;render();say('Đã gỡ API key mẫu.');}
+    if (cmd==='choose-folder'||cmd==='choose-files') say(cmd==='choose-folder'?'Phác thảo chọn thư mục: C:\\Users\\User\\Downloads':'Phác thảo chọn tệp: 2 tệp mẫu.');
+    if (['update','refresh','export','vt-query','open-data','clear-cache','samples'].includes(cmd)) {
+      const messages={update:'CSDL chữ ký mẫu đã cập nhật.',refresh:'Đã làm mới danh sách mẫu.',export:'Phác thảo thao tác xuất CSV lịch sử.', 'vt-query':'Đang xem kết quả VirusTotal mẫu.', 'open-data':'Phác thảo thao tác mở thư mục dữ liệu.', 'clear-cache':'Đã hiển thị trạng thái xóa cache mẫu.',samples:'Phác thảo thao tác tạo tệp kiểm thử.'};
+      say(messages[cmd]);
+    }
+  });
+  render();
+})();
+</script>
+<script>lucide.createIcons({attrs:{width:16,height:16}})</script></body></html>

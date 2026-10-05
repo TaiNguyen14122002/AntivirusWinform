@@ -1,4 +1,4 @@
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,6 +23,7 @@ namespace ScanAndRemoveVirus
         private readonly UcCaiDat ucCaiDat = new UcCaiDat();
 
         private UserControl currentControl;
+        private Label lblSidebarState;
 
         // =====================================================
         // 2. SIDEBAR
@@ -51,17 +52,6 @@ namespace ScanAndRemoveVirus
         public FrmMain()
         {
             InitializeComponent();
-
-            MessageBox.Show(
-                DbConnection.GetConnectionString(),
-                "Kiểm tra SQL",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-
-            var repo = new VirusSignatureRepository();
-            long total = repo.CountActive();
-            MessageBox.Show(
-                "SQL Server dang co " + total + " chu ky virus.");
 
             // Bật DoubleBuffered cho Form.
             DoubleBuffered = true;
@@ -99,6 +89,7 @@ namespace ScanAndRemoveVirus
 
             // Cập nhật bố cục ban đầu.
             UpdateResponsiveLayout();
+            InitializeSketch20();
         }
 
         // =====================================================
@@ -203,7 +194,17 @@ namespace ScanAndRemoveVirus
             try
             {
                 // Logo thương hiệu.
-                picBrand.Image = UiIcons.BrandShield(36);
+                picBrand.Image = UiIcons.BrandShield(32);
+                lblBrandName.ForeColor = Theme.TextDark;
+                lblBrandTag.AutoSize = false;
+                lblBrandTag.Size = new Size(134, 34);
+                lblSidebarState = SketchUi.Label("", Theme.SmallFont, Theme.Green);
+                lblSidebarState.SetBounds(22, 20, 176, 30);
+                pnlSidebarBottom.Controls.Add(lblSidebarState);
+                lblVersion.Location = new Point(22, 56);
+                RealTimeProtection.StatusChanged += SidebarProtectionChanged;
+                Shown += delegate { SidebarProtectionChanged(RealTimeProtection.IsRunning); };
+                FormClosed += delegate { RealTimeProtection.StatusChanged -= SidebarProtectionChanged; };
 
                 // Tạo các mục điều hướng.
                 btnTongQuan = MakeNav(
@@ -259,8 +260,8 @@ namespace ScanAndRemoveVirus
 
                 PlaceNav(
                     btnCaiDat,
-                    pnlSidebarBottom,
-                    12
+                    pnlNavHost,
+                    290
                 );
 
                 sidebarInitialized = true;
@@ -412,13 +413,34 @@ namespace ScanAndRemoveVirus
         // 11. API ĐIỀU HƯỚNG
         // =====================================================
 
+        public void MoCaiDatVirusTotal()
+        {
+            if (exactView != null) { exactView.SettingsTab = 2; exactView.Go("settings"); return; }
+            Navigate(btnCaiDat);
+            ucCaiDat.OpenVirusTotalSettings();
+        }
+
+        private void SidebarProtectionChanged(bool running)
+        {
+            if (lblSidebarState == null || IsDisposed) return;
+            if (InvokeRequired)
+            {
+                if (IsHandleCreated) BeginInvoke((MethodInvoker)(() => SidebarProtectionChanged(running)));
+                return;
+            }
+            lblSidebarState.Text = running ? "● Bảo vệ đang hoạt động" : "● Bảo vệ thời gian thực đang tắt";
+            lblSidebarState.ForeColor = running ? Theme.Green : Theme.Amber;
+        }
+
         public void MoTabCachLy()
         {
+            if (exactView != null) { exactView.Go("quarantine"); return; }
             Navigate(btnCachLy);
         }
 
         public void MoTabLichSu()
         {
+            if (exactView != null) { exactView.Go("history"); return; }
             Navigate(btnLichSu);
         }
 
@@ -431,6 +453,14 @@ namespace ScanAndRemoveVirus
             string v = (view ?? "")
                 .Trim()
                 .ToLowerInvariant();
+
+            if (exactView != null)
+            {
+                if (v.StartsWith("nangcao", StringComparison.Ordinal))
+                { exactView.AdvancedMode = v.Contains("full") ? 0 : v.Contains("file") ? 2 : v.Contains("custom") ? 3 : 1; exactView.Go("advanced"); }
+                else exactView.Go(v == "baove" ? "protection" : v == "cachly" ? "quarantine" : v == "lichsu" ? "history" : v == "caidat" ? "settings" : v == "chitiet" ? "details" : "overview");
+                return;
+            }
 
             switch (v)
             {
@@ -512,14 +542,14 @@ namespace ScanAndRemoveVirus
 
             int padding =
                 ClientSize.Width < 1180
-                    ? 16
-                    : 30;
+                    ? 20
+                    : 26;
 
             Padding newPadding = new Padding(
                 padding,
-                20,
+                28,
                 padding,
-                20
+                22
             );
 
             if (pnlContent.Padding != newPadding)

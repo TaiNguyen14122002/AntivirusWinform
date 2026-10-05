@@ -522,15 +522,16 @@ namespace ScanAndRemoveVirus.Control
             string caption = Text ?? string.Empty;
             Size textSize = TextRenderer.MeasureText(
                 caption, Font, Size.Empty, TextFormatFlags.NoPadding);
-            int iconWidth = Icon == null ? 0 : Icon.Width;
-            int gap = iconWidth == 0 ? 0 : IconGap;
+            Image displayIcon = Icon ?? Image;
+            int iconWidth = displayIcon == null ? 0 : displayIcon.Width;
+            int gap = iconWidth == 0 || string.IsNullOrEmpty(caption) ? 0 : IconGap;
             int totalWidth = iconWidth + gap + textSize.Width;
             int x = Math.Max(8, (Width - totalWidth) / 2);
 
-            if (Icon != null)
+            if (displayIcon != null)
             {
-                int y = (Height - Icon.Height) / 2;
-                g.DrawImage(Icon, x, y, Icon.Width, Icon.Height);
+                int y = (Height - displayIcon.Height) / 2;
+                g.DrawImage(displayIcon, x, y, displayIcon.Width, displayIcon.Height);
                 x += iconWidth + gap;
             }
 

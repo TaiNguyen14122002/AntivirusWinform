@@ -101,6 +101,17 @@ namespace ScanAndRemoveVirus.Control
                 });
         }
 
+        public static Bitmap PausedShieldBadge(int size)
+        {
+            return Get("shield-paused", size, Theme.Amber, delegate(Graphics g, int s, Color c)
+            {
+                using (var brush = new SolidBrush(Theme.AmberTint))
+                    g.FillEllipse(brush, 0, 0, s - 1, s - 1);
+                int inner = (int)(s * 0.52f);
+                g.DrawImage(ShieldSearch(inner, c), (s - inner) / 2, (s - inner) / 2, inner, inner);
+            });
+        }
+
         static GraphicsPath ShieldPath(int s)
         {
             var p = new GraphicsPath();
