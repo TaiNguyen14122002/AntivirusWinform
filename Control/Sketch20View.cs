@@ -377,21 +377,27 @@ namespace ScanAndRemoveVirus.Control
         }
         private void Activity(int y)
         {
-            int rows = Model.Activities.Count, height = 66 + (rows == 0 ? 125 : Math.Min(rows, 5) * 67);
+            const int rowHeight = 67;
+            int rows = Math.Min(Model.Activities.Count, 5), height = rowHeight + (rows == 0 ? 125 : rows * rowHeight);
+            Action<int> separator = position =>
+            {
+                var bounds = new Rectangle(1, position + bodyOffset, layoutWidth - 2, 1);
+                Canvas.Drawing.Add(g => { using (var brush = new SolidBrush(Sketch20Style.Border)) g.FillRectangle(brush, bounds); });
+            };
             Card("activity", 0, y, layoutWidth, height);
             Icon("history", 20, y + 23, 18); Text("Hoạt động gần đây", 48, y + 17, layoutWidth - 200, 31, 17, Sketch20Style.Ink, true);
             Button("open-history", "Xem lịch sử  ›", layoutWidth - 118, y + 17, 98, () => Go("history"), "", false, false, 31, true);
-            Line(0, y + 66, layoutWidth);
+            separator(y + rowHeight);
             if (rows == 0) Text("Chưa có hoạt động quét. Nhấn Quét ngay để bắt đầu.", 20, y + 90, layoutWidth - 40, 30, 13, Sketch20Style.Muted);
-            for (int i = 0; i < Math.Min(rows, 5); i++)
+            for (int i = 0; i < rows; i++)
             {
-                var row = Model.Activities[i]; int top = y + 66 + i * 67;
+                var row = Model.Activities[i]; int top = y + rowHeight + i * rowHeight;
                 Color bg = row[0] == "check" ? Sketch20Style.GreenSoft : row[0] == "archive" ? Sketch20Style.AmberSoft : Sketch20Style.BlueSoft;
                 Color fg = row[0] == "check" ? Sketch20Style.Green : row[0] == "archive" ? Sketch20Style.Amber : Sketch20Style.Blue;
                 Card("activity-icon-" + i, 20, top + 16, 34, 34, bg, Color.Transparent, 8); Icon(row[0], 29, top + 25, 16, fg);
-                Text(row[1], 66, top + 9, layoutWidth - 155, 27); Text(row[2], 66, top + 33, layoutWidth - 155, 20, 11, Sketch20Style.Muted);
+                Text(row[1], 66, top + 10, layoutWidth - 155, 24); Text(row[2], 66, top + 33, layoutWidth - 155, 20, 11, Sketch20Style.Muted);
                 Text(row[3], layoutWidth - 95, top + 22, 75, 22, 11, Sketch20Style.Muted, false, false, true);
-                if (i < rows - 1) Line(0, top + 67, layoutWidth);
+                if (i < rows - 1) separator(top + rowHeight);
             }
             Footer(y + height + 18, Model.Scanning ? "Đang quét: " + Model.ScanPath : Model.Status, "CSDL chữ ký: " + Model.Signature);
         }
