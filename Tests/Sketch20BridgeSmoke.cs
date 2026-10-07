@@ -1,4 +1,4 @@
-// Chỉ dùng tệp kiểm thử trong thư mục riêng. Không truy cập SQL/API của người dùng.
+﻿// Chỉ dùng tệp kiểm thử trong thư mục riêng. Không truy cập SQL/API của người dùng.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,7 +27,7 @@ internal static partial class Sketch20Smoke
     [DllImport("user32.dll")] private static extern bool EnumWindows(VisitWindow visit, IntPtr parameter);
     [DllImport("user32.dll")] private static extern IntPtr GetDlgItem(IntPtr handle, int id);
     private static T Read<T>(object target, string name) { return (T)target.GetType().GetField(name, Private).GetValue(target); }
-    private static void Click(Sketch20View view, string name) { ((Button)view.Canvas.Controls[name]).PerformClick(); Pump(); }
+    private static void Click(Sketch20View view, string name) { var control = view.Controls.Find(name, true).FirstOrDefault() as Button; if (control == null) control = view.Canvas.Controls[name] as Button; if (control == null) throw new InvalidOperationException("Không tìm thấy control: " + name); control.PerformClick(); Pump(); }
     private static void WaitScan(UcTongQuan scan)
     { var watch = Stopwatch.StartNew(); while (scan.ExactScanning && watch.ElapsedMilliseconds < 15000) Pump(30); Pump(300); }
     private static void LiveShot(Form form, string path)
@@ -44,6 +44,9 @@ internal static partial class Sketch20Smoke
         string folder = Path.Combine(output, "bridge-data"); Directory.CreateDirectory(folder);
         Environment.SetEnvironmentVariable("XVIRUS_DATA_DIR", folder);
         Environment.SetEnvironmentVariable("XVIRUS_LEGACY_UI_TEST", "0");
+        var apiPath = typeof(VirusTotalClient).GetField("cachedApiKeyPath", BindingFlags.NonPublic | BindingFlags.Static);
+        object previousApiPath = apiPath.GetValue(null);
+        apiPath.SetValue(null, Path.Combine(folder, "isolated-test-api-key.txt"));
         typeof(DbConnection).GetField("ConnectionString", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, "Sketch20SmokeIsolation=true");
         var settings = AppSettings.Load(); settings.RealTimeOnPersist = settings.UsbProtection = settings.DownloadProtection = settings.BehaviorWatch = settings.StartupFoldersWatch = settings.AutoUpdate = settings.VtAutoQuery = false;
         AppSettings.Save(settings);
@@ -73,12 +76,19 @@ internal static partial class Sketch20Smoke
                 form.Show(); Pump(450);
                 var view = form.exactView; var scan = Read<UcTongQuan>(form, "ucTongQuan");
                 Check("Ứng dụng mở mặc định bằng giao diện 20 màn", view != null && view.Visible && !view.Model.Sample);
-                Check("Giao diện phủ đủ vùng ứng dụng, sidebar không bị nhân đôi", view.Bounds == new Rectangle(1, 1, form.ClientSize.Width - 2, form.ClientSize.Height - 2));
+                var nativeStatus = form.Controls["mainStatusStrip"] as StatusStrip;
+                var legacySidebar = Read<Panel>(form, "pnlSidebar");
+                var legacyContent = Read<Panel>(form, "pnlContent");
+                bool layoutOk = nativeStatus != null && view.Left == 0 && view.Top == 0 && view.Width == form.ClientSize.Width && view.Bottom == nativeStatus.Top && !legacySidebar.Visible && !legacyContent.Visible;
+                if (!layoutOk) Console.WriteLine("LAYOUT DIAG: client=" + form.ClientSize + "; view=" + view.Bounds + "; status=" + (nativeStatus == null ? "null" : nativeStatus.Bounds.ToString()) + "; sidebarVisible=" + legacySidebar.Visible + "; contentVisible=" + legacyContent.Visible + "; padding=" + form.Padding);
+                Check("Giao diện phủ đủ vùng ứng dụng, không còn khoảng dư bên trái", layoutOk);
+                Check("Thanh trạng thái là WinForms StatusStrip thuần", nativeStatus != null && nativeStatus.RenderMode == ToolStripRenderMode.System && nativeStatus.Dock == DockStyle.Bottom);
                 Check("Ứng dụng thật không dùng số liệu minh họa", view.Model.ScannedFiles == 0 && view.Model.Quarantine.Count == 0 && view.Model.Detail == null);
                 Check("Trạng thái bảo vệ tắt lấy từ service", view.ScreenNumber == 20 && !RealTimeProtection.IsRunning);
                 Click(view, "nav-settings");
                 Check("Bánh răng góc phải mở cài đặt thật", view.Page == "settings" && view.Canvas.Controls["tab-0"] != null);
-                Check("Bánh răng giữ nhãn truy cập và trạng thái đang chọn", view.Canvas.Controls["nav-settings"].AccessibleName == "Cài đặt" && ((Sketch20Button)view.Canvas.Controls["nav-settings"]).Selected);
+                var settingsNav = view.Controls.Find("nav-settings", true).FirstOrDefault() as Sketch20Button;
+                Check("Bánh răng cố định ở góc phải giữ nhãn truy cập và trạng thái đang chọn", settingsNav != null && settingsNav.Parent == view.Canvas && settingsNav.Text.Length == 0 && settingsNav.IconName == "settings" && settingsNav.AccessibleName == "Cài đặt" && settingsNav.Selected && settingsNav.Left > view.Canvas.Width - 230);
                 view.Go("protection"); Pump();
                 var protection = Read<UcBaoVe>(form, "ucBaoVe"); protection.ExactSetFlag("aq", false); view.RefreshModel(true);
                 ((Sketch20Switch)view.Canvas.Controls["switch-aq"]).Checked = true; Pump();
@@ -102,14 +112,22 @@ internal static partial class Sketch20Smoke
                 var recursive = view.Canvas.Controls.OfType<Sketch20Check>().Single(); recursive.Checked = false;
                 ((Button)view.Canvas.Controls["start-advanced"]).PerformClick();
                 Check("Nút bắt đầu mới khởi chạy engine và màn đang quét", scan.ExactScanning && view.ScreenNumber == 18);
+                var statusText = Read<ToolStripStatusLabel>(form, "nativeStatusText");
+                Check("StatusStrip cập nhật trạng thái đang quét", scan.ExactScanning && statusText != null && statusText.Text.Contains("Đang quét"));
+                var scanViewport = view.Controls.Find("Sketch20Viewport", true).FirstOrDefault() as Panel;
+                Check("Tổng quan đang quét không hiện scrollbar", scanViewport != null && !scanViewport.AutoScroll && !scanViewport.VerticalScroll.Visible);
+                view.RefreshModel(true);
+                Pump(120);
+                Check("Refresh tiến trình không bật lại scrollbar", !scan.ExactScanning || (scanViewport != null && !scanViewport.AutoScroll && !scanViewport.VerticalScroll.Visible));
                 WaitScan(scan); view.RefreshModel(true);
                 Check("Quét thư mục không đệ quy kiểm tra đúng 4 tệp", !scan.ExactScanning && view.Model.ScannedFiles == 4);
                 Check("Kết quả thật hiện 3 đe dọa cùng tên và lý do", view.ScreenNumber == 19 && view.Model.Threats.Count == 3 && view.Model.Threats.Any(t => t.Name == "invoice.pdf.exe") && !view.Model.Threats.Any(t => t.Name == "invoice_update.exe"));
                 LiveShot(form, Path.Combine(output, "21-live-threats.png"));
                 Click(view, "threat-detail-0");
                 Check("Xem từ bảng mở đúng tệp trong phiên thật", view.Page == "details" && view.Model.Detail != null && view.Model.Detail.Path.StartsWith(samples));
+                string[] detailLabels = { "VirusTotal", "Hoạt động", "Chuỗi ký tự", "Chi tiết" };
                 for (int tab = 1; tab <= 4; tab++)
-                { Click(view, "tab-" + tab); Check("Tab thật " + tab + " nạp dữ liệu controller", Read<TabControl>(scan, "tabChiTietDong").SelectedIndex == tab && view.DetailTab == tab); }
+                { string label = detailLabels[tab - 1]; var targetTab = view.Canvas.Controls.OfType<Sketch20Button>().Single(b => b.Tab && b.Text == label); Click(view, targetTab.Name); Check("Tab thật " + tab + " nạp dữ liệu controller", Read<TabControl>(scan, "tabChiTietDong").SelectedIndex == tab && view.DetailTab == tab); }
                 Check("Thông tin bổ sung giữ SHA256 thực", view.Model.Detail.Sha256 != null && view.Model.Detail.Sha256.Length == 64);
                 LiveShot(form, Path.Combine(output, "22-live-metadata.png"));
                 Click(view, "details-back"); Check("Quay lại từ chi tiết giữ danh sách phiên quét", view.Page == "overview" && view.Model.Threats.Count == 3);
@@ -127,13 +145,16 @@ internal static partial class Sketch20Smoke
                 view.SelectScreen(16); typeof(Sketch20View).GetField("files", Private).SetValue(view, Directory.GetFiles(cancelFolder).ToList()); view.Render();
                 ((Button)view.Canvas.Controls["start-advanced"]).PerformClick();
                 ((Button)view.Canvas.Controls["cancel-scan"]).PerformClick(); WaitScan(scan); view.RefreshModel(true);
+                if (scan.ExactScanning || !view.Model.Status.Contains("Đã hủy"))
+                    Console.WriteLine("Cancel diagnostic: scanning=" + scan.ExactScanning + "; status=" + view.Model.Status);
                 Check("Nút hủy mới ngừng phiên quét của engine", !scan.ExactScanning && view.Model.Status.Contains("Đã hủy"));
                 form.ClientSize = new Size(1040, 720); Pump();
-                Check("Ứng dụng thật co giãn đủ vùng cửa sổ", view.Bounds == new Rectangle(1, 1, form.ClientSize.Width - 2, form.ClientSize.Height - 2));
+                nativeStatus = form.Controls["mainStatusStrip"] as StatusStrip;
+                Check("Ứng dụng thật co giãn đủ vùng cửa sổ", nativeStatus != null && view.Left == 0 && view.Width == form.ClientSize.Width && view.Bottom == nativeStatus.Top);
                 form.Close();
             }
         }
         catch (Exception ex) { Check("Luồng tích hợp chạy đến cuối: " + ex, false); }
-        finally { closeDialogs.Stop(); closeDialogs.Dispose(); foreach (var key in new[] { "usb", "download", "behavior", "startup" }) GuardService.Configure(key, false); RealTimeProtection.Stop(); }
+        finally { closeDialogs.Stop(); closeDialogs.Dispose(); foreach (var key in new[] { "usb", "download", "behavior", "startup" }) GuardService.Configure(key, false); RealTimeProtection.Stop(); apiPath.SetValue(null, previousApiPath); }
     }
 }

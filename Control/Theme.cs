@@ -21,7 +21,7 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color DashboardHeroBorder = Color.FromArgb(207, 232, 219);
         public static readonly Font DashboardHeroFont = new Font("Segoe UI", 20F, FontStyle.Bold);
         public static readonly Font DashboardDateFont = new Font("Segoe UI", 17F, FontStyle.Bold);
-        public static readonly Font DashboardCaptionFont = new Font("Segoe UI", 8.25F, FontStyle.Bold);
+        public static readonly Font DashboardCaptionFont = new Font("Segoe UI", 9F, FontStyle.Bold);
 
         // ---- Brand blue scale (#0A56D8) ----
         public static readonly Color Blue = Color.FromArgb(33, 105, 220);        // primary
@@ -58,20 +58,20 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color ChipGrayText = Color.FromArgb(148, 153, 161);
         public static readonly Color PageBg = Color.White;
 
-        public static readonly Font BodyFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-        public static readonly Font BodyBigFont = new Font("Segoe UI", 11.25F, FontStyle.Regular);  // hàng danh sách thoáng (Hoạt động gần đây)
-        public static readonly Font BoldFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-        public static readonly Font TitleFont = new Font("Segoe UI", 13.5F, FontStyle.Bold);
+        public static readonly Font BodyFont = new Font("Segoe UI", 10.5F, FontStyle.Regular);
+        public static readonly Font BodyBigFont = new Font("Segoe UI", 12F, FontStyle.Regular);  // hàng danh sách thoáng (Hoạt động gần đây)
+        public static readonly Font BoldFont = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+        public static readonly Font TitleFont = new Font("Segoe UI", 14.5F, FontStyle.Bold);
         // Ngôn ngữ thiết kế chuẩn (khởi đầu từ tab Lịch sử): header trang + card + lưới dày
-        public static readonly Font PageTitleFont = new Font("Segoe UI", 18F, FontStyle.Bold);
-        public static readonly Font PageSubFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-        public static readonly Font CardTitleFont = new Font("Segoe UI", 10.125F, FontStyle.Bold);
-        public static readonly Font HintFont = new Font("Segoe UI", 8.25F, FontStyle.Italic);
+        public static readonly Font PageTitleFont = new Font("Segoe UI", 19F, FontStyle.Bold);
+        public static readonly Font PageSubFont = new Font("Segoe UI", 10.5F, FontStyle.Regular);
+        public static readonly Font CardTitleFont = new Font("Segoe UI", 11F, FontStyle.Bold);
+        public static readonly Font HintFont = new Font("Segoe UI", 9F, FontStyle.Italic);
         // Cỡ chữ dùng cho các màn Tổng quan mới (hero, số liệu lớn, khoá tab)
-        public static readonly Font HeroTitleFont = new Font("Segoe UI", 15.75F, FontStyle.Bold);
-        public static readonly Font StatValueFont = new Font("Segoe UI", 18F, FontStyle.Bold);
-        public static readonly Font BadgeFont = new Font("Segoe UI", 8.25F, FontStyle.Bold);
-        public static readonly Font SmallFont = new Font("Segoe UI", 8.25F, FontStyle.Regular);
+        public static readonly Font HeroTitleFont = new Font("Segoe UI", 17F, FontStyle.Bold);
+        public static readonly Font StatValueFont = new Font("Segoe UI", 19F, FontStyle.Bold);
+        public static readonly Font BadgeFont = new Font("Segoe UI", 9F, FontStyle.Bold);
+        public static readonly Font SmallFont = new Font("Segoe UI", 9.25F, FontStyle.Regular);
 
         /// <summary>Mức độ đe dọa — suy ra từ loại phát hiện (SPEC-UcTongQuan.md §6.3).</summary>
         public enum ThreatLevel { High, Medium, Low }
@@ -346,9 +346,9 @@ namespace ScanAndRemoveVirus.Control
         public static void StyleHistoryGrid(DataGridView g)
         {
             StyleGrid(g);
-            g.ColumnHeadersHeight = 48;
-            g.RowTemplate.Height = 48;
-            foreach (DataGridViewRow row in g.Rows) row.Height = 48;
+            g.ColumnHeadersHeight = 50;
+            g.RowTemplate.Height = 52;
+            foreach (DataGridViewRow row in g.Rows) row.Height = 52;
             g.GridColor = BlueSoft;
             g.AlternatingRowsDefaultCellStyle.BackColor = PageBg;
             g.AlternatingRowsDefaultCellStyle.SelectionBackColor = PageBg;
@@ -412,6 +412,8 @@ namespace ScanAndRemoveVirus.Control
             g.ColumnHeadersDefaultCellStyle.BackColor = BlueFaint;
             g.ColumnHeadersDefaultCellStyle.ForeColor = BlueDark;
             g.ColumnHeadersDefaultCellStyle.Font = BoldFont;
+            g.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            g.ColumnHeadersDefaultCellStyle.Padding = new Padding(12, 0, 8, 0);
             // Ô header của CỘT ĐANG CHỌN được vẽ bằng màu Selection*, mặc định là
             // SystemColors.Highlight (xanh đặc) + HighlightText (chữ trắng) — đó là lý do
             // duy nhất cột đầu của bảng Bảo vệ xanh lè còn các cột kia thì không.
@@ -420,9 +422,10 @@ namespace ScanAndRemoveVirus.Control
             g.ColumnHeadersDefaultCellStyle.SelectionForeColor = BlueDark;
             g.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             g.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            g.ColumnHeadersHeight = 40;
+            g.ColumnHeadersHeight = 44;
             g.BackgroundColor = PageBg;
             g.BorderStyle = BorderStyle.None;
+            g.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             g.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             g.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             g.RowHeadersVisible = false;
@@ -430,11 +433,16 @@ namespace ScanAndRemoveVirus.Control
             g.AllowUserToDeleteRows = false;
             g.AllowUserToResizeRows = false;
             g.AllowUserToOrderColumns = false;
+            g.DefaultCellStyle.BackColor = PageBg;
+            g.DefaultCellStyle.ForeColor = TextDark;
+            g.DefaultCellStyle.Font = BodyFont;
+            g.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            g.DefaultCellStyle.Padding = new Padding(12, 0, 10, 0);
             g.RowTemplate.DefaultCellStyle.ForeColor = TextDark;
-            g.RowTemplate.Height = 34;
+            g.RowTemplate.Height = 42;
             // các hàng đã nạp trước khi StyleGrid chạy cũng phải theo đúng chiều cao chung
             foreach (DataGridViewRow row in g.Rows)
-                row.Height = 34;
+                row.Height = 42;
             AlternatingRows(g);
             g.GridColor = Line;
             // BỎ hiệu ứng chọn dòng: bấm vào dòng không đổi màu nền/chữ (chọn vẫn hoạt động ngầm)
@@ -535,7 +543,7 @@ namespace ScanAndRemoveVirus.Control
         // Mọi nút trong app dùng chung hình hài (font, border, cursor);
         // chỉ khác nhau theo VAI TRÒ semantics.
         public enum BtnRole { Primary, Secondary, Cancel, Action, Neutral, Danger }
-        public static readonly Font ButtonFont = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+        public static readonly Font ButtonFont = new Font("Segoe UI", 10.5F, FontStyle.Bold);
 
         /// <summary>
         /// Trạng thái đang áp của một nút (vai trò + đang rê chuột?) — lưu theo nút để
@@ -771,13 +779,13 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Font HeroBigFont = new Font("Segoe UI", 19.5F, FontStyle.Bold); // "Máy tính của bạn được bảo vệ"
         public static readonly Font StatBigFont = new Font("Segoe UI", 23.25F, FontStyle.Bold); // số liệu lớn
         public static readonly Font CardHeadFont = new Font("Segoe UI", 11.25F, FontStyle.Bold); // tiêu đề card
-        public static readonly Font FieldFont = new Font("Segoe UI", 9.75F, FontStyle.Regular);  // nhãn/giá trị
+        public static readonly Font FieldFont = new Font("Segoe UI", 10.5F, FontStyle.Regular);  // nhãn/giá trị
         public static readonly Font MonoFont = new Font("Consolas", 9.75F, FontStyle.Regular);
         // Mục điều hướng sidebar: bản thường + bản đậm (mục đang chọn). Một nguồn cho cả
         // Theme.StyleNav (nút sidebar kiểu cũ) lẫn UiKit.UiNavItem (sidebar hiện tại) — trước đây
         // mỗi bên tự new Font(...), riêng UiNavItem còn new Font(Font, Bold) MỖI LẦN VẼ.
         public static readonly Font NavFont = new Font("Segoe UI", 10.125F, FontStyle.Regular);
-        public static readonly Font NavBoldFont = new Font("Segoe UI", 10.125F, FontStyle.Bold);
+        public static readonly Font NavBoldFont = new Font("Segoe UI", 11F, FontStyle.Bold);
 
         /// <summary>Màu chữ của một "pill" theo ngữ nghĩa (nền = bản *Tint*, chữ = bản *Text*).</summary>
         public enum PillKind { Danger, Warn, Low, Ok, Info, Neutral }

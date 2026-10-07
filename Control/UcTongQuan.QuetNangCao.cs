@@ -621,9 +621,9 @@ namespace ScanAndRemoveVirus.Control
             string systemDrive = string.IsNullOrEmpty(windowsFolder) ? null : Path.GetPathRoot(windowsFolder);
             try
             {
-                foreach (DriveInfo d in DriveInfo.GetDrives())
+                foreach (DriveInfo d in ScanEngine.GetFullScanDrives())
                 {
-                    if (d.DriveType != DriveType.Fixed) continue;
+
                     string loai = string.Equals(d.Name, systemDrive, StringComparison.OrdinalIgnoreCase)
                         ? "Hệ thống (ổ cài đặt Windows)"
                         : "Ổ đĩa dữ liệu";

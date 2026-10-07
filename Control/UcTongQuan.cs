@@ -493,24 +493,43 @@ namespace ScanAndRemoveVirus.Control
             cts = new CancellationTokenSource();
             CancellationToken token = cts.Token;
             bool completed = false;
+            var progressGate = new object();
+            bool progressQueued = false;
+            int latestCount = 0;
+            string latestPath = null;
+            var progressClock = System.Diagnostics.Stopwatch.StartNew();
+            long lastProgressTime = -150;
             Action<int, string> progress = (count, current) =>
             {
+                lock (progressGate)
+                {
+                    latestCount = Math.Max(latestCount, count);
+                    if (current != null) latestPath = current;
+                    if (progressQueued || progressClock.ElapsedMilliseconds - lastProgressTime < 150) return;
+                    progressQueued = true;
+                }
                 try
                 {
                     BeginInvoke((MethodInvoker)(() =>
                     {
-                        lblScannedCount.Text = count.ToString("N0");
-                        if (current != null)
+                        int shownCount; string shownPath;
+                        lock (progressGate)
                         {
-                            lblScanProgress.Text = string.Format("Đang quét: {0}  ({1:N0} tệp)",
-                                current, count);
-                            // (lần 9) dải loading ở đầu trang bám đúng tiến trình của nhãn trạng thái quét
+                            shownCount = latestCount; shownPath = latestPath;
+                            lastProgressTime = progressClock.ElapsedMilliseconds;
+                            progressQueued = false;
+                        }
+                        if (!isScanning || token.IsCancellationRequested) return;
+                        lblScannedCount.Text = shownCount.ToString("N0");
+                        if (shownPath != null)
+                        {
+                            lblScanProgress.Text = string.Format("Đang quét: {0}  ({1:N0} tệp)", shownPath, shownCount);
                             CapNhatDongChiTietLoading(lblScanProgress.Text);
                         }
                     }));
                 }
-                catch (ObjectDisposedException) { } // form đã đóng giữa chừng
-                catch (InvalidOperationException) { }
+                catch (ObjectDisposedException) { lock (progressGate) progressQueued = false; }
+                catch (InvalidOperationException) { lock (progressGate) progressQueued = false; }
             };
 
             try
@@ -519,7 +538,7 @@ namespace ScanAndRemoveVirus.Control
                     ? new List<string>(job.Targets)
                     : null;
 
-                ScanResult result = await Task.Run(() =>
+                var worker = Task.Run(() =>
                 {
                     if (targets == null)
                         return ScanEngine.Scan(job.Type, job.CustomPath, token, progress);
@@ -528,14 +547,19 @@ namespace ScanAndRemoveVirus.Control
                     foreach (string target in targets)
                     {
                         token.ThrowIfCancellationRequested();
-                        ScanResult part = ScanEngine.Scan(ScanType.Custom, target, token, progress);
+                        int completedFiles = merged.FilesScanned;
+                        ScanResult part = ScanEngine.Scan(ScanType.Custom, target, token, (n, path) => progress(completedFiles + n, path));
                         merged.FilesScanned += part.FilesScanned;
                         merged.Duration += part.Duration;
                         foreach (ThreatFound t in part.Threats) merged.Threats.Add(t);
                     }
                     return merged;
-                });
+                }, token);
+                ScanResult result = await WaitForScan(worker, token);
 
+                // A cancel click can arrive after the worker finishes but before
+                // its continuation reaches the UI thread. Honor that request too.
+                token.ThrowIfCancellationRequested();
                 completed = true;
                 ApDungKetQuaQuet(result, job);
             }
@@ -561,6 +585,27 @@ namespace ScanAndRemoveVirus.Control
                 if (cts != null) { cts.Dispose(); cts = null; }
             }
             return completed;
+        }
+
+        private static async Task<ScanResult> WaitForScan(Task<ScanResult> worker, CancellationToken token)
+        {
+            // Cancellation must release the UI even while the thread pool has not
+            // started this worker. The worker keeps its cancelled token and cannot
+            // apply results to a later scan session.
+            var cancelled = new TaskCompletionSource<bool>();
+            using (token.Register(() => cancelled.TrySetResult(true)))
+            {
+                if (await Task.WhenAny(worker, cancelled.Task) != worker)
+                {
+                    _ = worker.ContinueWith(t => { var observed = t.Exception; },
+                        CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default);
+                    // Leave the Cancel() callback before disposing its registration.
+                    await Task.Yield();
+                    token.ThrowIfCancellationRequested();
+                }
+                return await worker;
+            }
         }
 
         /// <summary>Hiển thị kết quả phiên quét: bảng đe dọa, 5 tab chi tiết, thống kê, lịch sử, thông báo.</summary>
@@ -1367,9 +1412,6 @@ namespace ScanAndRemoveVirus.Control
         }
     }
 }
-
-
-
 
 
 
