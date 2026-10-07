@@ -64,7 +64,7 @@ namespace ScanAndRemoveVirus.Services
 
         private const long MaxContentScanBytes = 4 * 1024 * 1024;
         private const int ProgressEveryNFiles = 2000;
-        private const int MaxParallelWorkers = 64;
+        private const int MaxParallelWorkers = 4;
         private const int FileChunkSize = 1024;
         private const int MaxCacheEntries = 500000;
         private static readonly byte[] SignatureBytes = Encoding.ASCII.GetBytes(TestSignature);
@@ -349,6 +349,26 @@ namespace ScanAndRemoveVirus.Services
         // Báo cho UI (tab Tổng quan + tab Cách ly) khi danh sách cách ly thay đổi.
         public static event Action QuarantineChanged;
 
+        // One discovery policy for the scan engine and both scan selection views.
+        // Snapshot ready drives; a disconnected device must not hide the other drives.
+        public static DriveInfo[] GetFullScanDrives()
+        {
+            var drives = new List<DriveInfo>();
+            foreach (var drive in DriveInfo.GetDrives())
+            {
+                try
+                {
+                    if (drive.DriveType != DriveType.NoRootDirectory &&
+                        drive.DriveType != DriveType.Unknown && drive.IsReady)
+                        drives.Add(drive);
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+                catch (System.Security.SecurityException) { }
+            }
+            return drives.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+        }
+
         public static IEnumerable<string> GetScanRoots(ScanType type, string customPath)
         {
             if (type == ScanType.Custom)
@@ -357,9 +377,7 @@ namespace ScanAndRemoveVirus.Services
                     : Enumerable.Repeat(customPath, 1);
 
             if (type == ScanType.Full)
-                return DriveInfo.GetDrives()
-                    .Where(d => d.IsReady && d.DriveType == DriveType.Fixed)
-                    .Select(d => d.Name);
+                return GetFullScanDrives().Select(d => d.Name);
 
             string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             return new[]
@@ -413,10 +431,7 @@ namespace ScanAndRemoveVirus.Services
                     Cancellation = ct
                 };
 
-                int workerCount = Math.Max(8, Math.Min(MaxParallelWorkers, Environment.ProcessorCount * 4));
-                int minWorker, minIocp;
-                ThreadPool.GetMinThreads(out minWorker, out minIocp);
-                ThreadPool.SetMinThreads(Math.Max(minWorker, workerCount), Math.Max(minIocp, workerCount));
+                int workerCount = Math.Max(1, Math.Min(MaxParallelWorkers, Environment.ProcessorCount - 1));
 
                 for (int i = 0; i < workerCount; i++)
                     ThreadPool.QueueUserWorkItem(delegate { RunWorker(state); });

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -55,7 +55,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 var row = dgvHistory.Rows[i]; var source = row.Tag as HistoryEntry; if (source == null) continue;
                 model.History.Add(new Sketch20History { Index = i, Date = source.Time.ToString("dd/MM/yyyy"), Time = source.Time.ToString("HH:mm"),
-                    Type = source.Type, Result = source.Threats == 0 ? "An toàn" : KetQuaCua(source), Files = source.Files.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")),
+                    Type = source.Type, Scope = source.Scope, Result = source.Threats == 0 ? "An toàn" : KetQuaCua(source), Files = source.Files.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")),
                     Threats = source.Threats.ToString(), Duration = source.Seconds > 0 ? FormatSeconds(source.Seconds) : "—", Risk = source.Threats > 0 });
             }
         }
@@ -71,6 +71,17 @@ namespace ScanAndRemoveVirus.Control
             else if (command == "history-prev") GoPage(trang - 1);
             else if (command == "history-next") GoPage(trang + 1);
             else if (command == "history-refresh") LoadRealData();
+            else if (command != null && command.StartsWith("history-delete:", StringComparison.Ordinal))
+            {
+                int index;
+                if (!int.TryParse(command.Substring("history-delete:".Length), out index)) return;
+                HistoryEntry entry = ExactHistoryEntry(index);
+                if (entry == null) return;
+                DialogResult answer = MessageBox.Show(string.Format("Xóa nhật ký \"{0}\" lúc {1:dd/MM/yyyy HH:mm}?\r\n\r\nHành động này không thể hoàn tác.", entry.Type, entry.Time), "Xóa nhật ký hoạt động", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (answer != DialogResult.Yes) return;
+                if (!ScanHistoryStore.Remove(entry)) { MessageBox.Show("Không xóa được bản ghi này. Hãy làm mới nhật ký rồi thử lại.", "Xóa nhật ký hoạt động", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+                LoadRealData();
+            }
         }
         internal HistoryEntry ExactHistoryEntry(int index)
         { return index >= 0 && index < dgvHistory.Rows.Count ? dgvHistory.Rows[index].Tag as HistoryEntry : null; }
@@ -131,7 +142,11 @@ namespace ScanAndRemoveVirus.Control
             {
                 var row = dgvActivity.Rows[i]; if (row.IsNewRow) continue;
                 string description = Convert.ToString(row.Cells[colActDesc.Index].Value);
-                model.Activities.Add(new[] { description.IndexOf("cách ly", StringComparison.OrdinalIgnoreCase) >= 0 ? "archive" : description.IndexOf("cập nhật", StringComparison.OrdinalIgnoreCase) >= 0 ? "refresh" : "check", description, "", Convert.ToString(row.Cells[colActTime.Index].Value) });
+                int separator = description.IndexOf(": ", StringComparison.Ordinal);
+                string title = separator > 0 ? description.Substring(0, separator) : description;
+                string detail = separator > 0 ? description.Substring(separator + 2) : "";
+                string icon = description.IndexOf("cách ly", StringComparison.OrdinalIgnoreCase) >= 0 ? "archive" : description.IndexOf("phát hiện", StringComparison.OrdinalIgnoreCase) >= 0 ? "alert" : description.IndexOf("cập nhật", StringComparison.OrdinalIgnoreCase) >= 0 ? "refresh" : "check";
+                model.Activities.Add(new[] { icon, title, detail, Convert.ToString(row.Cells[colActTime.Index].Value) });
             }
         }
         private Sketch20File ExactFile(ThreatRow row, int index)
@@ -164,7 +179,18 @@ namespace ScanAndRemoveVirus.Control
             model.Behavior.Add(new[] { "Kết nối mạng", model.Strings.Any(s => s.StartsWith("http", StringComparison.OrdinalIgnoreCase)) ? "Có chuỗi địa chỉ trong nội dung tệp" : "Chưa có chuỗi địa chỉ được trích xuất" });
             model.Behavior.Add(new[] { "Kết luận", row.Resolved ? "Tệp đã được xử lý; đối chiếu với kết quả chữ ký." : "Kiểm tra nguồn gốc và kết quả phân tích trước khi chạy." });
         }
-        internal void ExactOpenThreat(int index) { MoChiTietKetQua(index); }
+        internal void ExactOpenThreat(int index, string path)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                int found = threatRows.FindIndex(r => string.Equals(r.Path, path, StringComparison.OrdinalIgnoreCase));
+                if (found >= 0) index = found;
+            }
+            if (index < 0 || index >= threatRows.Count) return;
+            HienThi(TongQuanView.ChiTiet, false);
+            RefreshDetailGrid();
+            ChonDongChiTiet(index);
+        }
         internal void ExactSelectDetailTab(int index)
         { tabChiTietDong.SelectedIndex = index; NapTabChiTiet(detailRowIndex, index); }
         internal void ExactQuickScan() { if (isScanning) return; HienThi(TongQuanView.AnToan, false); BtnScanNow_Click(null, EventArgs.Empty); }

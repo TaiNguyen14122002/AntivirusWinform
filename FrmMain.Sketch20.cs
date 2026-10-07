@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -14,6 +14,10 @@ namespace ScanAndRemoveVirus
     {
         internal Sketch20View exactView;
         private UcTongQuan exactDetailSource;
+        private StatusStrip nativeStatusStrip;
+        private ToolStripStatusLabel nativeStatusText;
+        private ToolStripStatusLabel nativeStatusSpring;
+        private ToolStripStatusLabel nativeStatusSignature;
         private void InitializeSketch20()
         {
             // Giữ các controller hiện có sống trên UI thread; lớp mới là toàn bộ giao diện hiển thị.
@@ -21,11 +25,46 @@ namespace ScanAndRemoveVirus
             if (Environment.GetEnvironmentVariable("XVIRUS_LEGACY_UI_TEST") == "1") return;
             EnableSketch20();
         }
+        private void InitializeNativeStatusStrip()
+        {
+            if (nativeStatusStrip != null) return;
+            nativeStatusStrip = new StatusStrip { Name = "mainStatusStrip", Dock = DockStyle.Bottom, SizingGrip = true, RenderMode = ToolStripRenderMode.System };
+            nativeStatusText = new ToolStripStatusLabel("Sẵn sàng");
+            nativeStatusSpring = new ToolStripStatusLabel { Spring = true };
+            nativeStatusSignature = new ToolStripStatusLabel("CSDL chữ ký: —");
+            nativeStatusStrip.Items.AddRange(new ToolStripItem[] { nativeStatusText, nativeStatusSpring, nativeStatusSignature });
+            Controls.Add(nativeStatusStrip);
+            nativeStatusStrip.BringToFront();
+            SizeChanged += delegate
+            {
+                if (exactView != null) UpdateNativeStatusStrip(exactView.Model);
+            };
+        }
+        private void ShowNativeScanningStatus()
+        {
+            if (nativeStatusText == null) return;
+            nativeStatusText.Text = "Bảo vệ thời gian thực: " + (RealTimeProtection.IsRunning ? "Bật" : "Tắt") + "   |   Đang quét";
+        }
+        private void UpdateNativeStatusStrip(Sketch20Model model)
+        {
+            if (nativeStatusStrip == null || model == null) return;
+            string state = model.Scanning ? "Đang quét" : model.ThreatCount > 0 ? model.ThreatCount + " mối đe dọa cần xử lý" : "Sẵn sàng";
+            bool compact = ClientSize.Width < 900;
+            nativeStatusText.Text = compact
+                ? (model.Running ? "Bảo vệ: Bật" : "Bảo vệ: Tắt") + "   |   " + state
+                : "Bảo vệ thời gian thực: " + (model.Running ? "Bật" : "Tắt") + "   |   " + state;
+            nativeStatusSignature.Text = "CSDL chữ ký: " + (string.IsNullOrWhiteSpace(model.Signature) ? "—" : model.Signature);
+            nativeStatusSignature.Visible = !compact;
+        }
         internal void EnableSketch20()
         {
             if (exactView != null) return;
-            ClientSize = new Size(1240, 800); MinimumSize = new Size(1000, 690);
-            Padding = new Padding(1); BackColor = Sketch20Style.Border;
+            ClientSize = new Size(1240, 900); MinimumSize = new Size(1040, 720);
+            Padding = Padding.Empty; BackColor = SystemColors.Control;
+            // Loại legacy hosts khỏi Dock layout trước khi thêm view mới.
+            pnlSidebar.Visible = false; pnlSidebar.Dock = DockStyle.None;
+            pnlContent.Visible = false; pnlContent.Dock = DockStyle.None;
+            InitializeNativeStatusStrip();
             var actions = new Sketch20Actions
             {
                 Navigate = ExactNavigate,
@@ -37,17 +76,31 @@ namespace ScanAndRemoveVirus
                 OpenFile = ExactOpenFile,
                 SelectDetailTab = index => (exactDetailSource ?? ucTongQuan).ExactSelectDetailTab(index),
                 FilterHistory = ucLichSu.ExactHistoryFilter,
-                StartAdvanced = ucTongQuan.ExactStartAdvanced
+                StartAdvanced = (mode, targets, includeSubfolders) =>
+                {
+                    ucTongQuan.ExactStartAdvanced(mode, targets, includeSubfolders);
+                    if (ucTongQuan.ExactScanning) ShowNativeScanningStatus();
+                }
             };
-            exactView = new Sketch20View(ExactModel(), actions, ExactModel) { Name = "Exact20Screens", Dock = DockStyle.None,
-                Bounds = new Rectangle(1, 1, ClientSize.Width - 2, ClientSize.Height - 2), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
-            Controls.Add(exactView); exactView.BringToFront();
-            // Controller cũ vẫn nhận Load/event và giữ dữ liệu, nhưng không có vùng vẽ phía dưới view mới.
-            // WinForms native có thể in các sibling này khi dựng nền control trong suốt.
-            foreach (var host in new[] { pnlSidebar, pnlContent })
+            exactView = new Sketch20View(ExactModel(), actions, ExactModel)
             {
-                var region = new Region(); region.MakeEmpty(); host.Region = region;
+                Name = "Exact20Screens",
+                Dock = DockStyle.Fill,
+                Margin = Padding.Empty
+            };
+            Controls.Add(exactView);
+            exactView.BringToFront();
+            // Với Dock=Fill + StatusStrip Dock=Bottom, view phải đứng trước trong Z-order
+            // để WinForms dành phần đáy cho StatusStrip thay vì vẽ chồng lên nó.
+            if (nativeStatusStrip != null)
+            {
+                Controls.SetChildIndex(exactView, 0);
+                Controls.SetChildIndex(nativeStatusStrip, Math.Min(1, Controls.Count - 1));
             }
+            PerformLayout();
+            Sketch20Chrome.Attach(this, exactView);
+            // Ép WinForms tính lại Dock sau khi status strip + exact view đã được thêm.
+            PerformLayout();
             FormClosed += delegate { if (exactDetailSource != null && !exactDetailSource.IsDisposed) exactDetailSource.Dispose(); };
         }
         private Sketch20Model ExactModel()
@@ -56,13 +109,26 @@ namespace ScanAndRemoveVirus
             foreach (string key in Sketch20View.FeatureKeys.Concat(new[] { "alerts", "update" })) model.Flags[key] = UcBaoVe.ExactFlag(key);
             model.KeyConfigured = VirusTotalClient.IsConfigured;
             model.Signature = ucBaoVe.ExactSignature;
-            ucTongQuan.ExactOverview(model); ucCaiDat.ExactSettings(model); ucLichSu.ExactHistory(model); ucCachLy.ExactQuarantine(model);
-            (exactDetailSource ?? ucTongQuan).ExactDetail(model);
+            ucTongQuan.ExactOverview(model);
+
+            string page = exactView == null ? "overview" : exactView.Page;
+            if (page == "settings") ucCaiDat.ExactSettings(model);
+
+            // Không đọc lại toàn bộ grid cách ly ở mỗi tick quét. Giữ snapshot hiện có
+            // cho các màn không cần dữ liệu cách ly chi tiết; chỉ refresh thật khi mở Cách ly.
+            if (exactView == null || page == "quarantine") ucCachLy.ExactQuarantine(model);
+            else if (exactView.Model != null && exactView.Model.Quarantine.Count > 0)
+                model.Quarantine.AddRange(exactView.Model.Quarantine);
+
+            if (page == "history") ucLichSu.ExactHistory(model);
+            if (page == "details") (exactDetailSource ?? ucTongQuan).ExactDetail(model);
+            UpdateNativeStatusStrip(model);
             return model;
         }
         private void ExactNavigate(string page)
         {
-            Navigate(page == "protection" ? btnBaoVe : page == "history" ? btnLichSu : page == "quarantine" ? btnCachLy : page == "settings" ? btnCaiDat : btnTongQuan);
+            // Giao diện Sketch20 là view chính; không điều hướng pnlContent legacy bị ẩn
+            // vì Clear/Add/ResumeLayout ở đó làm click bị trễ dù người dùng không nhìn thấy.
             if (page == "details") (exactDetailSource ?? ucTongQuan).ExactSelectDetailTab(exactView == null ? 0 : exactView.DetailTab);
             if (exactView != null) exactView.BringToFront();
         }
@@ -75,7 +141,17 @@ namespace ScanAndRemoveVirus
                 pnlContent.Controls.Add(exactDetailSource); exactDetailSource.CreateControl();
                 ucCachLy.ExactLoadQuarantineDetail(index, exactDetailSource);
             }
-            else { if (exactDetailSource != null) { exactDetailSource.Dispose(); exactDetailSource = null; } ucTongQuan.ExactOpenThreat(index); }
+            else
+            {
+                if (exactDetailSource != null) { exactDetailSource.Dispose(); exactDetailSource = null; }
+                string path = null;
+                if (exactView != null && exactView.Model != null)
+                {
+                    var target = exactView.Model.Threats.FirstOrDefault(t => t.Index == index);
+                    if (target != null) path = target.Path;
+                }
+                ucTongQuan.ExactOpenThreat(index, path);
+            }
         }
         private async void ExactHistoryDetails(int index)
         {
@@ -93,12 +169,12 @@ namespace ScanAndRemoveVirus
         }
         private void ExactCommand(string command)
         {
-            if (command == "scan") { ucTongQuan.ExactQuickScan(); return; }
+            if (command == "scan") { ucTongQuan.ExactQuickScan(); if (ucTongQuan.ExactScanning) ShowNativeScanningStatus(); return; }
             if (command == "enable") { ucBaoVe.ExactSetFlag("rt", true); return; }
             if (command == "cancel" || command == "isolate") { ucTongQuan.ExactScanCommand(command); return; }
             if (command == "isolate-file" || command == "delete-file" || command == "vt-query") { (exactDetailSource ?? ucTongQuan).ExactScanCommand(command); return; }
             if (command == "refresh" || command == "restore" || command == "delete") { ucCachLy.ExactQuarantineCommand(command); return; }
-            if (command == "export" || command == "history-prev" || command == "history-next") { ucLichSu.ExactHistoryCommand(command); return; }
+            if (command == "export" || command == "history-prev" || command == "history-next" || command.StartsWith("history-delete:", StringComparison.Ordinal)) { ucLichSu.ExactHistoryCommand(command); return; }
             if (command.StartsWith("history-detail:")) { int index; if (int.TryParse(command.Substring(15), out index)) ExactHistoryDetails(index); return; }
             if (command == "update")
             {

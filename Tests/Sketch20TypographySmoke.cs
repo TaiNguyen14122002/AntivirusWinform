@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -34,6 +34,7 @@ internal static class Sketch20TypographySmoke
             {
                 Size measured; ink[i] = Ink(graphics, text[i], out measured);
                 if (measured.Height > text[i].Bounds.Height + 1) errors.Add("height\t" + Safe(text[i].Value) + "\t" + measured.Height + ">" + text[i].Bounds.Height);
+                if (text[i].Value.Contains("?") || text[i].Value.Contains("\uFFFD")) errors.Add("encoding\t" + Safe(text[i].Value) + "\tInvalid replacement character");
                 foreach (System.Windows.Forms.Control input in view.Canvas.Controls)
                     if (input.Bounds.IntersectsWith(ink[i])) errors.Add("input-overlap\t" + Safe(text[i].Value) + "\t" + input.Name);
             }
@@ -41,6 +42,20 @@ internal static class Sketch20TypographySmoke
             {
                 var overlap = Rectangle.Intersect(ink[i], ink[j]);
                 if (overlap.Width > 1 && overlap.Height > 1) errors.Add("text-overlap\t" + Safe(text[i].Value) + "\t" + Safe(text[j].Value));
+            }
+            foreach (System.Windows.Forms.Control control in view.Canvas.Controls)
+            {
+                if (!(control is Sketch20Button) && !(control is Sketch20Mode) && !(control is Sketch20Check) && !(control is Sketch20Date) && !(control is Sketch20Choice)) continue;
+                var runs = new List<Sketch20TextRun>();
+                Sketch20Style.TraceText = (g, t) => runs.Add(t);
+                try { using (var bitmap = new Bitmap(control.Width, control.Height)) control.DrawToBitmap(bitmap, control.ClientRectangle); }
+                finally { Sketch20Style.TraceText = null; }
+                using (var cg = control.CreateGraphics())
+                    foreach (var run in runs)
+                    {
+                        Size measured; Ink(cg, run, out measured);
+                        if (measured.Height > run.Bounds.Height + 1) errors.Add("control-height\t" + Safe(control.Name + ": " + run.Value) + "\t" + measured.Height + ">" + run.Bounds.Height);
+                    }
             }
         }
         return errors;
@@ -98,6 +113,7 @@ internal static class Sketch20TypographySmoke
     [STAThread]
     private static int Main(string[] args)
     {
+        Console.OutputEncoding = new UTF8Encoding(false);
         Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
         string output = Path.GetFullPath(args.Length == 0 ? "TypographyEvidence" : args[0]); Directory.CreateDirectory(output);
         int cases = 0, failed = 0; var report = new List<string> { "case\tissue\ttext\tdetail" };
@@ -118,7 +134,7 @@ internal static class Sketch20TypographySmoke
                     form.View.SelectScreen(screen); Pump();
                     string label = prefix + screen.ToString("00") + "-" + size.Width + "x" + size.Height;
                     var issues = Audit(form.View); cases++; if (issues.Count > 0) failed++;
-                    foreach (string issue in issues) report.Add(label + "\t" + issue);
+                    foreach (string issue in issues) { report.Add(label + "\t" + issue); Console.WriteLine("  ISSUE " + label + " :: " + issue); }
                     Console.WriteLine((issues.Count == 0 ? "PASS " : "FAIL ") + label + " : " + issues.Count + " vấn đề vùng chữ");
                     using (var graphics = form.View.Canvas.CreateGraphics()) metrics.Add(label + "\t" + Sketch20Style.Font(13).Name + "\t" + Sketch20Style.Font(12, false, true).Name + "\t" + graphics.DpiX + "\t" + graphics.DpiY + "\t" + form.View.Canvas.TextRuns.Count + "\t" + issues.Count);
                     Shot(form, Path.Combine(output, label + ".png"));
@@ -135,9 +151,9 @@ internal static class Sketch20TypographySmoke
                     model.Sample = false; form.View.Render(); Pump();
                     string label = prefix + screen.ToString("00") + "-long-data-" + size.Width + "x" + size.Height;
                     var issues = Audit(form.View);
-                    if (screen == 11)
+                    if (screen == 11 && form.View.Canvas.ContextMenuStrip != null)
                     {
-                        var pathRun = form.View.Canvas.TextRuns.Single(t => t.Value == model.Detail.Path);
+                        var pathRun = form.View.Canvas.TextRuns.First(t => t.Value == model.Detail.Path);
                         if (pathRun.Wrap || form.View.Canvas.TooltipAt(new Point(pathRun.Bounds.X + 2, pathRun.Bounds.Y + 2)) != model.Detail.Path) issues.Add("full-value\tĐường dẫn gốc\tTooltip phải giữ toàn bộ đường dẫn và hàng phải dùng ellipsis");
                         var copy = form.View.Canvas.ContextMenuStrip.Items.OfType<ToolStripMenuItem>().Single(i => i.Text == "Sao chép đường dẫn gốc");
                         copy.PerformClick();

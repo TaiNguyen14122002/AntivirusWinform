@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -81,6 +81,10 @@
     <Compile Include="FrmMain.Sketch20.cs" />
     <Compile Include="Control\Sketch20Backend.cs" />
     <Compile Include="Control\Sketch20Kit.cs" />
+    <Compile Include="Control\Sketch20Artwork.cs" />
+    <Compile Include="Control\Sketch20ReferenceAssets.cs" />
+    <Compile Include="Control\Sketch20ReferencePages.cs" />
+    <Compile Include="Control\Sketch20Chrome.cs" />
     <Compile Include="Control\Sketch20Inputs.cs" />
     <Compile Include="Control\Sketch20Samples.cs" />
     <Compile Include="Control\Sketch20View.cs" />
@@ -177,6 +181,27 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-file-gear.png"><LogicalName>ReferenceUI.icon-file-gear.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\safe.png"><LogicalName>ReferenceUI.safe.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\protection.png"><LogicalName>ReferenceUI.protection.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\scanhero.png"><LogicalName>ReferenceUI.scanhero.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\scan.png"><LogicalName>ReferenceUI.scan.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\risk.png"><LogicalName>ReferenceUI.risk.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\off.png"><LogicalName>ReferenceUI.off.png</LogicalName></EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-rt.png"><LogicalName>ReferenceUI.icon-feature-rt.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-file.png"><LogicalName>ReferenceUI.icon-feature-file.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-usb.png"><LogicalName>ReferenceUI.icon-feature-usb.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-download.png"><LogicalName>ReferenceUI.icon-feature-download.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-behavior.png"><LogicalName>ReferenceUI.icon-feature-behavior.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-startup.png"><LogicalName>ReferenceUI.icon-feature-startup.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-aq.png"><LogicalName>ReferenceUI.icon-feature-aq.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-feature-web.png"><LogicalName>ReferenceUI.icon-feature-web.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-stat-risk.png"><LogicalName>ReferenceUI.icon-stat-risk.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-stat-file.png"><LogicalName>ReferenceUI.icon-stat-file.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\ReferenceUI\icon-stat-clock.png"><LogicalName>ReferenceUI.icon-stat-clock.png</LogicalName></EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
