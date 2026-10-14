@@ -34,7 +34,6 @@ namespace ScanAndRemoveVirus.Control
                 graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 var g = graphics;
                 using (var glow = new SolidBrush(Color.FromArgb(75, 255, 255, 255))) g.FillEllipse(glow, 18, 26, 212, 198);
-                using (var shadow = new SolidBrush(Color.FromArgb(35, 30, 114, 214))) g.FillEllipse(shadow, 39, 212, 148, 14);
                 using (var orbit = new Pen(Color.FromArgb(190, 255, 255, 255), 1.8f))
                 {
                     g.DrawArc(orbit, 4, 62, 232, 122, 150, 215);

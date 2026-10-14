@@ -519,7 +519,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (threatRows.Count == 0)
             {
-                MessageBox.Show("Chưa có kết quả quét nào để xem chi tiết. Hãy chạy một phiên quét trước.",
+                AppDialog.Show("Chưa có kết quả quét nào để xem chi tiết. Hãy chạy một phiên quét trước.",
                     "Chi tiết kết quả quét", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -891,13 +891,13 @@ namespace ScanAndRemoveVirus.Control
                 if (string.IsNullOrEmpty(hash) && File.Exists(r.Path)) hash = ScanEngine.ComputeFileSha256(r.Path);
                 if (string.IsNullOrEmpty(hash))
                 {
-                    MessageBox.Show("Chưa tính được SHA256 (tệp đã bị xóa hoặc không đọc được).",
+                    AppDialog.Show("Chưa tính được SHA256 (tệp đã bị xóa hoặc không đọc được).",
                         "Sao chép hash", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
                 r.HashSha256 = hash;
                 if (SaoChepVaoClipboard(hash))
-                    MessageBox.Show("Đã sao chép SHA256 đầy đủ vào clipboard.", "Sao chép hash",
+                    AppDialog.Show("Đã sao chép SHA256 đầy đủ vào clipboard.", "Sao chép hash",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -910,7 +910,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 if (r.Deleted)
                 {
-                    MessageBox.Show("Tệp này đã bị xóa khỏi máy nên không còn thao tác nào áp dụng được.",
+                    AppDialog.Show("Tệp này đã bị xóa khỏi máy nên không còn thao tác nào áp dụng được.",
                         "Thao tác theo dòng", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
@@ -928,7 +928,7 @@ namespace ScanAndRemoveVirus.Control
 
             if (action == 2)
             {
-                DialogResult answer = MessageBox.Show(
+                DialogResult answer = AppDialog.Show(
                     "Xóa vĩnh viễn tệp này khỏi máy tính?\n" + r.Path + "\nHành động này không thể hoàn tác.",
                     "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (answer != DialogResult.Yes) return;
@@ -939,12 +939,12 @@ namespace ScanAndRemoveVirus.Control
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Không xóa được tệp (có thể đang bị tiến trình khác giữ): " + ex.Message,
+                    AppDialog.Show("Không xóa được tệp (có thể đang bị tiến trình khác giữ): " + ex.Message,
                         "Xóa tệp", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 BoDongTrongBangDeDoa(r.Path);
-                MessageBox.Show("Đã xóa vĩnh viễn tệp khỏi máy tính.", "Xóa tệp",
+                AppDialog.Show("Đã xóa vĩnh viễn tệp khỏi máy tính.", "Xóa tệp",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -953,14 +953,14 @@ namespace ScanAndRemoveVirus.Control
                 {
                     if (!ScanEngine.Quarantine(r.Path, r.ThreatText))
                     {
-                        MessageBox.Show("Không cách ly được tệp (có thể đang bị khoá).", "Cách ly",
+                        AppDialog.Show("Không cách ly được tệp (có thể đang bị khoá).", "Cách ly",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }
                 r.Quarantined = true;   // tệp không còn ở vị trí cũ: coi như đã được xử lý
                 BoDongTrongBangDeDoa(r.Path);
-                MessageBox.Show("Đã cách ly tệp vào khu cách ly của app.", "Cách ly",
+                AppDialog.Show("Đã cách ly tệp vào khu cách ly của app.", "Cách ly",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
@@ -987,7 +987,7 @@ namespace ScanAndRemoveVirus.Control
             string gia = lbl.Text;
             if (string.IsNullOrEmpty(gia) || gia == "—" || gia == "Đang tính…" || gia.StartsWith("Không đọc"))
             {
-                MessageBox.Show("Chưa có giá trị để sao chép.", "Sao chép",
+                AppDialog.Show("Chưa có giá trị để sao chép.", "Sao chép",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1000,7 +1000,7 @@ namespace ScanAndRemoveVirus.Control
             try { Clipboard.SetText(noiDung); return true; }
             catch (Exception)
             {
-                MessageBox.Show("Không sao chép được vào clipboard (clipboard đang bị chiếm).",
+                AppDialog.Show("Không sao chép được vào clipboard (clipboard đang bị chiếm).",
                     "Sao chép", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
@@ -1032,7 +1032,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không mở được trình duyệt: " + ex.Message, "Mở liên kết",
+                AppDialog.Show("Không mở được trình duyệt: " + ex.Message, "Mở liên kết",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -1043,7 +1043,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (threatRows.Count == 0)
             {
-                MessageBox.Show("Chưa có kết quả quét nào để xuất báo cáo. Hãy chạy một phiên quét trước.",
+                AppDialog.Show("Chưa có kết quả quét nào để xuất báo cáo. Hãy chạy một phiên quét trước.",
                     "Xuất báo cáo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1061,11 +1061,11 @@ namespace ScanAndRemoveVirus.Control
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Không ghi được tệp báo cáo: " + ex.Message, "Xuất báo cáo",
+                    AppDialog.Show("Không ghi được tệp báo cáo: " + ex.Message, "Xuất báo cáo",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-                if (MessageBox.Show("Đã xuất báo cáo:\n" + dlg.FileName + "\n\nMở tệp ngay?",
+                if (AppDialog.Show("Đã xuất báo cáo:\n" + dlg.FileName + "\n\nMở tệp ngay?",
                         "Xuất báo cáo", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                     MoUrl(dlg.FileName);
             }

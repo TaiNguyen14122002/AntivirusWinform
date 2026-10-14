@@ -63,7 +63,7 @@ namespace ScanAndRemoveVirus.Services
         };
 
         private const long MaxContentScanBytes = 4 * 1024 * 1024;
-        private const int ProgressEveryNFiles = 2000;
+        private const int ProgressEveryNFiles = 100;
         private const int MaxParallelWorkers = 4;
         private const int FileChunkSize = 1024;
         private const int MaxCacheEntries = 500000;
@@ -707,9 +707,9 @@ namespace ScanAndRemoveVirus.Services
                 // File đã được engine thử xử lý, kể cả khi file bị khóa/lỗi đọc.
                 int scanned = Interlocked.Increment(ref state.Scanned);
 
-                if (state.Progress != null && scanned % ProgressEveryNFiles == 0)
+                if (state.Progress != null && (scanned == 1 || scanned % ProgressEveryNFiles == 0))
                 {
-                    try { state.Progress(scanned, Path.GetFileName(fullPath)); }
+                    try { state.Progress(scanned, fullPath); }
                     catch (Exception) { }
                 }
             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -8,7 +8,7 @@ namespace ScanAndRemoveVirus.Control
 {
     public partial class UcTongQuan
     {
-        private ComboBox sketchDetailPicker;
+        private UiSelect sketchDetailPicker;
         private Label sketchDetailPath, sketchAnalysisReason, sketchAnalysisHint;
         private UiPill sketchDetailStatus, sketchAnalysisLevel;
         private UiButton sketchIsolateFile, sketchDeleteFile;
@@ -25,8 +25,9 @@ namespace ScanAndRemoveVirus.Control
             page.Canvas.Controls.Add(header);
             var summary = SketchUi.Card("fileSummary");
             var icon = new PictureBox { Image = UiIcons.FileIcon(26, ".exe"), SizeMode = PictureBoxSizeMode.CenterImage, BackColor = Theme.RedTint };
-            sketchDetailPicker = new ComboBox { Name = "sketchDetailPicker", DropDownStyle = ComboBoxStyle.DropDownList,
-                FlatStyle = FlatStyle.Flat, Font = Theme.BoldFont, BackColor = Color.White, ForeColor = Theme.TextDark };
+            sketchDetailPicker = new UiSelect { Name = "sketchDetailPicker",
+                Font = Theme.BoldFont, BackColor = Color.White, ForeColor = Theme.TextDark };
+            sketchDetailPicker.Font = Theme.BoldFont;
             sketchDetailPath = SketchUi.Label("", Theme.SmallFont, Theme.TextGray);
             sketchDetailStatus = new UiPill("Chưa chọn tệp", Theme.PillKind.Info);
             summary.Controls.AddRange(new System.Windows.Forms.Control[] { icon, sketchDetailPicker, sketchDetailPath, sketchDetailStatus });

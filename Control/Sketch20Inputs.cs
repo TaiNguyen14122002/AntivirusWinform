@@ -7,6 +7,7 @@ namespace ScanAndRemoveVirus.Control
     internal sealed class Sketch20Mode : RadioButton
     {
         private readonly string description, icon;
+        private bool hover;
         internal bool Compact, Centered;
         internal float TextScale = 1;
         internal Sketch20Mode(string title, string note, string symbol)
@@ -14,6 +15,8 @@ namespace ScanAndRemoveVirus.Control
             Text = title; description = note; icon = symbol; AutoCheck = false; AutoSize = false;
             Cursor = Cursors.Hand; BackColor = Sketch20Style.Background; AccessibleRole = AccessibleRole.RadioButton;
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            MouseEnter += delegate { hover = true; Invalidate(); };
+            MouseLeave += delegate { hover = false; Invalidate(); };
         }
         protected override void OnPaintBackground(PaintEventArgs e)
         { Sketch20Style.ControlBackground(e.Graphics, this); }
@@ -21,9 +24,11 @@ namespace ScanAndRemoveVirus.Control
         {
             Sketch20Style.ControlBackground(e.Graphics, this);
             var g = e.Graphics; g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            Color cardFill = Checked ? ColorTranslator.FromHtml("#f3f8ff") : hover ? ColorTranslator.FromHtml("#f9fbff") : Color.White;
+            Color cardEdge = Checked ? ColorTranslator.FromHtml("#9fc7fb") : hover ? ColorTranslator.FromHtml("#c7ddf7") : ColorTranslator.FromHtml("#dce7f5");
             if (Compact)
             {
-                Sketch20Style.Round(g, ClientRectangle, 11, Color.White, Checked ? Sketch20Style.Blue : Sketch20Style.Border);
+                Sketch20Style.Round(g, new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 14, cardFill, cardEdge);
                 Sketch20ReferenceAssets.FilledIcon(g, icon, new Rectangle(18, 17, 27, 27), Sketch20Style.Blue);
                 Sketch20Style.Text(g, Text, new Rectangle(59, 9, Width - 74, 27), 11.5f * TextScale, Checked ? Sketch20Style.Blue : Sketch20Style.Ink, true);
                 Sketch20Style.Text(g, description, new Rectangle(59, 40, Width - 74, 47), 10.3f * TextScale, Sketch20Style.Muted, false, true);
@@ -34,14 +39,14 @@ namespace ScanAndRemoveVirus.Control
             }
             if (Centered)
             {
-                Sketch20Style.Round(g, ClientRectangle, 11, Color.White, Checked ? Sketch20Style.Blue : Sketch20Style.Border);
+                Sketch20Style.Round(g, new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 14, cardFill, cardEdge);
                 Sketch20ReferenceAssets.FilledIcon(g, icon, new Rectangle((Width - 36) / 2, 23, 36, 36), Checked ? Sketch20Style.Blue : Sketch20Style.Muted);
                 Sketch20Style.Text(g, Text, new Rectangle(17, 77, Width - 34, 30), 13 * TextScale, Checked ? Sketch20Style.Blue : Sketch20Style.Ink, true, center: true);
                 Sketch20Style.Text(g, description, new Rectangle(17, 111, Width - 34, Height - 117), 11 * TextScale, Checked ? Sketch20Style.Blue : Sketch20Style.Muted, false, true, center: true);
                 if (Checked) { using (var b = new SolidBrush(Sketch20Style.Blue)) g.FillEllipse(b, Width - 28, 10, 17, 17); Sketch20Style.Icon(g, "check", new Rectangle(Width - 25, 13, 11, 11), Color.White); }
                 return;
             }
-            Sketch20Style.Round(g, ClientRectangle, 11, Color.White, Checked ? Sketch20Style.Blue : Sketch20Style.Border);
+            Sketch20Style.Round(g, new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 14, cardFill, cardEdge);
             // Mode card dùng bố cục dọc để tiêu đề không bị ellipsis ở cửa sổ nhỏ.
             int iconBox = Height >= 140 ? 49 : 36, iconX = 18;
             Sketch20Style.Round(g, new Rectangle(iconX, 14, iconBox, iconBox), 11, Sketch20Style.BlueSoft, Color.Transparent);
@@ -69,59 +74,44 @@ namespace ScanAndRemoveVirus.Control
     {
         private readonly string[] choices;
         private int selected;
-        private ContextMenuStrip activeMenu;
         internal event Action<int> Chosen;
         internal Sketch20Choice(string[] entries, int index)
         {
-            choices = entries; selected = Math.Max(0, Math.Min(index, entries.Length - 1)); AccessibleRole = AccessibleRole.ComboBox;
+            choices = entries ?? new string[0];
+            selected = choices.Length == 0 ? -1 : Math.Max(0, Math.Min(index, choices.Length - 1));
+            AccessibleRole = AccessibleRole.ComboBox;
             Cursor = Cursors.Hand; BackColor = Sketch20Style.Background;
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             Click += delegate { OpenChoices(); };
         }
         private void OpenChoices()
         {
-            CloseActiveMenu();
-            var menu = new ContextMenuStrip { Font = Sketch20Style.Font(13) };
-            activeMenu = menu;
-            for (int i = 0; i < choices.Length; i++)
+            if (choices.Length == 0) return;
+            UiSelectPopup.ShowFor(this, choices, selected, delegate(int index)
             {
-                int index = i;
-                var item = new ToolStripMenuItem(choices[i]) { Checked = i == selected };
-                item.Click += delegate { if (IsDisposed) return; selected = index; Invalidate(); if (Chosen != null) Chosen(index); };
-                menu.Items.Add(item);
-            }
-            menu.Closed += PopupClosed;
-            if (!IsDisposed && IsHandleCreated) menu.Show(this, new Point(0, Height));
+                if (IsDisposed) return;
+                selected = index; Invalidate();
+                if (Chosen != null) Chosen(index);
+            }, Sketch20Style.Blue, Sketch20Style.BlueSoft);
         }
-        private void PopupClosed(object sender, ToolStripDropDownClosedEventArgs e)
-        {
-            var menu = sender as ContextMenuStrip;
-            if (ReferenceEquals(activeMenu, menu)) activeMenu = null;
-            if (menu != null) { menu.Closed -= PopupClosed; if (!menu.IsDisposed) menu.Dispose(); }
-        }
-        private void CloseActiveMenu()
-        {
-            var menu = activeMenu; activeMenu = null;
-            if (menu == null) return;
-            menu.Closed -= PopupClosed;
-            if (!menu.IsDisposed) { menu.Close(); menu.Dispose(); }
-        }
-        protected override void Dispose(bool disposing)
-        { if (disposing) CloseActiveMenu(); base.Dispose(disposing); }
         protected override void OnPaintBackground(PaintEventArgs e)
         { Sketch20Style.ControlBackground(e.Graphics, this); }
         protected override void OnPaint(PaintEventArgs e)
         {
             Sketch20Style.ControlBackground(e.Graphics, this);
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            Sketch20Style.Round(e.Graphics, ClientRectangle, 7, Color.FromArgb(247, 248, 250), Sketch20Style.Border);
-            Sketch20Style.Text(e.Graphics, choices[selected], new Rectangle(12, 0, Width - 40, Height));
-            Sketch20Style.Icon(e.Graphics, "chevron-down", new Rectangle(Width - 25, (Height - 13) / 2, 13, 13), Sketch20Style.Ink);
-            if (Focused && ShowFocusCues) ControlPaint.DrawFocusRectangle(e.Graphics, new Rectangle(4, 4, Width - 8, Height - 8));
+            Sketch20Style.Round(e.Graphics, new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 10, Color.White, ColorTranslator.FromHtml("#d9e7f7"));
+            int tileY = (Height - 28) / 2;
+            Sketch20Style.Round(e.Graphics, new Rectangle(8, tileY, 28, 28), 8, Sketch20Style.BlueSoft, Color.Transparent);
+            Sketch20Style.Icon(e.Graphics, "filter", new Rectangle(15, tileY + 7, 14, 14), Sketch20Style.Blue);
+            string value = selected >= 0 && selected < choices.Length ? choices[selected] : string.Empty;
+            Sketch20Style.Text(e.Graphics, value, new Rectangle(47, 0, Math.Max(1, Width - 90), Height), 11.5f, Sketch20Style.Ink, true);
+            int cx = Width - 37;
+            Sketch20Style.Round(e.Graphics, new Rectangle(cx, tileY, 28, 28), 8, ColorTranslator.FromHtml("#f1f6fd"), Color.Transparent);
+            Sketch20Style.Icon(e.Graphics, "chevron-down", new Rectangle(cx + 8, tileY + 8, 12, 12), Sketch20Style.Muted);
         }
     }
-    internal sealed class Sketch20Date : Button
-    {
+    internal sealed class Sketch20Date : Button{
         private DateTime value;
         private readonly bool sample;
         private ContextMenuStrip activeMenu;
@@ -147,7 +137,21 @@ namespace ScanAndRemoveVirus.Control
                 Invalidate();
             };
             menu.Closed += PopupClosed;
-            if (!IsDisposed && IsHandleCreated) menu.Show(this, new Point(0, Height));
+            if (!IsDisposed && IsHandleCreated)
+            {
+                Rectangle screenWork = Screen.FromControl(this).WorkingArea;
+                Form form = FindForm();
+                Rectangle appWork = form != null ? form.RectangleToScreen(form.ClientRectangle) : screenWork;
+                Rectangle work = Rectangle.Intersect(screenWork, appWork);
+                if (work.Width < 80 || work.Height < 80) work = screenWork;
+                Size popup = menu.GetPreferredSize(Size.Empty);
+                Point below = PointToScreen(new Point(0, Height + 4));
+                int px = Math.Max(work.Left + 4, Math.Min(below.X, work.Right - popup.Width - 4));
+                int py = below.Y;
+                if (py + popup.Height > work.Bottom - 4)
+                    py = Math.Max(work.Top + 4, PointToScreen(new Point(0, -popup.Height - 4)).Y);
+                menu.Show(new Point(px, py));
+            }
         }
         private void PopupClosed(object sender, ToolStripDropDownClosedEventArgs e)
         {

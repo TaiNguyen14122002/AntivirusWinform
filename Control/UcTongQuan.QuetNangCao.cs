@@ -108,7 +108,7 @@ namespace ScanAndRemoveVirus.Control
         private CheckBox[] chkCustom;
         private CheckBox chkBoQuaTepLon;
         private NumericUpDown numBoQuaTepLon;
-        private ComboBox cboDonVi;
+        private UiSelect cboDonVi;
         private readonly List<ScanTarget> dsViTri = new List<ScanTarget>();
 
         /// <summary>Một vị trí quét của chế độ tùy chỉnh (thư mục hoặc tệp lẻ).</summary>
@@ -1008,9 +1008,8 @@ namespace ScanAndRemoveVirus.Control
                 Font = Theme.BodyFont
             };
             numBoQuaTepLon.ValueChanged += delegate { CapNhatTrangThaiNutBatDauQuet(); };
-            cboDonVi = new ComboBox
+            cboDonVi = new UiSelect
             {
-                DropDownStyle = ComboBoxStyle.DropDownList,
                 Dock = DockStyle.Fill,
                 Margin = new Padding(0, 3, 6, 3),
                 Font = Theme.BodyFont
@@ -1223,7 +1222,7 @@ namespace ScanAndRemoveVirus.Control
                 if (string.Equals(coF, full, StringComparison.OrdinalIgnoreCase)) return false;
                 if (full.StartsWith(coF + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 {
-                    MessageBox.Show(string.Format("Thư mục này đã nằm trong {0} rồi.", coF),
+                    AppDialog.Show(string.Format("Thư mục này đã nằm trong {0} rồi.", coF),
                         "Quét thư mục", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
@@ -1284,7 +1283,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (dsThuMuc.Count == 0) return;
             if (dsThuMuc.Count >= 3 &&
-                MessageBox.Show(string.Format("Xóa toàn bộ {0} thư mục khỏi danh sách?", dsThuMuc.Count),
+                AppDialog.Show(string.Format("Xóa toàn bộ {0} thư mục khỏi danh sách?", dsThuMuc.Count),
                     "Xóa tất cả", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
             foreach (CancellationTokenSource c in sizeJobs.Values) c.Cancel();
@@ -1325,7 +1324,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 if (Directory.Exists(p)) { if (ThemThuMuc(p)) them++; }
                 else if (File.Exists(p))
-                    MessageBox.Show("Chế độ Quét thư mục chỉ nhận thư mục. Dùng chế độ Quét tệp nếu muốn thêm tệp.",
+                    AppDialog.Show("Chế độ Quét thư mục chỉ nhận thư mục. Dùng chế độ Quét tệp nếu muốn thêm tệp.",
                         "Quét thư mục", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             if (them > 0) txtThuMuc.Text = dsThuMuc[dsThuMuc.Count - 1];
@@ -1397,7 +1396,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (dsTep.Count == 0) return;
             if (dsTep.Count >= 3 &&
-                MessageBox.Show(string.Format("Xóa toàn bộ {0} tệp khỏi danh sách quét?", dsTep.Count),
+                AppDialog.Show(string.Format("Xóa toàn bộ {0} tệp khỏi danh sách quét?", dsTep.Count),
                     "Xóa tất cả", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
             dsTep.Clear();
@@ -1423,13 +1422,13 @@ namespace ScanAndRemoveVirus.Control
             {
                 if (File.Exists(p)) { tep.Add(p); continue; }
                 if (!Directory.Exists(p)) continue;   // tệp đã bị xóa ngoài Explorer: bỏ qua im lặng
-                MessageBox.Show("Chế độ Quét tệp chỉ nhận tệp (không nhận thư mục). "
+                AppDialog.Show("Chế độ Quét tệp chỉ nhận tệp (không nhận thư mục). "
                     + "Dùng chế độ Quét thư mục nếu bạn muốn quét cả thư mục.",
                     "Quét tệp", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             int them = ThemTep(tep.ToArray());
             if (them == 0 && tep.Count > 0)
-                MessageBox.Show("Các tệp này đã có trong danh sách (không thêm trùng).",
+                AppDialog.Show("Các tệp này đã có trong danh sách (không thêm trùng).",
                     "Quét tệp", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -1437,13 +1436,11 @@ namespace ScanAndRemoveVirus.Control
 
         private void BtnThemViTri_Click(object sender, EventArgs e)
         {
-            var menu = new ContextMenuStrip();
-            var mThuMuc = new ToolStripMenuItem("Thêm thư mục…");
-            mThuMuc.Click += delegate { ChonThemThuMucChoViTri(); };
-            var mTep = new ToolStripMenuItem("Thêm tệp…");
-            mTep.Click += delegate { ChonThemTepChoViTri(); };
-            menu.Items.AddRange(new ToolStripItem[] { mThuMuc, mTep });
-            menu.Show(btnThemViTri, new Point(0, btnThemViTri.Height + 2));
+            UiActionPopup.ShowFor(btnThemViTri, new[]
+            {
+                new UiActionEntry("Thêm thư mục…", delegate { ChonThemThuMucChoViTri(); }, null, UiIcons.Folder(16, Theme.Blue)),
+                new UiActionEntry("Thêm tệp…", delegate { ChonThemTepChoViTri(); }, null, UiIcons.FileIcon(16, ".exe"))
+            }, 210);
         }
 
         private void ChonThemThuMucChoViTri()
@@ -1510,7 +1507,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (dgvViTri.CurrentRow == null || dgvViTri.CurrentRow.Index >= dsViTri.Count)
             {
-                MessageBox.Show("Hãy bấm chọn 1 dòng trong bảng vị trí quét trước.",
+                AppDialog.Show("Hãy bấm chọn 1 dòng trong bảng vị trí quét trước.",
                     "Xóa dòng", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1522,7 +1519,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (dsViTri.Count == 0) return;
             if (dsViTri.Count >= 3 &&
-                MessageBox.Show(string.Format("Xóa toàn bộ {0} vị trí quét?", dsViTri.Count),
+                AppDialog.Show(string.Format("Xóa toàn bộ {0} vị trí quét?", dsViTri.Count),
                     "Xóa tất cả", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
             dsViTri.Clear();
@@ -1579,7 +1576,7 @@ namespace ScanAndRemoveVirus.Control
                                 roots.Add(Convert.ToString(r.Cells[1].Value));
                         if (roots.Count == 0)
                         {
-                            MessageBox.Show("Hãy tick ít nhất 1 ổ đĩa cần quét.", "Quét toàn bộ hệ thống",
+                            AppDialog.Show("Hãy tick ít nhất 1 ổ đĩa cần quét.", "Quét toàn bộ hệ thống",
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return null;
                         }
@@ -1593,7 +1590,7 @@ namespace ScanAndRemoveVirus.Control
                     {
                         if (dsThuMuc.Count == 0)
                         {
-                            MessageBox.Show("Hãy thêm ít nhất 1 thư mục cần quét.", "Quét thư mục",
+                            AppDialog.Show("Hãy thêm ít nhất 1 thư mục cần quét.", "Quét thư mục",
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return null;
                         }
@@ -1607,7 +1604,7 @@ namespace ScanAndRemoveVirus.Control
                     {
                         if (dsTep.Count == 0)
                         {
-                            MessageBox.Show("Hãy chọn ít nhất 1 tệp cần quét.", "Quét tệp",
+                            AppDialog.Show("Hãy chọn ít nhất 1 tệp cần quét.", "Quét tệp",
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return null;
                         }
@@ -1621,7 +1618,7 @@ namespace ScanAndRemoveVirus.Control
                     {
                         if (dsViTri.Count == 0)
                         {
-                            MessageBox.Show("Hãy thêm ít nhất 1 vị trí (thư mục hoặc tệp) cần quét.", "Quét tùy chỉnh",
+                            AppDialog.Show("Hãy thêm ít nhất 1 vị trí (thư mục hoặc tệp) cần quét.", "Quét tùy chỉnh",
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return null;
                         }
@@ -1639,7 +1636,7 @@ namespace ScanAndRemoveVirus.Control
                             HashSet<string> set = ParsePhanMoRong(out loi);
                             if (set.Count == 0)
                             {
-                                MessageBox.Show(loi, "Loại tệp quét", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                AppDialog.Show(loi, "Loại tệp quét", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 txtPhanMoRong.Focus();
                                 return null;
                             }

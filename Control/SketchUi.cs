@@ -233,21 +233,9 @@ namespace ScanAndRemoveVirus.Control
 
         public static void Grid(DataGridView grid)
         {
-            grid.BorderStyle = BorderStyle.None;
-            grid.BackgroundColor = Color.White;
-            grid.GridColor = Theme.Line;
-            grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            grid.ColumnHeadersDefaultCellStyle.BackColor = Theme.SidebarBg;
-            grid.ColumnHeadersDefaultCellStyle.ForeColor = Theme.TextGray;
-            grid.ColumnHeadersDefaultCellStyle.Font = Theme.SmallFont;
+            // Tất cả DataGridView dùng chung quy tắc responsive/minimum-width ở Theme.
+            Theme.StyleGrid(grid);
             grid.ColumnHeadersHeight = 40;
-            grid.DefaultCellStyle.Font = Theme.BodyFont;
-            grid.DefaultCellStyle.Padding = new Padding(8, 3, 8, 3);
-            grid.DefaultCellStyle.BackColor = Color.White;
-            grid.AlternatingRowsDefaultCellStyle.BackColor = Color.White;
-            grid.DefaultCellStyle.SelectionBackColor = Theme.BlueFaint;
-            grid.DefaultCellStyle.SelectionForeColor = Theme.TextDark;
             grid.RowTemplate.Height = 56;
             foreach (DataGridViewRow row in grid.Rows) row.Height = 56;
         }

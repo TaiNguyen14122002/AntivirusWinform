@@ -18,7 +18,7 @@ namespace ScanAndRemoveVirus.Control
             if (Images.TryGetValue(name, out image)) return image;
             using (var stream = typeof(Sketch20ReferenceAssets).Assembly.GetManifestResourceStream("ReferenceUI." + name + ".png"))
             {
-                if (stream == null) throw new InvalidOperationException("Missing reference artwork: " + name);
+                if (stream == null) return null;
                 using (var source = new Bitmap(stream))
                 {
                     image = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
@@ -41,9 +41,42 @@ namespace ScanAndRemoveVirus.Control
         }
         internal static void Draw(Graphics graphics, Rectangle bounds, string name)
         {
+            Bitmap image = Get(name);
+            if (image == null)
+            {
+                DrawFallback(graphics, bounds, name);
+                return;
+            }
             var state = graphics.Save();
-            try { graphics.InterpolationMode = InterpolationMode.HighQualityBicubic; graphics.DrawImage(Get(name), bounds); }
+            try { graphics.InterpolationMode = InterpolationMode.HighQualityBicubic; graphics.DrawImage(image, bounds); }
             finally { graphics.Restore(state); }
+        }
+        private static void DrawFallback(Graphics graphics, Rectangle bounds, string name)
+        {
+            string icon = null;
+            if (name == "icon-file-gear") icon = "file";
+            else if (name == "icon-feature-rt") icon = "shield-check";
+            else if (name == "icon-feature-file") icon = "file";
+            else if (name == "icon-feature-usb") icon = "usb";
+            else if (name == "icon-feature-download") icon = "download";
+            else if (name == "icon-feature-behavior") icon = "activity";
+            else if (name == "icon-feature-startup") icon = "power";
+            else if (name == "icon-feature-aq") icon = "archive";
+            else if (name == "icon-feature-web") icon = "globe";
+            else if (name == "icon-stat-risk") icon = "shield-alert";
+            else if (name == "icon-stat-file") icon = "file";
+            else if (name == "icon-stat-clock") icon = "clock";
+            if (icon != null)
+            {
+                Color ink = name.IndexOf("risk", System.StringComparison.OrdinalIgnoreCase) >= 0 ? Sketch20Style.Red : Sketch20Style.Blue;
+                Color fill = name.IndexOf("risk", System.StringComparison.OrdinalIgnoreCase) >= 0 ? Sketch20Style.RedSoft : Sketch20Style.BlueSoft;
+                Sketch20Style.Round(graphics, bounds, Math.Max(6, Math.Min(bounds.Width, bounds.Height) / 4), fill, Color.Transparent);
+                int inset = Math.Max(6, Math.Min(bounds.Width, bounds.Height) / 4);
+                Sketch20Style.Icon(graphics, icon, Rectangle.Inflate(bounds, -inset, -inset), ink);
+                return;
+            }
+            string kind = name == "scanhero" ? "scan" : name == "protection" || name == "safe" ? "safe" : name;
+            Sketch20Artwork.Draw(graphics, bounds, kind);
         }
         internal static void Logo(Graphics graphics, Rectangle bounds)
         {

@@ -50,7 +50,7 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color TextDark = Color.FromArgb(24, 40, 62);
         public static readonly Color TextMid = Color.FromArgb(55, 65, 81);
         public static readonly Color TextGray = Color.FromArgb(101, 117, 139);
-        public static readonly Color Line = Color.FromArgb(227, 234, 243);
+        public static readonly Color Line = Color.FromArgb(216, 227, 240);
         public static readonly Color ChipGray = Color.FromArgb(243, 244, 246);
         // (170,174,180) trên nền ChipGray chỉ đạt ~2:1 — chữ nút bị vô hiệu gần như tàng hình
         // (thấy rõ ở 3 nút "Khôi phục/Khôi phục tất cả/Xóa vĩnh viễn" khi chưa chọn dòng nào).
@@ -122,6 +122,9 @@ namespace ScanAndRemoveVirus.Control
             lbl.ForeColor = strong;
             lbl.TextAlign = ContentAlignment.MiddleCenter;
             lbl.Text = LevelText(level);
+            var flags = TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine;
+            int textWidth = TextRenderer.MeasureText(lbl.Text, lbl.Font, Size.Empty, flags).Width;
+            lbl.Size = new Size(Math.Max(32, textWidth + 16), Math.Max(24, lbl.Height));
         }
 
         /// <summary>Thẻ chọn chế độ quét (radio dạng card) — viền/nền đổi theo trạng thái chọn.</summary>
@@ -328,15 +331,11 @@ namespace ScanAndRemoveVirus.Control
         public static void StyleFilterInput(System.Windows.Forms.Control c)
         {
             if (c == null) return;
-            c.BackColor = PageBg;
+            c.BackColor = Color.White;
             c.ForeColor = TextDark;
             c.Font = BodyFont;
-            var combo = c as ComboBox;
-            if (combo != null)
-            {
-                combo.FlatStyle = FlatStyle.Flat;
-                combo.DropDownStyle = ComboBoxStyle.DropDownList;
-            }
+            var select = c as UiSelect;
+            if (select != null) select.Invalidate();
         }
 
         /// <summary>
@@ -346,9 +345,10 @@ namespace ScanAndRemoveVirus.Control
         public static void StyleHistoryGrid(DataGridView g)
         {
             StyleGrid(g);
-            g.ColumnHeadersHeight = 50;
-            g.RowTemplate.Height = 52;
-            foreach (DataGridViewRow row in g.Rows) row.Height = 52;
+            // History dung cung header/row rhythm voi moi DataGridView khac.
+            g.ColumnHeadersHeight = 42;
+            g.RowTemplate.Height = 44;
+            foreach (DataGridViewRow row in g.Rows) row.Height = 44;
             g.GridColor = BlueSoft;
             g.AlternatingRowsDefaultCellStyle.BackColor = PageBg;
             g.AlternatingRowsDefaultCellStyle.SelectionBackColor = PageBg;
@@ -422,11 +422,12 @@ namespace ScanAndRemoveVirus.Control
             g.ColumnHeadersDefaultCellStyle.SelectionForeColor = BlueDark;
             g.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             g.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            g.ColumnHeadersHeight = 44;
+            g.ColumnHeadersHeight = 42;
             g.BackgroundColor = PageBg;
             g.BorderStyle = BorderStyle.None;
             g.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             g.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            g.ScrollBars = ScrollBars.Both;
             g.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             g.RowHeadersVisible = false;
             g.AllowUserToAddRows = false;
@@ -437,12 +438,12 @@ namespace ScanAndRemoveVirus.Control
             g.DefaultCellStyle.ForeColor = TextDark;
             g.DefaultCellStyle.Font = BodyFont;
             g.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            g.DefaultCellStyle.Padding = new Padding(12, 0, 10, 0);
+            g.DefaultCellStyle.Padding = new Padding(12, 6, 10, 6);
             g.RowTemplate.DefaultCellStyle.ForeColor = TextDark;
-            g.RowTemplate.Height = 42;
+            g.RowTemplate.Height = 44;
             // các hàng đã nạp trước khi StyleGrid chạy cũng phải theo đúng chiều cao chung
             foreach (DataGridViewRow row in g.Rows)
-                row.Height = 42;
+                row.Height = 44;
             AlternatingRows(g);
             g.GridColor = Line;
             // BỎ hiệu ứng chọn dòng: bấm vào dòng không đổi màu nền/chữ (chọn vẫn hoạt động ngầm)
@@ -451,9 +452,49 @@ namespace ScanAndRemoveVirus.Control
             // và xóa cả KHUNG FOCUS nét đứt quanh ô vừa bấm — artifact highlight cuối cùng
             // Chỉ gắn MỘT lần: StyleHistoryGrid/StyleGrid có thể chạy lại trên cùng lưới, cộng dồn
             // handler thì mỗi ô được vẽ lại thêm một lượt.
-            if (GanLanDau(g)) g.CellPainting += StripFocusRing;
+            if (GanLanDau(g))
+            {
+                g.CellPainting += StripFocusRing;
+                g.ColumnAdded += delegate { ApplyResponsiveGridColumns(g); };
+            }
+            ApplyResponsiveGridColumns(g);
             // Bảng cuộn tay từng dòng/đổi trang liên tục -> không double buffer là nhấp nháy thấy rõ.
             BatDoubleBuffer(g);
+        }
+
+        static void ApplyResponsiveGridColumns(DataGridView g)
+        {
+            foreach (DataGridViewColumn col in g.Columns)
+            {
+                if (!col.Visible) continue;
+                int min;
+                if (col is DataGridViewCheckBoxColumn) min = 38;
+                else
+                {
+                    string header = col.HeaderText ?? string.Empty;
+                    int headerW = TextRenderer.MeasureText(header, BoldFont, Size.Empty, TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine).Width + 28;
+                    string key = header.ToLowerInvariant();
+                    int semantic = key.Contains("đường dẫn") ? 180
+                        : key.Contains("tệp") || key.Contains("file") || key.Contains("loại quét") ? 150
+                        : key.Contains("phát hiện") || key.Contains("mối đe dọa") ? 140
+                        : key.Contains("thời gian") || key.Contains("ngày") ? 112
+                        : key.Contains("trạng thái") || key.Contains("kết quả") || key.Contains("mức độ") ? 105
+                        : col is DataGridViewButtonColumn ? 82 : 90;
+                    min = Math.Max(headerW, semantic);
+                }
+                col.MinimumWidth = Math.Max(col.MinimumWidth, min);
+                // FillWeight theo vai trò để cột nội dung nhận phần dư, còn cột trạng thái/thao tác
+                // không chiếm quá nhiều nhưng vẫn giữ minimum khi cửa sổ hẹp.
+                string role = (col.HeaderText ?? string.Empty).ToLowerInvariant();
+                if (col is DataGridViewCheckBoxColumn) col.FillWeight = 35;
+                else if (col is DataGridViewButtonColumn) col.FillWeight = 70;
+                else if (role.Contains("đường dẫn")) col.FillWeight = 220;
+                else if (role.Contains("tệp") || role.Contains("file") || role.Contains("loại quét")) col.FillWeight = 180;
+                else if (role.Contains("phát hiện") || role.Contains("mối đe dọa")) col.FillWeight = 150;
+                else if (role.Contains("trạng thái") || role.Contains("kết quả") || role.Contains("mức độ")) col.FillWeight = 95;
+                else if (role.Contains("thời gian") || role.Contains("ngày")) col.FillWeight = 100;
+                else col.FillWeight = Math.Max(80, col.FillWeight);
+            }
         }
 
         // Vẽ lại ô bình thường nhưng bỏ phần Focus (khung nét đứt trên ô current cell)
@@ -761,10 +802,11 @@ namespace ScanAndRemoveVirus.Control
         public static readonly Color SidebarBg = Color.FromArgb(250, 251, 253);   // nền sidebar
         public static readonly Color NavActiveBg = Color.FromArgb(234, 242, 255);  // mục sidebar đang chọn
         public static readonly Color NavHoverBg = Color.FromArgb(241, 245, 249);   // mục sidebar rê chuột
-        public static readonly Color CardBorder = Color.FromArgb(227, 234, 243);   // viền card 1px
+        public static readonly Color CardBorder = Color.FromArgb(199, 213, 230);   // viền card rõ nhưng vẫn mềm
+        public static readonly Color BorderStrong = Color.FromArgb(181, 199, 221); // dialog / popup / khung cần nhấn
         public static readonly Color Divider = Color.FromArgb(241, 245, 249);      // đường kẻ mảnh trong card
         public static readonly Color InputBg = Color.White;
-        public static readonly Color InputBorder = Color.FromArgb(209, 213, 219);
+        public static readonly Color InputBorder = Color.FromArgb(191, 207, 226);
         public static readonly Color HeaderBg = Color.FromArgb(249, 250, 251);     // header bảng
 
         // ---- Bán kính bo góc (một nguồn duy nhất) ----
