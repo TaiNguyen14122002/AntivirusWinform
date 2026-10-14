@@ -76,6 +76,7 @@ namespace ScanAndRemoveVirus
                 OpenFile = ExactOpenFile,
                 SelectDetailTab = index => (exactDetailSource ?? ucTongQuan).ExactSelectDetailTab(index),
                 FilterHistory = ucLichSu.ExactHistoryFilter,
+                SortHistory = ucLichSu.ExactHistorySort,
                 StartAdvanced = (mode, targets, includeSubfolders) =>
                 {
                     ucTongQuan.ExactStartAdvanced(mode, targets, includeSubfolders);
@@ -143,29 +144,33 @@ namespace ScanAndRemoveVirus
             }
             else
             {
-                if (exactDetailSource != null) { exactDetailSource.Dispose(); exactDetailSource = null; }
                 string path = null;
                 if (exactView != null && exactView.Model != null)
                 {
                     var target = exactView.Model.Threats.FirstOrDefault(t => t.Index == index);
                     if (target != null) path = target.Path;
                 }
-                ucTongQuan.ExactOpenThreat(index, path);
+                // Chỉ giữ nguồn chi tiết riêng khi người dùng đang chuyển giữa các tệp
+                // của chính phiên lịch sử. Mở từ Dashboard phải quay về controller chính.
+                bool historyDetail = exactDetailSource != null && exactView != null &&
+                    exactView.Page == "details" && exactView.DetailReturnPage == "history";
+                if (!historyDetail && exactDetailSource != null) { exactDetailSource.Dispose(); exactDetailSource = null; }
+                (historyDetail ? exactDetailSource : ucTongQuan).ExactOpenThreat(index, path);
             }
         }
         private async void ExactHistoryDetails(int index)
         {
             var history = ucLichSu.ExactHistoryEntry(index); if (history == null) return;
-            if (history.Threats == 0) { MessageBox.Show("Phiên quét không phát hiện mối đe dọa.\n" + history.Type + " · " + history.Files + " tệp · " + history.Time.ToString("dd/MM/yyyy HH:mm"), "Kết quả quét", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (history.Threats == 0) { AppDialog.Show("Phiên quét không phát hiện mối đe dọa.\n" + history.Type + " · " + history.Files + " tệp · " + history.Time.ToString("dd/MM/yyyy HH:mm"), "Kết quả quét", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             try
             {
                 DataTable data = await Task.Run(() => new ThreatDetectionRepository().GetByScan(history.ScanID));
-                if (data.Rows.Count == 0) { MessageBox.Show("Không có bản ghi chi tiết từng tệp cho phiên quét này.", "Chi tiết lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+                if (data.Rows.Count == 0) { AppDialog.Show("Không có bản ghi chi tiết từng tệp cho phiên quét này.", "Chi tiết lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
                 if (exactDetailSource != null) exactDetailSource.Dispose();
                 exactDetailSource = new UcTongQuan { Dock = DockStyle.Fill }; pnlContent.Controls.Add(exactDetailSource); exactDetailSource.CreateControl();
                 exactDetailSource.ExactLoadHistory(data, history); exactView.DetailReturnPage = "history"; exactView.Go("details");
             }
-            catch (Exception ex) { MessageBox.Show("Không tải được chi tiết phiên quét: " + ex.Message, "Lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) { AppDialog.Show("Không tải được chi tiết phiên quét: " + ex.Message, "Lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
         private void ExactCommand(string command)
         {
@@ -174,7 +179,7 @@ namespace ScanAndRemoveVirus
             if (command == "cancel" || command == "isolate") { ucTongQuan.ExactScanCommand(command); return; }
             if (command == "isolate-file" || command == "delete-file" || command == "vt-query") { (exactDetailSource ?? ucTongQuan).ExactScanCommand(command); return; }
             if (command == "refresh" || command == "restore" || command == "delete") { ucCachLy.ExactQuarantineCommand(command); return; }
-            if (command == "export" || command == "history-prev" || command == "history-next" || command.StartsWith("history-delete:", StringComparison.Ordinal)) { ucLichSu.ExactHistoryCommand(command); return; }
+            if (command == "export" || command == "history-refresh" || command == "history-prev" || command == "history-next" || command.StartsWith("history-delete:", StringComparison.Ordinal)) { ucLichSu.ExactHistoryCommand(command); return; }
             if (command.StartsWith("history-detail:")) { int index; if (int.TryParse(command.Substring(15), out index)) ExactHistoryDetails(index); return; }
             if (command == "update")
             {

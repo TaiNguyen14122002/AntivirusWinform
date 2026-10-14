@@ -51,6 +51,8 @@ namespace ScanAndRemoveVirus.Control
         {
             model.HistoryPage = lblPage.Text; model.HistoryTotal = dangXem.Count;
             model.HistoryPrev = btnPrev.Enabled; model.HistoryNext = btnNext.Enabled;
+            model.HistoryFrom = dtpTuNgay.Value.Date; model.HistoryTo = dtpDenNgay.Value.Date;
+            model.HistoryFilter = cboLoaiQuet.SelectedItem as string ?? "Tất cả";
             for (int i = 0; i < dgvHistory.Rows.Count; i++)
             {
                 var row = dgvHistory.Rows[i]; var source = row.Tag as HistoryEntry; if (source == null) continue;
@@ -61,9 +63,35 @@ namespace ScanAndRemoveVirus.Control
         }
         internal void ExactHistoryFilter(DateTime start, DateTime end, string type)
         {
-            dtpTuNgay.Value = start; dtpDenNgay.Value = end;
-            int found = cboLoaiQuet.FindString(type); cboLoaiQuet.SelectedIndex = found >= 0 ? found : 0;
+            if (start.Date > end.Date)
+            {
+                AppDialog.Show("Từ ngày không được sau Đến ngày. Bộ lọc chưa được áp dụng.",
+                    "Bộ lọc lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            GanNgay(dtpTuNgay, start.Date);
+            GanNgay(dtpDenNgay, end.Date);
+            string requested = string.IsNullOrWhiteSpace(type) ? "Tất cả" : type.Trim();
+            int found = -1;
+            for (int i = 0; i < cboLoaiQuet.Items.Count; i++)
+                if (string.Equals(Convert.ToString(cboLoaiQuet.Items[i]), requested, StringComparison.OrdinalIgnoreCase))
+                { found = i; break; }
+            if (found < 0)
+                for (int i = 0; i < cboLoaiQuet.Items.Count; i++)
+                {
+                    string item = Convert.ToString(cboLoaiQuet.Items[i]);
+                    if (HistoryTypeMatches(item, requested)) { found = i; break; }
+                }
+            cboLoaiQuet.SelectedIndex = found >= 0 ? found : 0;
             BtnLoc_Click(null, EventArgs.Empty);
+        }
+        internal void ExactHistorySort(bool oldestFirst)
+        {
+            cuTruoc = oldestFirst;
+            trang = 1;
+            Rebuild();
+            Render();
+            InvalidateHeaderIcons();
         }
         internal void ExactHistoryCommand(string command)
         {
@@ -77,9 +105,14 @@ namespace ScanAndRemoveVirus.Control
                 if (!int.TryParse(command.Substring("history-delete:".Length), out index)) return;
                 HistoryEntry entry = ExactHistoryEntry(index);
                 if (entry == null) return;
-                DialogResult answer = MessageBox.Show(string.Format("Xóa nhật ký \"{0}\" lúc {1:dd/MM/yyyy HH:mm}?\r\n\r\nHành động này không thể hoàn tác.", entry.Type, entry.Time), "Xóa nhật ký hoạt động", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult answer = AppDialog.Show(string.Format("Xóa nhật ký \"{0}\" lúc {1:dd/MM/yyyy HH:mm}?\r\n\r\nHành động này không thể hoàn tác.", entry.Type, entry.Time), "Xóa nhật ký hoạt động", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (answer != DialogResult.Yes) return;
-                if (!ScanHistoryStore.Remove(entry)) { MessageBox.Show("Không xóa được bản ghi này. Hãy làm mới nhật ký rồi thử lại.", "Xóa nhật ký hoạt động", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+                if (!ScanHistoryStore.Remove(entry))
+                {
+                    LoadRealData();
+                    AppDialog.Show("Bản ghi đã thay đổi hoặc không thể xóa. Nhật ký đã được làm mới tự động.", "Xóa nhật ký hoạt động", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
                 LoadRealData();
             }
         }
@@ -159,6 +192,10 @@ namespace ScanAndRemoveVirus.Control
         }
         internal void ExactDetail(Sketch20Model model)
         {
+            // Trang chi tiết phải dùng đúng danh sách của nguồn hiện tại (phiên quét đang xem
+            // hoặc phiên lịch sử), không giữ danh sách từ Dashboard chính.
+            model.Threats.Clear();
+            for (int i = 0; i < threatRows.Count; i++) model.Threats.Add(ExactFile(threatRows[i], i));
             if (detailRowIndex < 0 || detailRowIndex >= threatRows.Count) return;
             var row = threatRows[detailRowIndex]; model.Detail = ExactFile(row, detailRowIndex);
             if (row.VtReport != null)
@@ -208,10 +245,10 @@ namespace ScanAndRemoveVirus.Control
             if (mode != 0 && !recursive && mode == 1)
             {
                 var topFiles = new List<string>();
-                foreach (var folder in targets) { try { topFiles.AddRange(Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)); } catch (Exception ex) { MessageBox.Show("Không đọc được thư mục: " + ex.Message, "Quét thư mục", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; } }
+                foreach (var folder in targets) { try { topFiles.AddRange(Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)); } catch (Exception ex) { AppDialog.Show("Không đọc được thư mục: " + ex.Message, "Quét thư mục", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; } }
                 targets = topFiles;
             }
-            if (mode != 0 && targets.Count == 0) { MessageBox.Show("Chưa có tệp hoặc vị trí nào để quét.", "Quét nâng cao", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (mode != 0 && targets.Count == 0) { AppDialog.Show("Chưa có tệp hoặc vị trí nào để quét.", "Quét nâng cao", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             var job = new ScanJob { Type = mode == 0 ? ScanType.Full : ScanType.Custom, Targets = mode == 0 ? null : targets,
                 DisplayName = mode == 0 ? "Quét toàn bộ hệ thống" : mode == 1 ? "Quét thư mục" : mode == 2 ? "Quét tệp" : "Quét tùy chỉnh",
                 ScopeText = mode == 0 ? "Các ổ đĩa sẵn sàng" : string.Join("; ", targets), FromAdvanced = true, AutoQuarantine = RealTimeProtection.AutoQuarantine };

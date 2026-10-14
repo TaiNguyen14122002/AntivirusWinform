@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -97,8 +97,8 @@ internal static partial class Sketch20Smoke
             ((Button)form.View.Canvas.Controls["advanced-scan"]).PerformClick(); Pump();
             Check("Quét nâng cao mở đúng trang, không nhảy sang Bảo vệ", form.View.Page == "advanced" && form.View.Canvas.TextRuns.Any(t => t.Value == "Quét virus"));
             Check("Quét nâng cao chỉ có 4 chế độ nâng cao", form.View.Canvas.Controls.OfType<Sketch20Mode>().Select(m => m.Text).SequenceEqual(new[] { "Quét toàn bộ hệ thống", "Quét thư mục", "Quét tệp", "Quét tùy chỉnh" }));
-            var advancedBack = form.View.Canvas.Controls["advanced-back"] as Button;
-            Check("Quét nâng cao có icon quay lại", advancedBack != null && advancedBack.AccessibleName == "Quay lại Tổng quan");
+            var advancedBack = form.View.Canvas.Controls["page-back"] as Button;
+            Check("Quét nâng cao có icon quay lại", advancedBack != null && advancedBack.AccessibleName == "Quay lại màn trước");
             if (advancedBack != null) { advancedBack.PerformClick(); Pump(); Check("Icon quay lại đưa về Tổng quan", form.View.Page == "overview"); }
             form.View.SelectScreen(18); Pump();
             Check("Đang quét không làm thẻ Thiết bị này bị thu nhỏ", form.View.Canvas.Nodes["device-card"].Height == normalDeviceHeight);

@@ -1,4 +1,4 @@
-﻿// Chỉ dùng tệp kiểm thử trong thư mục riêng. Không truy cập SQL/API của người dùng.
+// Chỉ dùng tệp kiểm thử trong thư mục riêng. Không truy cập SQL/API của người dùng.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -130,7 +130,7 @@ internal static partial class Sketch20Smoke
                 { string label = detailLabels[tab - 1]; var targetTab = view.Canvas.Controls.OfType<Sketch20Button>().Single(b => b.Tab && b.Text == label); Click(view, targetTab.Name); Check("Tab thật " + tab + " nạp dữ liệu controller", Read<TabControl>(scan, "tabChiTietDong").SelectedIndex == tab && view.DetailTab == tab); }
                 Check("Thông tin bổ sung giữ SHA256 thực", view.Model.Detail.Sha256 != null && view.Model.Detail.Sha256.Length == 64);
                 LiveShot(form, Path.Combine(output, "22-live-metadata.png"));
-                Click(view, "details-back"); Check("Quay lại từ chi tiết giữ danh sách phiên quét", view.Page == "overview" && view.Model.Threats.Count == 3);
+                Click(view, "page-back"); Check("Quay lại từ chi tiết giữ danh sách phiên quét", view.Page == "overview" && view.Model.Threats.Count == 3);
                 Click(view, "isolate-all");
                 Check("SQL lỗi giữ tệp và kết quả, không báo cách ly thành công", view.Model.Threats.Count == 3 && File.Exists(Path.Combine(samples, "signature.txt")));
                 view.Go("quarantine"); Pump(300); view.RefreshModel(true);

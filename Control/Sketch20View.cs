@@ -19,6 +19,9 @@ namespace ScanAndRemoveVirus.Control
         internal readonly Sketch20Actions Actions;
         private readonly Func<Sketch20Model> readModel;
         private readonly Timer update;
+        private readonly Timer layoutRenderTimer, searchRenderTimer;
+        private string pendingSearchName;
+        private int pendingSearchCaret;
         internal Sketch20Model Model;
         internal string Page = "overview";
         internal string DetailReturnPage = "quarantine";
@@ -29,22 +32,32 @@ namespace ScanAndRemoveVirus.Control
         private int layoutWidth;
         private int bodyOffset;
         private readonly ToolTip toolTips = new ToolTip();
-        private Sketch20Button settingsShortcut;
         private bool rendering;
         private bool needsScrollbar;
         private int detailBodyY = 306;
+        private int sidebarStatusTop;
+        private bool CompactSidebar { get { return ClientSize.Width < 1180; } }
         private DateTime? scanningSince;
         private DateTime lastScanRenderUtc = DateTime.MinValue;
-        private int stringsOffset, engineOffset, historyOffset, quarantineOffset;
-        private bool quarantineOldest;
+        private int stringsOffset, engineOffset, historyOffset, quarantineOffset, threatOffset;
+        private bool quarantineOldest, historyOldest;
         private readonly HashSet<int> quarantineSelection = new HashSet<int>();
         private List<string> folders = new List<string>(), files = new List<string>(), customFolders = new List<string>();
         private bool[] customLocations = { true, true, false, false };
         private bool includeSubfolders = true;
         private readonly HashSet<string> excludedDrives = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private string engineSearch = "", stringSearch = "";
-        private DateTime from = new DateTime(2024, 11, 1), to = new DateTime(2024, 11, 30);
+        private DateTime from = DateTime.Today.AddDays(-30), to = DateTime.Today;
         private string scanFilter = "Tất cả", typedKey = "";
+        private bool historyFilterInitialized;
+
+        private sealed class NavigationState
+        {
+            internal string Page, DetailReturnPage;
+            internal int SettingsTab, DetailTab, AdvancedMode;
+        }
+        private readonly Stack<NavigationState> navigation = new Stack<NavigationState>();
+        private bool restoringNavigation;
 
         internal Sketch20View(Sketch20Model initial, Sketch20Actions actions, Func<Sketch20Model> source = null)
         {
@@ -54,18 +67,54 @@ namespace ScanAndRemoveVirus.Control
             sidebar = new Panel { Dock = DockStyle.Left, Width = 208, BackColor = Sketch20Style.Sidebar };
             Theme.BatDoubleBuffer(this);
             Theme.BatDoubleBuffer(sidebar); sidebar.Paint += DrawSidebar;
+            sidebar.Resize += delegate { LayoutSidebarBottom(); sidebar.Invalidate(); };
             viewport = new Panel { Name = "Sketch20Viewport", Dock = DockStyle.Fill, AutoScroll = true, BackColor = Sketch20Style.Background };
             Theme.BatDoubleBuffer(viewport);
             Canvas = new Sketch20Surface { Name = "Sketch20Canvas", Location = new Point(26, 29) };
             viewport.Controls.Add(Canvas); Controls.Add(viewport); Controls.Add(sidebar);
-            Canvas.LocationChanged += delegate { PositionSettingsShortcut(); };
-            viewport.Scroll += delegate { PositionSettingsShortcut(); };
-            Resize += delegate { Render(); }; viewport.Resize += delegate { if (!rendering) Render(); };
+            AllowDrop = viewport.AllowDrop = Canvas.AllowDrop = true;
+            DragEnter += ExternalDragEnter; viewport.DragEnter += ExternalDragEnter; Canvas.DragEnter += ExternalDragEnter;
+            DragDrop += ExternalDragDrop; viewport.DragDrop += ExternalDragDrop; Canvas.DragDrop += ExternalDragDrop;
+            MouseWheel += TableMouseWheel; sidebar.MouseWheel += TableMouseWheel; viewport.MouseWheel += TableMouseWheel; Canvas.MouseWheel += TableMouseWheel;
+            Canvas.MouseClick += ThreatListMouseClick;
+            Canvas.MouseMove += ThreatListMouseMove;
+            layoutRenderTimer = new Timer { Interval = 55 };
+            layoutRenderTimer.Tick += delegate { layoutRenderTimer.Stop(); if (!rendering && !IsDisposed) Render(); };
+            searchRenderTimer = new Timer { Interval = 130 };
+            searchRenderTimer.Tick += delegate
+            {
+                searchRenderTimer.Stop();
+                if (rendering || IsDisposed) return;
+                var current = !string.IsNullOrEmpty(pendingSearchName) ? Canvas.Controls[pendingSearchName] as TextBox : null;
+                bool restoreFocus = current != null && current.Focused;
+                string name = pendingSearchName; int caret = pendingSearchCaret;
+                Render();
+                if (restoreFocus && !string.IsNullOrEmpty(name))
+                {
+                    var next = Canvas.Controls[name] as TextBox;
+                    if (next != null) { next.Focus(); next.SelectionStart = Math.Min(caret, next.TextLength); }
+                }
+            };
+            Resize += delegate { UpdateResponsiveSidebar(); ScheduleLayoutRender(); };
+            viewport.Resize += delegate { if (!rendering) ScheduleLayoutRender(); };
             update = new Timer { Interval = 500 };
             update.Tick += delegate { RefreshModel(); };
             if (source != null) update.Start();
-            BuildSidebarButtons(); Render();
-            Disposed += delegate { update.Stop(); update.Dispose(); toolTips.Dispose(); };
+            BuildSidebarButtons(); UpdateResponsiveSidebar(); Render();
+            Disposed += delegate
+            {
+                update.Stop(); update.Dispose();
+                layoutRenderTimer.Stop(); layoutRenderTimer.Dispose();
+                searchRenderTimer.Stop(); searchRenderTimer.Dispose();
+                toolTips.Dispose();
+            };
+        }
+
+        private void ScheduleLayoutRender()
+        {
+            if (rendering || IsDisposed) return;
+            layoutRenderTimer.Stop();
+            layoutRenderTimer.Start();
         }
 
         internal int ScreenNumber
@@ -75,7 +124,7 @@ namespace ScanAndRemoveVirus.Control
                 if (Page == "protection") return 2;
                 if (Page == "history") return 3;
                 if (Page == "quarantine") return 4;
-                if (Page == "settings") return SettingsTab == 0 ? 5 : 11 + SettingsTab;
+                if (Page == "settings") return SettingsTab == 0 ? 5 : 14;
                 if (Page == "advanced") return AdvancedMode == 0 ? 6 : 14 + AdvancedMode;
                 if (Page == "details") return 7 + DetailTab;
                 return Model.Scanning ? 18 : Model.ThreatCount > 0 ? 19 : !Model.Running ? 20 : 1;
@@ -84,18 +133,60 @@ namespace ScanAndRemoveVirus.Control
         internal void SelectScreen(int number)
         {
             if (number < 1 || number > 20) throw new ArgumentOutOfRangeException("number");
+            navigation.Clear();
             if (Model.Sample) { Model = Sketch20Samples.Create(number); if (number >= 7 && number <= 10) DetailReturnPage = "overview"; if (number == 11) DetailReturnPage = "quarantine"; if (number == 4) { quarantineSelection.Clear(); quarantineSelection.Add(0); quarantineSelection.Add(1); } }
-            SettingsTab = number == 12 ? 1 : number == 13 ? 2 : number == 14 ? 3 : 0;
+            SettingsTab = number == 14 ? 1 : 0;
             DetailTab = number >= 7 && number <= 11 ? number - 7 : 0;
             AdvancedMode = number >= 15 && number <= 17 ? number - 14 : 0;
             Page = number == 2 ? "protection" : number == 3 ? "history" : number == 4 ? "quarantine" : number == 5 || number >= 12 && number <= 14 ? "settings" : number == 6 || number >= 15 && number <= 17 ? "advanced" : number >= 7 && number <= 11 ? "details" : "overview";
-            stringsOffset = engineOffset = historyOffset = quarantineOffset = 0; viewport.AutoScrollPosition = Point.Empty; NotifyPage(); Render(); ResetPageScroll();
+            stringsOffset = engineOffset = historyOffset = quarantineOffset = threatOffset = 0; viewport.AutoScrollPosition = Point.Empty; NotifyPage(); Render(); ResetPageScroll();
         }
+        private NavigationState CurrentNavigationState()
+        {
+            return new NavigationState
+            {
+                Page = Page, DetailReturnPage = DetailReturnPage, SettingsTab = SettingsTab,
+                DetailTab = DetailTab, AdvancedMode = AdvancedMode
+            };
+        }
+
+        private void RestoreNavigationState(NavigationState state)
+        {
+            if (state == null) return;
+            Page = state.Page; DetailReturnPage = state.DetailReturnPage;
+            SettingsTab = state.SettingsTab; DetailTab = state.DetailTab; AdvancedMode = state.AdvancedMode;
+            viewport.AutoScrollPosition = Point.Empty;
+            NotifyPage(); Render(); ResetPageScroll();
+            if (readModel != null && IsHandleCreated)
+                BeginInvoke((Action)(() => { if (!IsDisposed) RefreshModel(true); }));
+        }
+
+        private void NavigateBack()
+        {
+            if (restoringNavigation) return;
+            restoringNavigation = true;
+            try
+            {
+                if (navigation.Count > 0) RestoreNavigationState(navigation.Pop());
+                else if (Page != "overview") RestoreNavigationState(new NavigationState { Page = "overview", DetailReturnPage = "overview" });
+            }
+            finally { restoringNavigation = false; }
+        }
+
         internal void Go(string page)
         {
+            if (!restoringNavigation && !string.Equals(Page, page, StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.Equals(page, "overview", StringComparison.OrdinalIgnoreCase))
+                    navigation.Clear();
+                else
+                    navigation.Push(CurrentNavigationState());
+            }
+
             Page = page;
             if (page == "history") historyOffset = 0;
             if (page == "quarantine") quarantineOffset = 0;
+            if (page == "threats") threatOffset = 0;
             viewport.AutoScrollPosition = Point.Empty;
             // Chuyển trang trước để click phản hồi ngay. Backend/controller cũ được
             // đồng bộ sau frame đầu, tránh giữ UI thread 1-3 giây trước khi đổi màn.
@@ -150,20 +241,95 @@ namespace ScanAndRemoveVirus.Control
                 }
                 else if (next.Scanning != wasScanning) lastScanRenderUtc = DateTime.UtcNow;
             }
-            if (!Canvas.Controls.OfType<TextBox>().Any(c => c.Focused) && !ContainsFocusedTextBox(Canvas)) Render();
+            if (!ContainsFocusedEditor(Canvas)) Render();
         }
-        private static bool ContainsFocusedTextBox(System.Windows.Forms.Control parent)
-        { return parent.Controls.Cast<System.Windows.Forms.Control>().Any(c => c is TextBox && c.Focused || ContainsFocusedTextBox(c)); }
+        private static bool ContainsFocusedEditor(System.Windows.Forms.Control parent)
+        {
+            return parent.Controls.Cast<System.Windows.Forms.Control>().Any(c =>
+                ((c is TextBox || c is UiSelect || c is DateTimePicker) && c.Focused) || ContainsFocusedEditor(c));
+        }
+
+        private void TableMouseWheel(object sender, MouseEventArgs e)
+        {
+            if (Model == null || Canvas == null || Canvas.IsDisposed) return;
+            Point mouse = Canvas.PointToClient(System.Windows.Forms.Control.MousePosition);
+            VScrollBar bar = null;
+            foreach (VScrollBar candidate in Canvas.Controls.OfType<VScrollBar>())
+            {
+                // Toàn bộ bề ngang của table, cùng dải Y với scrollbar, đều nhận wheel.
+                var tableArea = new Rectangle(0, candidate.Top, Math.Max(1, layoutWidth), candidate.Height);
+                if (tableArea.Contains(mouse)) { bar = candidate; break; }
+            }
+            if (bar == null) return;
+
+            int max = Math.Max(0, bar.Maximum - bar.LargeChange + 1);
+            if (max <= 0) return;
+            int step = SystemInformation.MouseWheelScrollLines <= 0 ? 1 : Math.Min(3, SystemInformation.MouseWheelScrollLines);
+            int next = Math.Max(0, Math.Min(max, bar.Value + (e.Delta < 0 ? step : -step)));
+            if (next == bar.Value) return;
+
+            SetTableOffset(bar.Name, next);
+            var handled = e as HandledMouseEventArgs;
+            if (handled != null) handled.Handled = true;
+            Render();
+        }
+
+        private void SetTableOffset(string name, int value)
+        {
+            if (name == "quarantine-scroll") quarantineOffset = value;
+            else if (name == "history-scroll") historyOffset = value;
+            else if (name == "threat-scroll") threatOffset = value;
+            else if (name == "engine-scroll") engineOffset = value;
+            else if (name == "strings-scroll") stringsOffset = value;
+        }
+
+        private void WireTableMouseWheel(System.Windows.Forms.Control parent)
+        {
+            foreach (System.Windows.Forms.Control child in parent.Controls)
+            {
+                if (!(child is VScrollBar))
+                {
+                    child.MouseWheel -= TableMouseWheel;
+                    child.MouseWheel += TableMouseWheel;
+                }
+                if (child.HasChildren) WireTableMouseWheel(child);
+            }
+        }
+
+        private int ThreatRowAt(Point point)
+        {
+            if (Page != "threats") return -1;
+            for (int i = 0; ; i++)
+            {
+                Rectangle bounds;
+                if (!Canvas.Nodes.TryGetValue("threat-list-row-" + i, out bounds)) break;
+                if (bounds.Contains(point)) return threatOffset + i;
+            }
+            return -1;
+        }
+
+        private void ThreatListMouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+            int row = ThreatRowAt(e.Location);
+            if (row < 0 || row >= Model.Threats.Count) return;
+            OpenDetail(Model.Threats[row].Index, false);
+        }
+
+        private void ThreatListMouseMove(object sender, MouseEventArgs e)
+        {
+            Canvas.Cursor = ThreatRowAt(e.Location) >= 0 ? Cursors.Hand : Cursors.Default;
+        }
 
         private void BuildSidebarButtons()
         {
-            string[] names = { "Tổng quan", "Bảo vệ", "Cách ly", "Lịch sử" };
-            string[] pages = { "overview", "protection", "quarantine", "history" };
+            string[] names = { "Tổng quan", "Bảo vệ", "Cách ly", "Lịch sử", "Cài đặt" };
+            string[] pages = { "overview", "protection", "quarantine", "history", "settings" };
             for (int i = 0; i < names.Length; i++)
             {
                 string page = pages[i];
                 var nav = new Button { Name = "nav-" + page, Text = names[i], AccessibleName = names[i], FlatStyle = FlatStyle.Flat,
-                    BackColor = Sketch20Style.Sidebar, ForeColor = Color.Transparent, Cursor = Cursors.Hand, TabStop = true,
+                    BackColor = Sketch20Style.Sidebar, ForeColor = Color.Transparent, Cursor = Cursors.Hand, TabStop = false,
                     Bounds = new Rectangle(10, 91 + i * 51, 188, 44) };
                 nav.FlatAppearance.BorderSize = 0;
                 // Navbar không đổi nền khi hover/nhấn; chỉ trạng thái active mới được tô màu.
@@ -174,8 +340,16 @@ namespace ScanAndRemoveVirus.Control
                 nav.Click += delegate { Go(page); };
                 sidebar.Controls.Add(nav);
             }
-            string[] sectionNames = { "Chung", "Bảo vệ chủ động", "VirusTotal", "Dữ liệu & công cụ" };
-            string[] sectionIcons = { "settings", "shield-check", "sigma", "hard-drive" };
+            // Thông tin thiết bị hiển thị trực tiếp ở đáy sidebar, không cần click mở popup.
+            var deviceInfo = Model.Sample ? new[] { "DESKTOP-7H3K9P2", "Windows 11 Pro 23H2", "Intel Core i7-12700H", "16 GB", "64-bit", "Dell Precision 5540" } : DeviceInformation;
+            var device = new Sketch20SidebarStatus("Thông tin thiết bị", "monitor")
+            {
+                Name = "sidebar-device", Note = deviceInfo[0], Details = deviceInfo
+            };
+            sidebar.Controls.Add(device);
+            LayoutSidebarBottom();
+            string[] sectionNames = { "Chung", "Dữ liệu & công cụ" };
+            string[] sectionIcons = { "settings", "hard-drive" };
             for (int i = 0; i < sectionNames.Length; i++)
             {
                 int index = i;
@@ -183,59 +357,139 @@ namespace ScanAndRemoveVirus.Control
                 item.Click += delegate { SettingsTab = index; Go("settings"); };
                 sidebar.Controls.Add(item);
             }
+            BringSidebarStatusToFront();
+        }
+
+        private void UpdateResponsiveSidebar()
+        {
+            int targetWidth = CompactSidebar ? 76 : 208;
+            if (sidebar.Width != targetWidth) sidebar.Width = targetWidth;
+            string[] pages = { "overview", "protection", "quarantine", "history", "settings" };
+            for (int i = 0; i < pages.Length; i++)
+            {
+                var nav = sidebar.Controls["nav-" + pages[i]] as Button;
+                if (nav == null) continue;
+                nav.Bounds = CompactSidebar
+                    ? new Rectangle(8, 91 + i * 51, 60, 44)
+                    : new Rectangle(10, 91 + i * 51, 188, 44);
+                toolTips.SetToolTip(nav, nav.Text);
+            }
+            var device = sidebar.Controls["sidebar-device"];
+            if (device != null && CompactSidebar) toolTips.SetToolTip(device, "Thông tin thiết bị · " + Environment.MachineName);
+            LayoutSidebarBottom();
+            sidebar.Invalidate();
+        }
+
+        private void LayoutSidebarBottom()
+        {
+            const int menuBottom = 339;
+            if (CompactSidebar)
+            {
+                const int compactCardHeight = 68;
+                int footerTop = sidebar.ClientSize.Height - 12;
+                sidebarStatusTop = Math.Max(menuBottom + 8, footerTop - compactCardHeight - 12);
+                var compact = sidebar.Controls["sidebar-device"];
+                if (compact != null)
+                {
+                    compact.Bounds = new Rectangle(10, sidebarStatusTop + 8, 56, 50);
+                    compact.Visible = true;
+                }
+                BringSidebarStatusToFront();
+                return;
+            }
+
+            int normalFooterTop = Math.Max(0, sidebar.ClientSize.Height - 52);
+            const int cardHeight = 220;
+            int desiredTop = normalFooterTop - cardHeight - 16;
+            sidebarStatusTop = Math.Max(menuBottom + 11, desiredTop);
+            if (sidebarStatusTop + cardHeight > normalFooterTop - 8)
+                sidebarStatusTop = Math.Max(menuBottom + 4, normalFooterTop - cardHeight - 8);
+
+            var item = sidebar.Controls["sidebar-device"];
+            if (item != null)
+            {
+                item.Bounds = new Rectangle(16, sidebarStatusTop + 8, 176, 204);
+                item.Visible = true;
+            }
+            BringSidebarStatusToFront();
+        }
+
+        private void BringSidebarStatusToFront()
+        {
+            var item = sidebar.Controls["sidebar-device"];
+            if (item != null) item.BringToFront();
         }
 
         private void DrawNav(Graphics g, Button button, string page)
         {
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            bool active = page == Page || page == "overview" && (Page == "advanced" || Page == "details" && DetailReturnPage == "overview") || page == "quarantine" && Page == "details" && DetailReturnPage == "quarantine" || page == "history" && Page == "details" && DetailReturnPage == "history";
+            bool active = page == Page || page == "overview" && (Page == "advanced" || Page == "threats" || Page == "details" && (DetailReturnPage == "overview" || DetailReturnPage == "threats")) || page == "quarantine" && Page == "details" && DetailReturnPage == "quarantine" || page == "history" && Page == "details" && DetailReturnPage == "history";
             Sketch20Style.Round(g, button.ClientRectangle, 10, active ? Sketch20Style.BlueSoft : Sketch20Style.Sidebar, Color.Transparent);
             if (active) using (var b = new SolidBrush(Sketch20Style.Blue)) g.FillRectangle(b, 0, 9, 3, 28);
             Color ink = active ? Sketch20Style.Blue : Sketch20Style.Ink;
             string icon = page == "overview" ? "house" : page == "protection" ? "shield" : page == "quarantine" ? "archive" : page == "history" ? "history" : "settings";
-            if (Page == "settings") Sketch20Style.Icon(g, icon, new Rectangle(17, 12, 20, 20), active ? Sketch20Style.Blue : Sketch20Style.Muted);
-            else Sketch20ReferenceAssets.FilledIcon(g, page == "protection" ? "shield-check" : page == "quarantine" ? "cube" : page == "history" ? "clock" : icon, new Rectangle(17, 12, 20, 20), active ? Sketch20Style.Blue : Sketch20Style.Muted);
-            Sketch20Style.Text(g, button.Text, new Rectangle(52, 0, 115, 44), 14, ink, active);
-            if (Page == "settings" && page == "quarantine" && Model.Quarantine.Count > 0)
+            int iconX = CompactSidebar ? (button.Width - 20) / 2 : 17;
+            Sketch20ReferenceAssets.FilledIcon(g, page == "protection" ? "shield-check" : page == "quarantine" ? "cube" : page == "history" ? "clock" : icon, new Rectangle(iconX, 12, 20, 20), active ? Sketch20Style.Blue : Sketch20Style.Muted);
+            if (!CompactSidebar)
+                Sketch20Style.Text(g, button.Text, new Rectangle(52, 0, 115, 44), 14, ink, active);
+            if (page == "quarantine" && Model.Quarantine.Count > 0)
             {
-                Sketch20Style.Round(g, new Rectangle(145, 14, 21, 20), 7, active ? Color.White : Sketch20Style.BlueSoft, Color.Transparent);
-                Sketch20Style.Text(g, Model.Quarantine.Count.ToString(), new Rectangle(145, 14, 21, 20), 10.5f, Sketch20Style.Blue, true, false, true);
+                string countText = Model.Quarantine.Count.ToString();
+                int badgeW = Math.Max(18, Sketch20Style.Measure(countText, CompactSidebar ? 8.5f : 10.5f, true) + 8);
+                int badgeX = CompactSidebar ? button.Width - badgeW - 3 : 166 - badgeW;
+                int badgeY = CompactSidebar ? 3 : 14;
+                int badgeH = CompactSidebar ? 17 : 20;
+                Sketch20Style.Round(g, new Rectangle(badgeX, badgeY, badgeW, badgeH), badgeH / 2, active ? Color.White : Sketch20Style.BlueSoft, Color.Transparent);
+                Sketch20Style.Text(g, countText, new Rectangle(badgeX, badgeY, badgeW, badgeH), CompactSidebar ? 8.5f : 10.5f, Sketch20Style.Blue, true, false, false, false, true);
             }
-            if (button.Focused) ControlPaint.DrawFocusRectangle(g, new Rectangle(5, 5, 166, 36));
         }
 
         private void DrawSidebar(object sender, PaintEventArgs e)
         {
             var g = e.Graphics; g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using (var pen = new Pen(Sketch20Style.Border)) g.DrawLine(pen, 207, 0, 207, sidebar.Height);
-            if (Page == "settings") Sketch20Artwork.Draw(g, new Rectangle(22, 21, 39, 44), "safe");
-            else Sketch20ReferenceAssets.Logo(g, new Rectangle(27, 26, 27, 32));
-            Sketch20Style.Text(g, "Antivirus", new Rectangle(65, 25, 131, 34), 20, Sketch20Style.Ink, true);
+            using (var bg = new SolidBrush(Sketch20Style.Sidebar)) g.FillRectangle(bg, e.ClipRectangle);
+            using (var pen = new Pen(Sketch20Style.Border)) g.DrawLine(pen, sidebar.Width - 1, 0, sidebar.Width - 1, sidebar.Height);
 
-            // Sidebar giữ điều hướng và phiên bản.
-            using (var pen = new Pen(Sketch20Style.Border)) g.DrawLine(pen, 24, sidebar.Height - 52, 184, sidebar.Height - 52);
+            if (CompactSidebar)
+            {
+                Sketch20ReferenceAssets.Logo(g, new Rectangle(24, 26, 27, 32));
+                Sketch20Style.Round(g, new Rectangle(8, sidebarStatusTop, 60, 68), 13, Color.White, Sketch20Style.Border);
+                return;
+            }
+
+            Sketch20ReferenceAssets.Logo(g, new Rectangle(27, 26, 27, 32));
+            Sketch20Style.Text(g, "Antivirus", new Rectangle(65, 25, 131, 34), 20, Sketch20Style.Ink, true);
+            Sketch20Style.Round(g, new Rectangle(12, sidebarStatusTop, 184, 220), 13, Color.White, Sketch20Style.Border);
+            using (var pen = new Pen(Sketch20Style.Border))
+                g.DrawLine(pen, 24, sidebar.Height - 52, 184, sidebar.Height - 52);
             Sketch20Style.Text(g, "Phiên bản " + Model.Version, new Rectangle(26, sidebar.Height - 43, 156, 24), 10.5f, Sketch20Style.Muted);
         }
+
 
 
         internal void Render()
         {
             if (rendering || IsDisposed || viewport.ClientSize.Width < 90) return;
             rendering = true;
-            bool fixedScanViewport = Page == "overview" && Model != null && Model.Scanning;
-            var scroll = fixedScanViewport ? Point.Empty : viewport.AutoScrollPosition;
+            bool fixedScanViewport = (Page == "overview" && Model != null && Model.Scanning) || Page == "settings";
+            bool fixedProtectionViewport = Page == "protection";
+            bool fixedViewport = fixedScanViewport || fixedProtectionViewport;
+            var scroll = fixedViewport ? Point.Empty : viewport.AutoScrollPosition;
             try
             {
                 // Tổng quan khi quét là viewport cố định: không tạo scrollbar và không
                 // toggle AutoScroll qua lại theo từng nhịp progress.
                 viewport.AutoScroll = false;
-                Canvas.Location = new Point(26, 29);
+                UpdateResponsiveSidebar();
+                int pageMargin = CompactSidebar ? 16 : 26;
+                Canvas.Location = new Point(pageMargin, 29);
                 Canvas.SuspendLayout();
                 toolTips.RemoveAll();
                 if (Canvas.ContextMenuStrip != null) { Canvas.ContextMenuStrip.Dispose(); Canvas.ContextMenuStrip = null; }
                 foreach (System.Windows.Forms.Control c in Canvas.Controls.Cast<System.Windows.Forms.Control>().ToArray()) c.Dispose();
                 Canvas.Drawing.Clear(); Canvas.BackgroundDrawing.Clear(); Canvas.Nodes.Clear(); Canvas.TextRuns.Clear();
-                layoutWidth = Math.Max(500, viewport.Width - 52 - (!fixedScanViewport && needsScrollbar ? SystemInformation.VerticalScrollBarWidth : 0));
+                int availableWidth = viewport.Width - pageMargin * 2 - (!fixedViewport && needsScrollbar ? SystemInformation.VerticalScrollBarWidth : 0);
+                layoutWidth = Math.Max(620, availableWidth);
                 Canvas.Width = layoutWidth;
                 bodyOffset = 0;
                 PageTools();
@@ -247,23 +501,25 @@ namespace ScanAndRemoveVirus.Control
                 else if (Page == "quarantine") ReferenceQuarantine();
                 else if (Page == "settings") Settings();
                 else if (Page == "advanced") Advanced();
+                else if (Page == "threats") ThreatTable(114);
                 else if (Page == "details") ReferenceDetails();
                 else Overview();
                 if (WindowForm != null) Sketch20Chrome.AddControls(WindowForm, this, layoutWidth);
-                settingsShortcut = Button("nav-settings", "", layoutWidth - 42, 0, 36, () => Go("settings"), "settings", false, false, 32);
-                settingsShortcut.AccessibleName = "Cài đặt";
-                settingsShortcut.IconPixels = 22;
-                settingsShortcut.Selected = Page == "settings";
-                toolTips.SetToolTip(settingsShortcut, "Cài đặt");
-                settingsShortcut.BringToFront();
-                Canvas.Height = fixedScanViewport ? Math.Max(1, viewport.ClientSize.Height - Canvas.Top) : ContentHeight;
-                // Khi đang quét, tuyệt đối không sinh scrollbar. Các màn còn lại giữ
-                // hành vi cuộn cũ.
-                viewport.AutoScrollMinSize = fixedScanViewport ? Size.Empty : new Size(0, ContentHeight + (Page == "settings" ? 45 : 31));
-                viewport.AutoScroll = !fixedScanViewport;
-                if (!fixedScanViewport) viewport.AutoScrollPosition = new Point(-scroll.X, -scroll.Y);
-                PositionSettingsShortcut();
-                Canvas.ResumeLayout(); Canvas.Invalidate(); sidebar.Invalidate();
+                Canvas.Height = fixedViewport ? Math.Max(1, viewport.ClientSize.Height - Canvas.Top) : ContentHeight;
+                // Tổng quan khi quét và tab Bảo vệ là viewport cố định: không sinh scrollbar.
+                int horizontalMin = layoutWidth > availableWidth ? layoutWidth + pageMargin * 2 : 0;
+                viewport.AutoScrollMinSize = fixedViewport ? Size.Empty : new Size(horizontalMin, ContentHeight + (Page == "settings" ? 45 : 31));
+                viewport.AutoScroll = !fixedViewport;
+                if (!fixedViewport) viewport.AutoScrollPosition = new Point(-scroll.X, -scroll.Y);
+                WireTableMouseWheel(this);
+                LayoutSidebarBottom();
+                Canvas.ResumeLayout(); Canvas.Invalidate();
+                var sideDevice = sidebar.Controls["sidebar-device"] as Sketch20SidebarStatus;
+                if (sideDevice != null)
+                {
+                    var info = Model.Sample ? new[] { "DESKTOP-7H3K9P2", "Windows 11 Pro 23H2", "Intel Core i7-12700H", "16 GB", "64-bit", "Dell Precision 5540" } : DeviceInformation;
+                    sideDevice.Note = info[0]; sideDevice.Details = info; sideDevice.StatusColor = Sketch20Style.Blue;
+                }
                 foreach (System.Windows.Forms.Control c in sidebar.Controls)
                 {
                     if (c.Name.StartsWith("settings-section-"))
@@ -273,17 +529,12 @@ namespace ScanAndRemoveVirus.Control
                     }
                     c.Invalidate();
                 }
+                BringSidebarStatusToFront();
+                sidebar.Invalidate();
             }
             finally { rendering = false; }
             bool needs = !fixedScanViewport && ContentHeight + (Page == "settings" ? 45 : 31) > viewport.Height;
             if (needsScrollbar != needs) { needsScrollbar = needs; Render(); }
-        }
-        private void PositionSettingsShortcut()
-        {
-            if (settingsShortcut == null || settingsShortcut.IsDisposed) return;
-            // Compensate for the scrolling canvas so settings stays in the window corner.
-            settingsShortcut.Location = new Point(layoutWidth - 42, Math.Max(0, -viewport.AutoScrollPosition.Y));
-            Canvas.Nodes[settingsShortcut.Name] = settingsShortcut.Bounds;
         }
         private float ReferenceTextScale { get { return Page == "settings" ? 1f : Math.Min(1.17f, Math.Max(1.02f, layoutWidth / 820f)); } }
         private new void Text(string value, int x, int y, int width, int height = 20, float pixels = 13, Color? color = null, bool bold = false, bool wrap = false, bool right = false, bool mono = false)
@@ -297,14 +548,14 @@ namespace ScanAndRemoveVirus.Control
         { y += bodyOffset; Canvas.Drawing.Add(g => { using (var pen = new Pen(Sketch20Style.Border)) g.DrawLine(pen, x, y, x + width, y); }); }
         private void Icon(string name, int x, int y, int size = 16, Color? color = null)
         { y += bodyOffset; Canvas.Drawing.Add(g => Sketch20Style.Icon(g, name, new Rectangle(x, y, size, size), color ?? Sketch20Style.Blue)); }
-        private void Card(string name, int x, int y, int width, int height, Color? fill = null, Color? edge = null, int radius = 12)
+        private void Card(string name, int x, int y, int width, int height, Color? fill = null, Color? edge = null, int radius = 14)
         {
             var bounds = new Rectangle(x, y + bodyOffset, width, height); Canvas.Nodes[name] = bounds;
             Action<Graphics> paint = g =>
             {
-                if ((fill ?? Color.White) == Color.White)
-                    Sketch20Style.Round(g, new Rectangle(bounds.X + 1, bounds.Y + 3, bounds.Width, bounds.Height), radius, Sketch20Style.Shadow, Color.Transparent);
-                Sketch20Style.Round(g, bounds, radius, fill ?? Color.White, edge ?? Sketch20Style.Border);
+                Color actualFill = fill ?? Color.White;
+                Color actualEdge = edge ?? ColorTranslator.FromHtml("#dce7f5");
+                Sketch20Style.Round(g, bounds, radius, actualFill, actualEdge);
             };
             Canvas.Drawing.Add(paint); Canvas.BackgroundDrawing.Add(paint);
         }
@@ -313,7 +564,6 @@ namespace ScanAndRemoveVirus.Control
             var bounds = new Rectangle(x, y + bodyOffset, width, height); Canvas.Nodes[name] = bounds;
             Action<Graphics> paint = g =>
             {
-                Sketch20Style.Round(g, new Rectangle(bounds.X + 1, bounds.Y + 4, bounds.Width, bounds.Height), radius, Sketch20Style.Shadow, Color.Transparent);
                 using (var path = UiKit.Round(new Rectangle(bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1), radius))
                 using (var brush = new System.Drawing.Drawing2D.LinearGradientBrush(bounds, start, end, System.Drawing.Drawing2D.LinearGradientMode.Horizontal))
                 using (var pen = new Pen(edge)) { g.FillPath(brush, path); g.DrawPath(pen, path); }
@@ -332,22 +582,36 @@ namespace ScanAndRemoveVirus.Control
         {
             Color ink = kind == "technical" ? ColorTranslator.FromHtml("#8840f8") : kind == "neutral" ? Sketch20Style.Muted : kind == "risk" ? Sketch20Style.Red : kind == "warn" ? Sketch20Style.Amber : kind == "info" ? Sketch20Style.Blue : Sketch20Style.Green;
             Color bg = kind == "technical" ? ColorTranslator.FromHtml("#f0e9ff") : kind == "neutral" ? ColorTranslator.FromHtml("#edf2f8") : kind == "risk" ? Sketch20Style.RedSoft : kind == "warn" ? Sketch20Style.AmberSoft : kind == "info" ? Sketch20Style.BlueSoft : Sketch20Style.GreenSoft;
-            int w = width > 0 ? width : Sketch20Style.Measure(caption, 11, true) + 16;
-            Card("badge-" + x + "-" + y, x, y, w, 24, bg, Color.Transparent, 5);
-            bool indicator = Page != "settings" && new[] { "Cao", "Trung bình", "Nguy hiểm", "Đáng ngờ", "Đang cách ly", "Đã cách ly", "An toàn" }.Contains(caption);
+            bool indicator = Page != "settings" && (new[] { "Cao", "Trung bình", "Nguy hiểm", "Đáng ngờ", "Đang cách ly", "Đã cách ly", "An toàn" }.Contains(caption) || (kind == "risk" || kind == "safe") && (caption ?? "").EndsWith(" tệp", StringComparison.OrdinalIgnoreCase));
+            const float badgeText = 10.8f;
+            int natural = Sketch20Style.PillWidth(caption, badgeText * ReferenceTextScale, indicator);
+            // Badge luôn ôm nội dung. Tham số width cũ chỉ còn giữ tương thích lời gọi,
+            // không được kéo giãn hoặc cắt chữ theo độ rộng cột.
+            int w = natural;
+            Card("badge-" + x + "-" + y, x, y, w, 24, bg, Color.Transparent, 12);
             if (indicator)
             {
                 int py = y + bodyOffset;
-                Canvas.Drawing.Add(g => { using (var brush = new SolidBrush(ink)) g.FillEllipse(brush, x + 8, py + 5, 14, 14); });
-                Icon(kind == "safe" ? "check" : "alert", x + 10, y + 7, 10, Color.White);
+                Canvas.Drawing.Add(g => { using (var brush = new SolidBrush(ink)) g.FillEllipse(brush, x + 8, py + 6, 12, 12); });
+                Icon(kind == "safe" ? "check" : "alert", x + 10, y + 8, 8, Color.White);
             }
-            Text(caption, x + (indicator ? 28 : 8), y, w - (indicator ? 32 : 12), 24, 11, ink, true);
+            Text(caption, x + (indicator ? 26 : 8), y, Math.Max(1, w - (indicator ? 34 : 16)), 24, badgeText, ink, true);
         }
         private Sketch20Button Button(string name, string caption, int x, int y, int width, Action click, string icon = "", bool primary = false, bool danger = false, int height = 40, bool link = false)
         {
             var b = new Sketch20Button(caption, icon) { Name = name, Primary = primary, Danger = danger, Link = link,
                 Bounds = new Rectangle(x, y + bodyOffset, width, height), TextPixels = (height <= 33 ? 12 : 13) * ReferenceTextScale };
             b.Click += delegate { click(); }; Canvas.Controls.Add(b); Canvas.Nodes[name] = b.Bounds; return b;
+        }
+        private void HitArea(string name, string accessibleName, int x, int y, int width, int height, Action click)
+        {
+            var hit = new Sketch20HitArea
+            {
+                Name = name, AccessibleName = accessibleName,
+                Bounds = new Rectangle(x, y + bodyOffset, width, height)
+            };
+            hit.Click += delegate { click(); };
+            Canvas.Controls.Add(hit); Canvas.Nodes[name] = hit.Bounds;
         }
         private void Switch(string key, string caption, int x, int y)
         {
@@ -368,33 +632,31 @@ namespace ScanAndRemoveVirus.Control
         }
         private void PageTools()
         {
-            string title = Page == "overview" ? "Tổng quan" : Page == "protection" ? "Bảo vệ" : Page == "history" ? "Lịch sử" : Page == "quarantine" ? "Cách ly" : Page == "settings" ? "Cài đặt" : Page == "advanced" ? "Quét virus" : "Chi tiết tệp";
+            string title = Page == "overview" ? "Tổng quan" : Page == "protection" ? "Bảo vệ" : Page == "history" ? "Lịch sử" : Page == "quarantine" ? "Cách ly" : Page == "settings" ? "Cài đặt" : Page == "advanced" ? "Quét virus" : Page == "threats" ? "Mối đe dọa cần xử lý" : "Chi tiết tệp";
             string subtitle = Page == "overview" ? "Theo dõi trạng thái bảo vệ và hoạt động của máy tính." :
                 Page == "protection" ? "Các mô-đun bảo vệ giúp giữ an toàn cho thiết bị của bạn." :
                 Page == "history" ? "Xem lại các lần quét, phát hiện và hành động đã thực hiện." :
                 Page == "quarantine" ? "Các tệp có khả năng gây hại đã được cách ly để đảm bảo an toàn cho thiết bị." :
                 Page == "settings" ? "Tùy chỉnh hoạt động và các tính năng bảo vệ theo nhu cầu của bạn." :
                 Page == "advanced" ? "Chọn chế độ quét phù hợp để kiểm tra và loại bỏ các mối đe dọa." :
+                Page == "threats" ? "Chọn một tệp trong danh sách để xem chi tiết trước khi cách ly." :
                 "Xem thông tin chi tiết và kết quả phân tích của tệp được phát hiện.";
 
-            if (Page == "details" && DetailTab >= 2) return;
-            if (Page == "details")
+            // 5 tab cấp 1 của sidebar không có Back. Chỉ màn con mới hiển thị Back.
+            bool primaryPage = Page == "overview" || Page == "protection" || Page == "quarantine" || Page == "history" || Page == "settings";
+            if (!primaryPage)
             {
-                Button("details-back", "Quay lại", 0, 0, 92, () => Go(DetailReturnPage), "arrow-left", false, false, 25, true);
-                Text(title, 0, 28, layoutWidth - 200, 40, 25, Sketch20Style.Ink, true);
-                Text(subtitle, 0, 65, layoutWidth - 210, 24, 12, Sketch20Style.Muted);
-            }
-            else if (Page == "advanced")
-            {
-                var back = Button("advanced-back", "", 0, 6, 32, () => Go("overview"), "arrow-left", false, false, 32, true);
-                back.AccessibleName = "Quay lại Tổng quan";
-                Text(title, 44, 0, layoutWidth - 274, 44, 27, Sketch20Style.Ink, true);
-                Text(subtitle, 44, 39, layoutWidth - 294, 25, 12.5f, Sketch20Style.Muted);
+                var back = Button("page-back", "", 0, 6, 32, NavigateBack, "arrow-left", false, false, 32, true);
+                back.AccessibleName = "Quay lại màn trước";
+                Text(title, 44, 0, layoutWidth - (Page == "threats" ? 250 : 74), 44, 27, Sketch20Style.Ink, true);
+                Text(subtitle, 44, 39, layoutWidth - (Page == "threats" ? 270 : 94), 25, 12.5f, Sketch20Style.Muted);
+                if (Page == "threats" && Model.Threats.Count > 0)
+                    Button("isolate-all-threats", "Cách ly tất cả", layoutWidth - 166, 2, 166, () => Command("isolate"), "archive", true, false, 40);
             }
             else
             {
-                Text(title, 0, 0, layoutWidth - 230, 44, 27, Sketch20Style.Ink, true);
-                Text(subtitle, 0, 39, layoutWidth - 250, 25, 12.5f, Sketch20Style.Muted);
+                // Các màn cấp 1 chỉ giữ tiêu đề chữ, không dùng ô icon trước tiêu đề.
+                Text(title, 0, 6, layoutWidth - 230, 36, 24, Sketch20Style.Ink, true);
             }
 
             int right = layoutWidth;
@@ -408,7 +670,8 @@ namespace ScanAndRemoveVirus.Control
         }
         private void Tabs(int y, string[] titles, int selected, Action<int> choose)
         {
-            string[] icons = Page == "settings" ? new[] { "settings", "shield-check", "sigma", "hard-drive" } : new[] { "file", "sigma", "activity", "files", "shield-check" };
+            Card("tabs-shell", 0, y, layoutWidth, 48, Color.White, ColorTranslator.FromHtml("#dce7f5"), 14);
+            string[] icons = Page == "settings" ? new[] { "settings", "shield-check", "hard-drive" } : new[] { "file", "sigma", "activity", "files", "shield-check" };
             float pixels = layoutWidth < 850 ? 11.5f : 13;
             int[] widths = titles.Select((t, i) => Sketch20Style.Measure(t, pixels, i == selected) + 50).ToArray();
             int total = widths.Sum() + 5 * (titles.Length - 1);
@@ -420,7 +683,7 @@ namespace ScanAndRemoveVirus.Control
                 b.Click += delegate { choose(index); }; Canvas.Controls.Add(b); Canvas.Nodes[b.Name] = b.Bounds;
                 x += width + 5;
             }
-            Line(0, y + 43, layoutWidth); Canvas.Nodes["tabs"] = new Rectangle(0, y + bodyOffset, layoutWidth, 44);
+            Canvas.Nodes["tabs"] = new Rectangle(0, y + bodyOffset, layoutWidth, 48);
         }
         private void TwoLineText(string title, string note, int x, int y, int width, float titleSize = 12, float noteSize = 10.5f, Color? titleColor = null, Color? noteColor = null, bool titleBold = true, bool wrapNote = false)
         {
@@ -448,7 +711,12 @@ namespace ScanAndRemoveVirus.Control
         {
             Card("callout-" + y, x, y, width, height, warn ? Sketch20Style.AmberSoft : Sketch20Style.BlueSoft, Color.Transparent, 9);
             Icon(warn ? "alert" : "info", x + 16, y + (height - 16) / 2);
-            Text(value, x + 41, y + 7, width - 57, height - 14, 12, warn ? Sketch20Style.Amber : Sketch20Style.Muted, false, true);
+            int textWidth = width - 57;
+            bool singleLine = value != null && value.IndexOf('\n') < 0 && Sketch20Style.Measure(value, 12) <= textWidth;
+            if (singleLine)
+                Text(value, x + 41, y, textWidth, height, 12, warn ? Sketch20Style.Amber : Sketch20Style.Muted);
+            else
+                Text(value, x + 41, y + 7, textWidth, height - 14, 12, warn ? Sketch20Style.Amber : Sketch20Style.Muted, false, true);
         }
 
         private void Overview()
@@ -476,11 +744,14 @@ namespace ScanAndRemoveVirus.Control
             Artwork("hero-art", artX, heroY + 13, artW, heroH - 20, state == 1 ? "reference-off" : state == 2 ? "reference-scan" : state == 3 ? "reference-risk" : "reference-safe");
             if (state == 1 || state == 3)
             {
-                string prefix = state == 1 ? "Bảo vệ thời gian thực " : Model.ThreatCount + " ";
+                string prefix = state == 1 ? "Bảo vệ thời gian thực" : Model.ThreatCount.ToString();
                 string suffix = state == 1 ? "đang tắt" : "tệp cần được xử lý";
-                int prefixW = Sketch20Style.Measure(prefix, titlePixels, true);
-                Text(prefix.TrimEnd(), 26, heroY + 25, prefixW, titleH, titlePixels, state == 3 ? Sketch20Style.Red : Sketch20Style.Ink, true);
-                Text(suffix, 26 + prefixW, heroY + 25, Math.Max(1, titleW - prefixW), titleH, titlePixels, state == 1 ? Sketch20Style.Amber : Sketch20Style.Ink, true);
+                // TextRenderer vẫn chừa một chút side-bearing quanh glyph dù NoPadding.
+                // Trừ theo cỡ font để phần số/chữ màu và phần tiêu đề kế tiếp nhìn như một câu liền.
+                int prefixW = Math.Max(1, Sketch20Style.Measure(prefix, titlePixels, true) - (int)Math.Round(titlePixels * 0.45f));
+                const int splitTitleGap = 7;
+                Text(prefix, 26, heroY + 25, prefixW, titleH, titlePixels, state == 3 ? Sketch20Style.Red : Sketch20Style.Ink, true);
+                Text(suffix, 26 + prefixW + splitTitleGap, heroY + 25, Math.Max(1, titleW - prefixW - splitTitleGap), titleH, titlePixels, state == 1 ? Sketch20Style.Amber : Sketch20Style.Ink, true);
             }
             else Text(titles[state], 26, heroY + 25, titleW, titleH, titlePixels, Sketch20Style.Ink, true, true);
             Text(note, 26, heroY + noteY, copyW, noteH, 12, Sketch20Style.Muted, false, true);
@@ -503,22 +774,37 @@ namespace ScanAndRemoveVirus.Control
             }
             else if (state == 3)
             {
-                Button("show-details", "Xem chi tiết", 26, actionY, 149, () => OpenDetail(Model.Threats.Count > 0 ? Model.Threats[0].Index : 0, false), "file-search", true, true);
+                Button("show-details", "Xem chi tiết", 26, actionY, 149, () => Go("threats"), "file-search", true, true);
                 Button("quick-scan", "Quét lại", 187, actionY, 125, () => Command("scan"), "refresh");
             }
             else
             {
                 int scanY = Math.Max(121, noteY + noteH + 16);
-                int progressW = Math.Max(195, copyW - 123), progress = Model.Progress < 0 ? 35 : Math.Min(100, Model.Progress);
+                int progressW = Math.Max(195, copyW - 123);
                 Card("progress-track", 26, heroY + scanY, progressW, 10, Sketch20Style.Track, Color.Transparent, 5);
-                Card("progress-fill", 26, heroY + scanY, Math.Max(6, progressW * progress / 100), 10, Sketch20Style.Blue, Color.Transparent, 5);
-                Text(Model.Progress < 0 ? "Đang quét" : progress + "%", 38 + progressW, heroY + scanY - 9, 108, 28, 12, Sketch20Style.Blue, true);
+                if (Model.Progress >= 0)
+                {
+                    int progress = Math.Min(100, Model.Progress);
+                    Card("progress-fill", 26, heroY + scanY, Math.Max(6, progressW * progress / 100), 10, Sketch20Style.Blue, Color.Transparent, 5);
+                    Text(progress + "%", 38 + progressW, heroY + scanY - 9, 108, 28, 12, Sketch20Style.Blue, true);
+                }
+                else
+                {
+                    // Không biết trước tổng số tệp nếu quét cây thư mục. Dùng thanh hoạt động
+                    // chạy theo số tệp THẬT đã xử lý thay vì vẽ cố định 35% giả lập.
+                    int segment = Math.Max(36, progressW / 4);
+                    int travel = Math.Max(1, progressW - segment);
+                    int x = 26 + (Model.ScannedFiles * 7 % travel);
+                    Card("progress-fill", x, heroY + scanY, segment, 10, Sketch20Style.Blue, Color.Transparent, 5);
+                    Text("Đang quét", 38 + progressW, heroY + scanY - 9, 108, 28, 12, Sketch20Style.Blue, true);
+                }
                 Text(Model.ScannedFiles.ToString("N0") + " tệp · " + Model.ThreatCount + " mối đe dọa", 26, heroY + scanY + 15, copyW, 24, 10.5f, Sketch20Style.Muted);
                 // Giữ block đường dẫn nằm trọn phía trên hàng nút; trước đây dòng path chạm/đè button.
                 Text("Đang kiểm tra:", 26, heroY + scanY + 43, copyW, 19, 11, Sketch20Style.Ink);
                 Text(Model.ScanPath, 26, heroY + scanY + 62, copyW, 17, 10.5f, Sketch20Style.Muted);
-                Button("scan-results", "Xem kết quả", 26, actionY, 166, () => { if (Model.Sample) Command("finish"); else if (Model.Threats.Count > 0) OpenDetail(Model.Threats[0].Index, false); else Go("history"); }, "eye");
-                Button("cancel-scan", "Hủy quét", 207, actionY, 134, () => Command("cancel"), "x", false, true);
+                // Trong lúc đang quét chưa có kết quả cuối cùng: chỉ cho phép hủy phiên quét.
+                int scanActionY = actionY + 8;
+                Button("cancel-scan", "Hủy quét", 26, scanActionY, 134, () => Command("cancel"), "x", false, true);
             }
             int statsY = heroY + heroH + 14, gap = 14, statW = (layoutWidth - gap * 2) / 3;
             string[] labels = { "Mối đe dọa", "Tệp đã quét", state == 2 ? "Thời gian đã qua" : "Lần quét gần nhất" };
@@ -532,17 +818,16 @@ namespace ScanAndRemoveVirus.Control
                 int x = i * (statW + gap), w = i == 2 ? layoutWidth - x : statW;
                 Card("stat-" + i, x, statsY, w, 105);
                 Artwork("stat-icon-" + i, x + 16, statsY + 17, 51, 56, "reference-icon-stat-" + (i == 0 ? "risk" : i == 1 ? "file" : "clock"));
-                Text(labels[i], x + 82, statsY + 13, w - 110, 24, 11.5f, Sketch20Style.Ink);
-                Text(values[i], x + 82, statsY + 37, w - 105, 33, i == 2 ? 17.5f : 22, i == 0 && state == 3 ? Sketch20Style.Red : Sketch20Style.Ink, true);
-                Text(hints[i], x + 82, statsY + 75, w - 96, 21, 10.2f, Sketch20Style.Muted);
-                Icon("chevron-right", x + w - 24, statsY + 17, 12, Sketch20Style.Muted);
+                Text(labels[i], x + 82, statsY + 13, w - 96, 24, 11.5f, Sketch20Style.Ink);
+                Text(values[i], x + 82, statsY + 37, w - 92, 33, i == 2 ? 17.5f : 22, i == 0 && state == 3 ? Sketch20Style.Red : Sketch20Style.Ink, true);
+                Text(hints[i], x + 82, statsY + 75, w - 92, 21, 10.2f, Sketch20Style.Muted);
             }
             int lowerY = statsY + 119;
-            int lowerH = state == 3 ? 435 : state == 2
+            int lowerH = state == 2
                 ? Math.Max(164, Math.Min(360, viewport.Height - lowerY - 45))
                 : Math.Max(342, Math.Min(452, viewport.Height - lowerY - 62));
-            OverviewLower(lowerY, lowerH, state == 3);
-            ContentHeight = state == 2 ? Math.Max(1, viewport.ClientSize.Height - 30) : lowerY + lowerH + (state == 3 ? 0 : 14);
+            OverviewLower(lowerY, lowerH);
+            ContentHeight = state == 2 ? Math.Max(1, viewport.ClientSize.Height - 30) : lowerY + lowerH + 14;
         }
         private void MiniStatus(string title, string note, int x, int y, Color color, int width)
         {
@@ -551,106 +836,65 @@ namespace ScanAndRemoveVirus.Control
             Text(title, x + 29, y, width - 29, 26, 11.5f, Sketch20Style.Ink, true);
             Text(note, x + 29, y + 25, width - 29, 22, 10.5f, note == "Đang tắt" ? Sketch20Style.Red : Sketch20Style.Muted);
         }
-        private void OverviewLower(int y, int height, bool threats)
+        private void OverviewLower(int y, int height)
         {
-            const int gap = 14;
-            if (threats)
+            Card("activity-card", 0, y, layoutWidth, height, Color.White, ColorTranslator.FromHtml("#dce7f5"), 16);
+            Card("activity-title-icon", 17, y + 10, 36, 36, ColorTranslator.FromHtml("#edf5ff"), Color.Transparent, 10);
+            Icon("history", 27, y + 20, 16, Sketch20Style.Blue);
+            Text("Hoạt động gần đây", 66, y + 8, layoutWidth - 205, 32, 17, Sketch20Style.Ink, true);
+            Button("open-history", "Xem tất cả  →", layoutWidth - 126, y + 11, 109, () => Go("history"), "", false, false, 28, true);
+            const int activityListTop = 60;
+            const int activityBottomPadding = 12;
+            const int activityRowGap = 8;
+            int availableRowsH = Math.Max(58, height - activityListTop - activityBottomPadding);
+            int maxRows = Math.Max(1, Math.Min(5, (availableRowsH + activityRowGap) / (58 + activityRowGap)));
+            int actRows = Math.Min(maxRows, Model.Activities.Count);
+            int cardH = actRows == 0 ? 0 : Math.Min(76, Math.Max(58, (availableRowsH - activityRowGap * (actRows - 1)) / actRows));
+            int rowsStartY = y + activityListTop;
+            if (actRows == 0)
             {
-                const int threatH = 174;
-                Card("threat-list", 0, y, layoutWidth, threatH);
-                Text("Các mối đe dọa đã phát hiện (" + Model.Threats.Count + ")", 18, y + 9, layoutWidth - 210, 31, 16, Sketch20Style.Ink, true);
-                Button("isolate-all", "Cách ly tất cả", layoutWidth - 166, y + 8, 148, () => Command("isolate"), "archive", true, true, 34);
-                for (int i = 0; i < Math.Min(3, Model.Threats.Count); i++)
-                {
-                    var f = Model.Threats[i]; int top = y + 45 + i * 40, index = f.Index;
-                    Card("threat-row-" + i, 12, top, layoutWidth - 24, 36, Color.White, Sketch20Style.Border, 8);
-                    Card("threat-mini-icon-" + i, 20, top + 3, 30, 30, Sketch20Style.RedSoft, Color.Transparent, 7);
-                    Icon("file-warning", 28, top + 10, 15, Sketch20Style.Red);
-                    Text(f.Name, 60, top + 1, layoutWidth - 424, 18, 11, Sketch20Style.Ink, true);
-                    Text(f.Path, 60, top + 18, layoutWidth - 424, 17, 9, Sketch20Style.Muted);
-                    Badge(f.Severity, layoutWidth - 339, top + 6, Kind(f.Severity), 79);
-                    Text(f.Time, layoutWidth - 249, top + 7, 70, 22, 9.5f, Sketch20Style.Muted, false, false, true);
-                    Button("threat-detail-" + i, "Chi tiết", layoutWidth - 170, top + 3, 78, () => OpenDetail(index, false), "", false, false, 29, true);
-                    Button("isolate-one-" + i, "Cách ly", layoutWidth - 84, top + 3, 68, () => { OpenDetail(index, false); Command("isolate-file"); }, "", false, false, 29);
-                }
-                y += threatH + gap; height -= threatH + gap;
+                int emptyY = y + Math.Max(62, (height - 82) / 2);
+                Card("activity-empty-icon", (layoutWidth - 48) / 2, emptyY, 48, 48, Sketch20Style.GreenSoft, Color.Transparent, 24);
+                Icon("shield-check", (layoutWidth - 22) / 2, emptyY + 13, 22, Sketch20Style.Green);
+                Text("Chưa có hoạt động gần đây.", 20, emptyY + 58, layoutWidth - 40, 30, 12.5f, Sketch20Style.Muted, true, false, true);
             }
-            int leftW = (int)(layoutWidth * .59), rightX = leftW + gap, rightW = layoutWidth - rightX;
-            Card("activity-card", 0, y, leftW, height);
-            Text("Hoạt động gần đây", 17, y + 10, leftW - 150, 30, 17, Sketch20Style.Ink, true);
-            Button("open-history", "Xem tất cả  →", leftW - 126, y + 11, 109, () => Go("history"), "", false, false, 28, true);
-            bool scanning = Model.Scanning;
-            int maxActivityRows = scanning ? (height < 210 ? 1 : height < 300 ? 2 : 4) : threats ? 3 : 5;
-            int actRows = Math.Min(maxActivityRows, Model.Activities.Count);
-            int rowH = Math.Min(72, Math.Max(48, (height - 53) / Math.Max(1, actRows)));
-            if (actRows == 0) Text("Chưa có hoạt động gần đây.", 20, y + 70, leftW - 40, 30, 13, Sketch20Style.Muted);
             for (int i = 0; i < actRows; i++)
             {
-                var a = Model.Activities[i]; int top = y + 47 + i * rowH, center = top + (rowH - 6) / 2;
+                var a = Model.Activities[i]; int top = rowsStartY + i * (cardH + activityRowGap), center = top + cardH / 2;
                 Color fg = a[0] == "check" ? Sketch20Style.Green : a[0] == "archive" ? Sketch20Style.Red : Sketch20Style.Blue;
                 Color bg = a[0] == "check" ? Sketch20Style.GreenSoft : a[0] == "archive" ? Sketch20Style.RedSoft : Sketch20Style.BlueSoft;
-                Card("activity-row-" + i, 12, top, leftW - 24, rowH - 6, Color.White, Sketch20Style.Border, 9);
+                Card("activity-row-" + i, 12, top, layoutWidth - 24, cardH, Color.White, ColorTranslator.FromHtml("#e5edf8"), 11);
                 Card("activity-icon-" + i, 22, center - 19, 38, 38, bg, Color.Transparent, 19);
                 FilledIcon(a[0] == "check" ? "shield-check" : a[0], 32, center - 9, 18, fg);
-                TwoLineText(a[1], a[2], 72, center - 22, leftW - 205, 11.6f, 9.7f);
-                Text(a[3], leftW - 138, center - 22, 118, 25, 9.5f, Sketch20Style.Muted, false, false, true);
-            }
-            bool compactLower = threats;
-            int deviceH = compactLower ? 114 : 164;
-            Card("device-card", rightX, y, rightW, deviceH);
-            Icon("monitor", rightX + 18, y + 18, 16, Sketch20Style.Ink);
-            Text("Thiết bị này", rightX + 44, y + 9, rightW - 126, 32, 14.5f, Sketch20Style.Ink, true);
-            Button("device-details", "Chi tiết →", rightX + rightW - 90, y + 10, 74, ShowDeviceInformation, "", false, false, 29, true);
-            string[] labels = { "Tên thiết bị", "Hệ điều hành", "Bộ xử lý", "Bộ nhớ (RAM)" };
-            string[] vals = Model.Sample ? new[] { "DESKTOP-7H3K9P2", "Windows 11 Pro 23H2", "Intel Core i7-12700H", "16 GB" } : DeviceInformation;
-            for (int i = 0; i < 4; i++)
-            {
-                Icon(i == 0 ? "laptop" : i == 1 ? "windows" : i == 2 ? "cpu" : "ram", rightX + 18, y + (compactLower ? 44 : 51) + i * (compactLower ? 18 : 26), 14, Sketch20Style.Muted);
-                Text(labels[i], rightX + 42, y + (compactLower ? 38 : 44) + i * (compactLower ? 18 : 26), 108, compactLower ? 22 : 26, 10.6f, Sketch20Style.Muted);
-                Text(vals[i], rightX + 151, y + (compactLower ? 38 : 44) + i * (compactLower ? 18 : 26), rightW - 170, compactLower ? 22 : 26, 10.6f, Sketch20Style.Ink);
-            }
-            string[] names = { "Bảo vệ thời gian thực", "Cập nhật chữ ký", "Khu vực cách ly", "Bảo vệ web" };
-            string[] hints = { Model.Running ? "Liên tục theo dõi và ngăn chặn mối đe dọa." : "Đang tắt. Thiết bị của bạn có thể gặp rủi ro.", Model.Signature, Model.Quarantine.Count + " tệp đang được cách ly", Model.KeyConfigured ? "Tra cứu tệp qua VirusTotal" : "Cấu hình API key để tra cứu tệp" };
-            string[] icons = { "shield-check", "refresh", "bulb", "shield-check" };
-            if (!Model.Running) { names[2] = "Tường lửa"; hints[2] = "Đang bảo vệ các kết nối mạng của bạn."; icons[2] = "shield-check"; names[3] = "Khuyến nghị"; hints[3] = "Bật bảo vệ thời gian thực để giữ an toàn."; icons[3] = "bulb"; }
-            if (compactLower) { names[2] = "Khuyến nghị"; hints[2] = Model.Scanning ? "Một số cài đặt có thể được tối ưu." : "Hãy xử lý các mối đe dọa đã phát hiện."; icons[2] = "bulb"; }
-            int quickCount = compactLower ? 3 : scanning ? (height < 300 ? 0 : 3) : 4;
-            int quickH = quickCount == 0 ? 0 : compactLower ? 36 : Math.Max(42, Math.Min(55, (height - deviceH - 12) / Math.Max(1, quickCount) - 5));
-            for (int i = 0; i < quickCount; i++)
-            {
-                int top = y + deviceH + (compactLower ? 8 : 10) + i * (quickH + 4);
-                Card("device-action-" + i, rightX, top, rightW, quickH, i == 0 && !Model.Running ? Sketch20Style.RedSoft : Color.White);
-                Icon(icons[i], rightX + 17, top + (quickH - 20) / 2, 20, i == 0 ? Model.Running ? Sketch20Style.Green : Sketch20Style.Red : i == 2 ? Sketch20Style.Amber : Sketch20Style.Blue);
-                if (compactLower)
-                {
-                    Text(names[i], rightX + 49, top + 1, rightW - 112, 18, 10.5f, Sketch20Style.Ink, true);
-                    Text(hints[i], rightX + 49, top + 18, rightW - 112, 16, 8.1f, Sketch20Style.Muted);
-                }
-                else TwoLineText(names[i], hints[i], rightX + 49, top + 4, rightW - 112, 11.2f, 9.1f);
-                if (i == 0) Switch("rt", names[i], rightX + rightW - 53, top + 8);
-                else if (i == 1) Button("device-update", "", rightX + rightW - 47, top + 7, 29, () => Command("update"), "chevron-right", false, false, 29, true);
-                else if (i == 2) Button("device-quarantine", "", rightX + rightW - 47, top + 7, 29, () => { if (!Model.Running) OpenFirewallSettings(); else Go("quarantine"); }, "chevron-right", false, false, 29, true);
-                else Button("device-web", "", rightX + rightW - 47, top + 7, 29, () => { if (!Model.Running) Command("enable"); else { SettingsTab = 2; Go("settings"); } }, "chevron-right", false, false, 29, true);
+                if (string.IsNullOrWhiteSpace(a[2]))
+                    Text(a[1], 72, center - 15, layoutWidth - 235, 30, 11.6f, Sketch20Style.Ink, true);
+                else
+                    TwoLineText(a[1], a[2], 72, center - 22, layoutWidth - 235, 11.6f, 9.7f);
+                Text(a[3], layoutWidth - 150, center - 15, 126, 30, 9.5f, Sketch20Style.Muted, false, false, true);
             }
         }
         private static readonly string[] DeviceInformation = ReadDeviceInformation();
         private static string[] ReadDeviceInformation()
         {
-            string cpu = "Máy tính Windows", os = Environment.OSVersion.VersionString, memory = "—";
+            string cpu = "Máy tính Windows", os = Environment.OSVersion.VersionString, memory = "—", model = "Máy tính Windows";
             try
             {
                 cpu = Convert.ToString(Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0", "ProcessorNameString", cpu)).Trim();
                 os = Convert.ToString(Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ProductName", os));
                 if (Environment.OSVersion.Version.Build >= 22000) os = os.Replace("Windows 10", "Windows 11");
                 memory = Math.Round(new Microsoft.VisualBasic.Devices.ComputerInfo().TotalPhysicalMemory / 1073741824.0) + " GB";
+                string manufacturer = Convert.ToString(Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\BIOS", "SystemManufacturer", "")).Replace(" Inc.", "").Trim();
+                string product = Convert.ToString(Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\BIOS", "SystemProductName", "")).Trim();
+                model = (manufacturer + " " + product).Trim();
+                if (string.IsNullOrWhiteSpace(model)) model = "Máy tính Windows";
             }
             catch { }
-            return new[] { Environment.MachineName, os, cpu, memory };
+            return new[] { Environment.MachineName, os, cpu, memory, Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit", model };
         }
         private void ShowDeviceInformation()
         {
-            var vals = Model.Sample ? new[] { "DESKTOP-7H3K9P2", "Windows 11 Pro 23H2", "Intel Core i7-12700H", "16 GB" } : DeviceInformation;
-            MessageBox.Show("Thiết bị: " + vals[0] + "\nHệ điều hành: " + vals[1] + "\nBộ xử lý: " + vals[2] + "\nBộ nhớ: " + vals[3], "Thông tin thiết bị", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var vals = Model.Sample ? new[] { "DESKTOP-7H3K9P2", "Windows 11 Pro 23H2", "Intel Core i7-12700H", "16 GB", "64-bit", "Dell Precision 5540" } : DeviceInformation;
+            AppDialog.Show("Thiết bị: " + vals[0] + "\nHệ điều hành: " + vals[1] + "\nBộ xử lý: " + vals[2] + "\nBộ nhớ: " + vals[3], "Thông tin thiết bị", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void Activity(int y)
@@ -668,36 +912,83 @@ namespace ScanAndRemoveVirus.Control
                 var row = Model.Activities[i]; int top = y + headerHeight + i * rowStep;
                 Card("activity-row-" + i, 12, top, layoutWidth - 24, 64, Sketch20Style.Background, Color.Transparent, 7);
                 Color fg = row[0] == "check" ? Sketch20Style.Green : row[0] == "archive" ? Sketch20Style.Amber : Sketch20Style.Blue;
-                Icon(row[0], 26, top + 23, 18, fg);
-                TwoLineText(row[1], row[2], 58, top + 8, layoutWidth - 175, 13, 11);
-                Text(row[3], layoutWidth - 101, top + 20, 75, 24, 11, Sketch20Style.Muted, false, false, true);
+                int center = top + 32;
+                Icon(row[0], 26, center - 9, 18, fg);
+                if (string.IsNullOrWhiteSpace(row[2]))
+                    Text(row[1], 58, center - 15, layoutWidth - 175, 30, 13, Sketch20Style.Ink, true);
+                else
+                    TwoLineText(row[1], row[2], 58, top + 8, layoutWidth - 175, 13, 11);
+                Text(row[3], layoutWidth - 101, center - 15, 75, 30, 11, Sketch20Style.Muted, false, false, true);
             }
             Footer(y + height + 18, Model.Scanning ? "Đang quét: " + Model.ScanPath : Model.Status, "CSDL chữ ký: " + Model.Signature);
         }
         private void ThreatTable(int y)
         {
-            int count = Model.Threats.Count, rows = Math.Min(count, 8), height = 72 + (rows == 0 ? 108 : rows * 76) + 64;
-            Card("threat-list", 0, y, layoutWidth, height, Color.White, Sketch20Style.Border, 14);
-            Card("threat-title-icon", 18, y + 16, 34, 34, Sketch20Style.RedSoft, Color.Transparent, 9);
-            Icon("shield-alert", 26, y + 24, 18, Sketch20Style.Red);
-            Text("Mối đe dọa được phát hiện", 64, y + 12, layoutWidth - 190, 28, 17, Sketch20Style.Ink, true);
-            Text("Kiểm tra từng tệp trước khi cách ly hoặc xóa.", 64, y + 38, layoutWidth - 210, 20, 11, Sketch20Style.Muted);
-            Badge(count + " tệp", layoutWidth - 82, y + 21, "risk", 64);
-            if (rows == 0) Text("Không có mối đe dọa đang chờ xử lý.", 22, y + 92, layoutWidth - 44, 30, 13, Sketch20Style.Muted);
-            for (int i = 0; i < rows; i++)
+            const int rowH = Sketch20Style.TableRowHeight, rowGap = Sketch20Style.TableRowGap;
+            int count = Model.Threats.Count;
+            int visible = Math.Min(count, Math.Max(3, Math.Min(7, (viewport.Height - y - 238) / (rowH + rowGap))));
+            threatOffset = Math.Max(0, Math.Min(threatOffset, Math.Max(0, count - Math.Max(1, visible))));
+            int rowsHeight = count == 0 ? 104 : visible * (rowH + rowGap) - rowGap;
+            int listH = 79 + Sketch20Style.TableHeaderHeight + Sketch20Style.TableOuterPaddingY + rowsHeight + Sketch20Style.TableOuterPaddingY + 44;
+
+            Card("threat-list", 0, y, layoutWidth, listH, Color.White, ColorTranslator.FromHtml("#dce7f5"), 16);
+
+            // Header thoáng, cùng ngôn ngữ card với các màn còn lại.
+            Card("threat-title-icon", 22, y + 17, 46, 46, Sketch20Style.RedSoft, Color.Transparent, 12);
+            Icon("shield-alert", 34, y + 29, 22, Sketch20Style.Red);
+            Text("Danh sách tệp cần cách ly", 82, y + 12, layoutWidth - 280, 32, 19, Sketch20Style.Ink, true);
+            Text("Kiểm tra từng tệp trước khi thực hiện cách ly.", 82, y + 43, layoutWidth - 300, 24, 11, Sketch20Style.Muted);
+            int countW = Sketch20Style.PillWidth(count + " tệp", 10.8f * ReferenceTextScale, true);
+            Badge(count + " tệp", layoutWidth - countW - 22, y + 27, count > 0 ? "risk" : "safe", countW);
+
+            int head = y + 79;
+            int rowX = 18;
+            bool hasScroll = count > visible;
+            int rowW = layoutWidth - rowX - (hasScroll ? 37 : 18);
+            // Tệp là cột flex; mức độ/phát hiện/thao tác có minimum riêng.
+            // Cột thao tác phải luôn đủ chỗ cho toàn bộ chữ "Xem chi tiết" + chevron.
+            // Khi hẹp, ưu tiên co cột tệp/nội dung thay vì rút gọn action thành "Xem chi...".
+            int[] threatCols = ResponsiveTableWidths(rowW, 0, 312, 108, 168, 154);
+            int fileW = threatCols[0], severityW = threatCols[1], reasonW = threatCols[2], actionW = threatCols[3];
+            int severityX = rowX + fileW, reasonX = severityX + severityW, actionX = reasonX + reasonW;
+            Card("threat-table-header", rowX, head, rowW, Sketch20Style.TableHeaderHeight, ColorTranslator.FromHtml("#f7faff"), Color.Transparent, 9);
+            Text("TỆP TIN", rowX + 18, head, fileW - 28, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("MỨC ĐỘ", severityX, head, severityW - 12, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("PHÁT HIỆN", reasonX, head, reasonW - 12, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("THAO TÁC", actionX, head, actionW - 8, Sketch20Style.TableHeaderHeight, 9.0f, Sketch20Style.Muted, true);
+
+            int rowsY = head + Sketch20Style.TableHeaderHeight + Sketch20Style.TableOuterPaddingY;
+            if (count == 0)
             {
-                var f = Model.Threats[i]; int top = y + 70 + i * 76, index = f.Index;
-                Card("threat-row-" + i, 16, top, layoutWidth - 32, 66, i % 2 == 0 ? Color.White : Sketch20Style.GridAlt, Sketch20Style.Border, 10);
-                Card("threat-file-icon-" + i, 28, top + 15, 36, 36, Sketch20Style.RedSoft, Color.Transparent, 9);
-                Icon("file-warning", 37, top + 24, 18, Sketch20Style.Red);
-                TwoLineText(f.Name, f.Reason, 78, top + 8, layoutWidth - 340, 13, 11);
-                Badge(f.Severity, layoutWidth - 230, top + 21, Kind(f.Severity), 86);
-                Button("threat-detail-" + i, "Chi tiết", layoutWidth - 126, top + 17, 92, () => OpenDetail(index, false), "chevron-right", false, false, 34, true);
+                Card("threat-empty", rowX, rowsY, rowW, rowsHeight, Sketch20Style.Background, Color.Transparent, 12);
+                Card("threat-empty-icon", rowX + 22, rowsY + 22, 46, 46, Sketch20Style.GreenSoft, Color.Transparent, 23);
+                Icon("shield-check", rowX + 34, rowsY + 34, 22, Sketch20Style.Green);
+                Text("Không còn tệp nào đang chờ xử lý", rowX + 84, rowsY + 19, rowW - 110, 30, 14, Sketch20Style.Ink, true);
+                Text("Thiết bị hiện không có mối đe dọa cần cách ly.", rowX + 84, rowsY + 48, rowW - 110, 24, 10.8f, Sketch20Style.Muted);
+                Button("threats-empty-back", "Về Tổng quan", rowX + rowW - 154, rowsY + 31, 132, () => Go("overview"), "arrow-left", false, false, 36);
             }
-            int foot = y + 70 + (rows == 0 ? 108 : rows * 76);
-            Text("Ưu tiên cách ly trước, chỉ xóa khi đã xác minh.", 20, foot + 18, layoutWidth - 210, 24, 11, Sketch20Style.Muted);
-            Button("isolate-all", "Cách ly tất cả", layoutWidth - 152, foot + 12, 132, () => Command("isolate"), "archive", true, false, 36);
-            Footer(y + height + 18, Model.Status, "CSDL chữ ký: " + Model.Signature);
+            else
+            {
+                if (hasScroll)
+                    AddTableScroll("threat-scroll", layoutWidth - 17, rowsY, rowsHeight, count, Math.Max(1, visible), threatOffset, value => threatOffset = value);
+                for (int i = 0; i < visible; i++)
+                {
+                    var f = Model.Threats[threatOffset + i];
+                    int top = rowsY + i * (rowH + rowGap), index = f.Index;
+                    var row = new Sketch20ThreatRow(f, severityX - rowX, reasonX - rowX, actionX - rowX, false)
+                    {
+                        Name = "threat-list-row-" + i,
+                        Bounds = new Rectangle(rowX, top, rowW, rowH)
+                    };
+                    row.Click += delegate { OpenDetail(index, false); };
+                    Canvas.Controls.Add(row); Canvas.Nodes[row.Name] = row.Bounds;
+                }
+            }
+
+            int footerY = rowsY + rowsHeight + Sketch20Style.TableOuterPaddingY;
+            Icon("info", 26, footerY + 14, 16, Sketch20Style.Blue);
+            Text("Nhấn vào một dòng để xem chi tiết trước khi xử lý.", 51, footerY + 7, layoutWidth - 78, 30, 10.5f, Sketch20Style.Muted);
+            ContentHeight = y + listH + 18;
         }
 
         internal static readonly string[] FeatureKeys = { "rt", "restore", "usb", "download", "behavior", "startup", "aq", "vtq" };
@@ -705,6 +996,34 @@ namespace ScanAndRemoveVirus.Control
         internal static readonly string[] FeatureNotes = { "Giám sát tệp mới hoặc thay đổi trong máy.", "Kiểm tra lại tệp trước khi khôi phục từ cách ly.", "Quét ổ USB ngay khi được kết nối.", "Kiểm tra tệp tải về từ Internet.", "Theo dõi tiến trình có hành vi đáng ngờ.", "Kiểm tra tệp mới trong thư mục Startup.", "Chuyển tệp nguy hiểm vào khu vực cách ly.", "Tra cứu tệp nghi ngờ bằng mã băm." };
         private static string Kind(string severity)
         { return severity == "Cao" ? "risk" : severity == "Trung bình" ? "warn" : "info"; }
+
+        // Phân bổ cột dùng chung cho các table custom. Các cột giữ minimum rõ ràng;
+        // cột flex nhận toàn bộ phần dư để resize không làm cột khác mất chữ.
+        private static int[] ResponsiveTableWidths(int totalWidth, int flexIndex, params int[] minimums)
+        {
+            var widths = (int[])minimums.Clone();
+            int sum = widths.Sum();
+            if (totalWidth >= sum)
+            {
+                widths[Math.Max(0, Math.Min(flexIndex, widths.Length - 1))] += totalWidth - sum;
+                return widths;
+            }
+
+            // Trường hợp cực hẹp: ưu tiên giữ các cột trạng thái/thao tác; co cột flex trước.
+            int flex = Math.Max(0, Math.Min(flexIndex, widths.Length - 1));
+            int deficit = sum - totalWidth;
+            int flexFloor = Math.Min(widths[flex], 96);
+            int take = Math.Min(deficit, Math.Max(0, widths[flex] - flexFloor));
+            widths[flex] -= take; deficit -= take;
+            for (int i = 0; i < widths.Length && deficit > 0; i++)
+            {
+                if (i == flex) continue;
+                int floor = Math.Min(widths[i], 64);
+                take = Math.Min(deficit, Math.Max(0, widths[i] - floor));
+                widths[i] -= take; deficit -= take;
+            }
+            return widths;
+        }
 
         private void TableHeader(int y, string[] names, float[] starts, int height = 39)
         {
@@ -719,156 +1038,217 @@ namespace ScanAndRemoveVirus.Control
         }
         private void History()
         {
-            int rows=Model.History.Count, rowH=66, listY=178;
-            int visible=Math.Min(rows,Math.Max(3,Math.Min(8,(viewport.Height-listY-154)/rowH)));
-            historyOffset=Math.Max(0,Math.Min(historyOffset,Math.Max(0,rows-visible)));
-            Card("history-filter-card",0,81,layoutWidth,82,Color.White,Sketch20Style.Border,14);
-            int exportW=116, filterBtnW=104, gap=10;
-            int available=layoutWidth-40-exportW-filterBtnW-gap*4;
-            int dateW=(int)(available*0.27), typeW=available-dateW*2;
-            Text("Từ ngày",20,87,dateW,20,10.5f,Sketch20Style.Muted,true);
-            Text("Đến ngày",30+dateW,87,dateW,20,10.5f,Sketch20Style.Muted,true);
-            Text("Loại quét",40+dateW*2,87,typeW,20,10.5f,Sketch20Style.Muted,true);
-            DateBox("history-from",from,20,108,dateW,d=>from=d);
-            DateBox("history-to",to,30+dateW,108,dateW,d=>to=d);
-            string[] types={"Tất cả","Quét nhanh","Quét thư mục","Quét tệp","Quét toàn bộ","Quét tùy chỉnh","Thời gian thực"};
-            SelectBox("history-filter",types,Math.Max(0,Array.IndexOf(types,scanFilter)),40+dateW*2,108,typeW,i=>scanFilter=types[i]);
-            int filterX=50+dateW*2+typeW;
-            Button("filter-history","Lọc",filterX,111,filterBtnW,()=>{ historyOffset=0; if(Actions.FilterHistory!=null) Actions.FilterHistory(from,to,scanFilter); if(Model.Sample) Model.History=Sketch20Samples.Create(3).History.Where(h=>scanFilter=="Tất cả"||h.Type==scanFilter).ToList(); RefreshModel(true); Render(); },"search",true,false,36);
-            Button("export-csv","Xuất CSV",filterX+filterBtnW+gap,111,exportW,()=>Command("export"),"download",false,false,36);
+            if (!historyFilterInitialized && Model != null && !Model.Sample && (Model.HistoryTotal > 0 || Model.History.Count > 0))
+            {
+                from = Model.HistoryFrom.Date;
+                to = Model.HistoryTo.Date;
+                scanFilter = NormalizeHistoryFilter(Model.HistoryFilter);
+                historyFilterInitialized = true;
+            }
+            const int filterY = 81, filterH = 152, controlY = 176, controlH = 40;
+            GradientCard("history-filter-card", 0, filterY, layoutWidth, filterH,
+                Color.White, ColorTranslator.FromHtml("#f7fbff"), ColorTranslator.FromHtml("#c7d5e6"), 16);
+            Card("history-filter-icon",18,filterY+11,52,52,ColorTranslator.FromHtml("#e8f2ff"),Color.Transparent,15);
+            Icon("filter",33,filterY+26,22,Sketch20Style.Blue);
+            Text("Bộ lọc lịch sử",84,filterY+10,layoutWidth-320,32,18.8f,ColorTranslator.FromHtml("#101f38"),true);
+            Text("Thu hẹp kết quả theo thời gian và loại quét.",84,filterY+42,layoutWidth-330,22,10.8f,ColorTranslator.FromHtml("#667895"));
 
-            int listH=57+Math.Max(1,visible)*rowH+48;
-            Card("history-list",0,listY,layoutWidth,listH,Color.White,Sketch20Style.Border,14);
-            Text("Nhật ký hoạt động",18,listY+10,layoutWidth-280,29,17,Sketch20Style.Ink,true);
-            Text("Tổng "+(Model.Sample?rows:Model.HistoryTotal)+" lần quét",layoutWidth-307,listY+13,125,24,10.5f,Sketch20Style.Muted,false,false,true);
-            Card("history-sort",layoutWidth-164,listY+8,146,33,Sketch20Style.Background,Sketch20Style.Border,8);
-            Text("Mới nhất trước",layoutWidth-153,listY+8,117,33,10.5f,Sketch20Style.Ink);
-            Icon("chevron-down",layoutWidth-38,listY+18,13,Sketch20Style.Muted);
-            if(rows==0) Text("Không có lịch sử quét phù hợp.",20,listY+74,layoutWidth-40,35,12.5f,Sketch20Style.Muted);
-            string[] rowIcons={"monitor","folder","file","scan"};
-            AddTableScroll("history-scroll",layoutWidth-17,listY+48,visible*rowH,rows,visible,historyOffset,value=>historyOffset=value);
+            int refreshW=112, exportW=136, filterBtnW=102, gap=12;
+            int available=layoutWidth-36-refreshW-exportW-filterBtnW-gap*5;
+            int dateW=(int)(available*0.28), typeW=available-dateW*2;
+            if (typeW > 264) { int extra = typeW - 264; typeW = 264; dateW += extra / 2; }
+            int date2X=18+dateW+gap, filterTypeX=date2X+dateW+gap;
+            int labelY=filterY+74;
+            Text("Từ ngày",18,labelY,dateW,18,10.1f,ColorTranslator.FromHtml("#536684"),true);
+            Text("Đến ngày",date2X,labelY,dateW,18,10.1f,ColorTranslator.FromHtml("#536684"),true);
+            Text("Loại quét",filterTypeX,labelY,typeW,18,10.1f,ColorTranslator.FromHtml("#536684"),true);
+            DateBox("history-from",from,18,controlY,dateW,d=>from=d);
+            DateBox("history-to",to,date2X,controlY,dateW,d=>to=d);
+            string[] types={"Tất cả","Quét nhanh","Quét thư mục","Quét tệp","Quét toàn bộ","Quét tùy chỉnh"};
+            SelectBox("history-filter",types,Math.Max(0,Array.IndexOf(types,scanFilter)),filterTypeX,controlY,typeW,i=>scanFilter=types[i],controlH);
+            int filterX=filterTypeX+typeW+gap;
+            Button("filter-history","Lọc",filterX,controlY,filterBtnW,()=>{ historyOffset=0; if(Actions.FilterHistory!=null) Actions.FilterHistory(from,to,scanFilter); if(Model.Sample) Model.History=Sketch20Samples.Create(3).History.Where(h=>scanFilter=="Tất cả"||h.Type==scanFilter).ToList(); RefreshModel(true); },"search",true,false,controlH);
+            int refreshX=filterX+filterBtnW+gap;
+            Button("history-refresh","Làm mới",refreshX,controlY,refreshW,()=>{ historyOffset=0; Command("history-refresh"); },"refresh",false,false,controlH);
+            Button("export-csv","Xuất CSV",refreshX+refreshW+gap,controlY,exportW,()=>Command("export"),"download",false,false,controlH);
+
+            const int rowH=Sketch20Style.TableRowHeight,rowGap=Sketch20Style.TableRowGap;
+            int rows=Model.History.Count,listY=248;
+            int visible=Math.Min(rows,Math.Max(2,Math.Min(7,(viewport.Height-listY-205)/(rowH+rowGap))));
+            historyOffset=Math.Max(0,Math.Min(historyOffset,Math.Max(0,rows-Math.Max(1,visible))));
+            int rowsHeight=rows==0?100:visible*(rowH+rowGap)-rowGap;
+            int listH=72+Sketch20Style.TableHeaderHeight+Sketch20Style.TableOuterPaddingY+rowsHeight+Sketch20Style.TableOuterPaddingY+44;
+            Card("history-list",0,listY,layoutWidth,listH,Color.White,ColorTranslator.FromHtml("#dce7f5"),16);
+            Card("history-title-icon",20,listY+15,42,42,Sketch20Style.BlueSoft,Color.Transparent,11);
+            Icon("history",31,listY+26,20,Sketch20Style.Blue);
+            Text("Nhật ký hoạt động",76,listY+10,layoutWidth-410,31,18.5f,Sketch20Style.Ink,true);
+            Text("Theo dõi các lần quét và kết quả xử lý gần đây.",76,listY+39,layoutWidth-430,22,10.7f,Sketch20Style.Muted);
+            Text("Tổng "+(Model.Sample?rows:Model.HistoryTotal)+" lần quét",layoutWidth-324,listY+20,132,27,10.7f,Sketch20Style.Muted,false,false,true);
+            HeaderSelectBox("history-sort",new[]{"Mới nhất trước","Cũ nhất trước"},historyOldest?1:0,layoutWidth-184,listY+20,162,27,10.7f,value=>
+            {
+                historyOldest=value==1; historyOffset=0;
+                if(Actions.SortHistory!=null) Actions.SortHistory(historyOldest);
+                if(Model.Sample) Model.History=historyOldest?Model.History.OrderBy(h=>h.Date+h.Time).ToList():Model.History.OrderByDescending(h=>h.Date+h.Time).ToList();
+                RefreshModel(true);
+            });
+
+            int head=listY+72,rowX=16;
+            bool hasScroll=rows>visible;
+            int rowW=layoutWidth-rowX-(hasScroll?37:16);
+
+            // Responsive theo chiều rộng THỰC của row. Cột loại quét nhận toàn bộ phần dư;
+            // các cột thời gian/thống kê/kết quả/thao tác giữ đủ chỗ để không cắt chữ.
+            bool compactHistory = rowW < 900;
+            int timeW = compactHistory ? 102 : 116;
+            int statW = compactHistory ? 184 : 205;
+            int resultW = compactHistory ? 148 : 156;
+            int actionW = compactHistory ? 94 : 104;
+            int scanTypeW = Math.Max(230, rowW - timeW - statW - resultW - actionW - 24);
+            int typeX = rowX + timeW;
+            int statX = typeX + scanTypeW;
+            int resultX = statX + statW;
+            int actionX = rowX + rowW - actionW;
+
+            Card("history-table-header",rowX,head,rowW,Sketch20Style.TableHeaderHeight,ColorTranslator.FromHtml("#f7faff"),Color.Transparent,9);
+            Text("THỜI GIAN",rowX+14,head,timeW-20,Sketch20Style.TableHeaderHeight,9.4f,Sketch20Style.Muted,true);
+            Text("LOẠI QUÉT",typeX,head,scanTypeW-14,Sketch20Style.TableHeaderHeight,9.4f,Sketch20Style.Muted,true);
+            Text("THỐNG KÊ",statX,head,statW-12,Sketch20Style.TableHeaderHeight,9.4f,Sketch20Style.Muted,true);
+            Text("KẾT QUẢ",resultX,head,resultW-8,Sketch20Style.TableHeaderHeight,9.4f,Sketch20Style.Muted,true);
+            Text("THAO TÁC",actionX,head,actionW-4,Sketch20Style.TableHeaderHeight,9.0f,Sketch20Style.Muted,true);
+            int rowsY=head+34+Sketch20Style.TableOuterPaddingY;
+            if(hasScroll) AddTableScroll("history-scroll",layoutWidth-17,rowsY,rowsHeight,rows,Math.Max(1,visible),historyOffset,value=>historyOffset=value);
+
             for(int i=0;i<visible;i++)
             {
-                var row=Model.History[historyOffset+i]; int top=listY+48+i*rowH,index=row.Index;
-                int visualH=rowH-7;
-                int centerY=top+visualH/2;
-                int twoLineTop=centerY-21;
-                Card("history-row-"+i,16,top,layoutWidth-32,visualH,Color.White,Sketch20Style.Border,9);
+                var row=Model.History[historyOffset+i]; int top=rowsY+i*(rowH+rowGap),index=row.Index,centerY=top+rowH/2;
+                Card("history-row-"+i,rowX,top,rowW,rowH,Color.White,ColorTranslator.FromHtml("#e5edf8"),11);
+                TwoLineText(row.Date,row.Time,rowX+14,top+(rowH-(Sketch20Style.TitleLineHeight+Sketch20Style.TextStackGap+Sketch20Style.BodyLineHeight))/2,timeW-26,11.3f,9.6f,Sketch20Style.Ink,Sketch20Style.Muted,true);
 
-                // Date/time block shares the exact same vertical center as the rest of the row.
-                TwoLineText(row.Date,row.Time,28,centerY-(Sketch20Style.TitleLineHeight+Sketch20Style.TextStackGap+Sketch20Style.BodyLineHeight)/2,100,11.5f,9.8f);
+                Card("history-type-icon-"+i,typeX,top+(rowH-42)/2,42,42,Sketch20Style.BlueSoft,Color.Transparent,10);
+                FilledIcon(row.Type.IndexOf("toàn",StringComparison.OrdinalIgnoreCase)>=0?"house":row.Type.IndexOf("thư",StringComparison.OrdinalIgnoreCase)>=0?"folder":row.Type.IndexOf("tệp",StringComparison.OrdinalIgnoreCase)>=0?"file":"bolt",typeX+11,top+(rowH-20)/2,20,Sketch20Style.Blue);
+                int typeTextX = typeX + 54;
+                int typeTextW = Math.Max(150, scanTypeW - 64);
+                int typeTextY = top + (rowH - (25 + Sketch20Style.TextStackGap + 21)) / 2;
+                string scope = !string.IsNullOrEmpty(row.Scope)?row.Scope:row.Type.IndexOf("toàn",StringComparison.OrdinalIgnoreCase)>=0?"Tất cả ổ đĩa và thư mục":"Vị trí được lựa chọn";
+                Text(row.Type,typeTextX,typeTextY,typeTextW,25,compactHistory?10.9f:11.5f,Sketch20Style.Ink,true);
+                Text(scope,typeTextX,typeTextY+25+Sketch20Style.TextStackGap,typeTextW,21,compactHistory?8.9f:9.4f,Sketch20Style.Muted);
 
-                // Scan type and compact statistics share one visual center line.
-                int statX=layoutWidth-551;
-                int typeIconTop=centerY-16;
-                Card("history-type-icon-"+i,132,typeIconTop,32,32,Sketch20Style.BlueSoft,Color.Transparent,8);
-                FilledIcon(row.Type.IndexOf("toàn",StringComparison.OrdinalIgnoreCase)>=0?"house":row.Type.IndexOf("thư",StringComparison.OrdinalIgnoreCase)>=0?"file":row.Type.IndexOf("tệp",StringComparison.OrdinalIgnoreCase)>=0?"file":"bolt",138,centerY-10,20,Sketch20Style.Blue);
-                int typeTextW=Math.Max(60,statX-189);
-                TwoLineText(row.Type,!string.IsNullOrEmpty(row.Scope) ? row.Scope : row.Type.IndexOf("toàn",StringComparison.OrdinalIgnoreCase)>=0 ? "Quét tất cả ổ đĩa và thư mục" : "Các vị trí quan trọng trong hệ thống",177,centerY-(Sketch20Style.TitleLineHeight+Sketch20Style.TextStackGap+Sketch20Style.BodyLineHeight)/2,typeTextW,11.5f,9.5f);
-                int statY=centerY-14;
-                Card("history-files-icon-"+i,statX,statY,28,28,Sketch20Style.BlueSoft,Color.Transparent,8);
-                FilledIcon("file",statX+7,statY+7,14,Sketch20Style.Blue);
-                Text(row.Files+" tệp",statX+35,centerY-12,86,24,10.3f,Sketch20Style.Ink,true);
-                int threatX=statX+125;
                 Color threatInk=row.Risk?Sketch20Style.Red:Sketch20Style.Green;
-                Color threatSoft=row.Risk?Sketch20Style.RedSoft:Sketch20Style.GreenSoft;
-                Card("history-threat-icon-"+i,threatX,statY,28,28,threatSoft,Color.Transparent,8);
-                FilledIcon(row.Risk?"bolt":"shield-check",threatX+7,statY+7,14,threatInk);
-                Text(row.Threats+" mối đe dọa",threatX+35,centerY-12,91,24,9.7f,threatInk,true);
-                int durationX=statX+255;
-                Icon("clock",durationX,centerY-8,16,Sketch20Style.Muted);
-                Text(row.Duration,durationX+22,centerY-12,70,24,9.8f,Sketch20Style.Ink);
-                Badge(row.Result!=null&&row.Result.IndexOf("phát hiện",StringComparison.OrdinalIgnoreCase)>=0?"Phát hiện":row.Result,layoutWidth-200,centerY-12,row.Risk?"risk":"safe",76);
-                var deleteHistory=Button("history-delete-"+i,"",layoutWidth-116,centerY-16,32,()=>{ if(Actions.Command!=null) Actions.Command("history-delete:"+index); RefreshModel(true); Render(); },"trash",false,true,32,true);
+                int durationX = statX + statW - 68;
+                Text(row.Files+" tệp",statX,centerY-22,Math.Max(72,durationX-statX-8),22,10.2f,Sketch20Style.Ink,true);
+                Text(row.Threats+" mối đe dọa",statX,centerY+1,Math.Max(105,statW-12),22,9.7f,threatInk,true);
+                Icon("clock",durationX,centerY-8,14,Sketch20Style.Muted);
+                Text(row.Duration,durationX+18,centerY-12,48,24,9.3f,Sketch20Style.Muted);
+
+                string result=row.Result!=null&&row.Result.IndexOf("phát hiện",StringComparison.OrdinalIgnoreCase)>=0?"Phát hiện":row.Result;
+                Badge(result,resultX,top+(rowH-24)/2,row.Risk?"risk":"safe");
+
+                int deleteX = actionX + 2;
+                int viewX = actionX + 38;
+                var deleteHistory=Button("history-delete-"+i,"",deleteX,top+(rowH-32)/2,30,()=>{if(Actions.Command!=null)Actions.Command("history-delete:"+index);RefreshModel(true);Render();},"trash",false,true,32,true);
                 deleteHistory.AccessibleName="Xóa nhật ký";
-                Button("history-detail-"+i,"Xem",layoutWidth-76,centerY-16,52,()=>{ if(Actions.Command!=null) Actions.Command("history-detail:"+index); RefreshModel(true); if(Model.Sample&&Model.Detail!=null) Go("details"); },"",false,false,32,true);
+                Button("history-detail-"+i,"Xem",viewX,top+(rowH-32)/2,Math.Max(50,rowX+rowW-viewX-4),()=>{if(Actions.Command!=null)Actions.Command("history-detail:"+index);RefreshModel(true);if(Model.Sample&&Model.Detail!=null)Go("details");},"",false,false,32,true);
             }
-            int footer=listY+50+Math.Max(1,visible)*rowH;
-            Text("Trang "+(Model.Sample?(rows==0?"0 / 0":"1 / 1"):Model.HistoryPage),20,footer+8,layoutWidth-180,24,10.5f,Sketch20Style.Muted);
-            var prev=Button("history-prev","",layoutWidth-110,footer+3,34,()=>{historyOffset=0;Command("history-prev");},"chevron-left",false,false,32); prev.Enabled=Model.HistoryPrev;
-            var next=Button("history-next","",layoutWidth-62,footer+3,34,()=>{historyOffset=0;Command("history-next");},"chevron-right",false,false,32); next.Enabled=Model.HistoryNext;
+            if(rows==0)
+            {
+                Card("history-empty",rowX,rowsY,rowW,rowsHeight,Sketch20Style.Background,Color.Transparent,12);
+                Card("history-empty-icon",rowX+22,rowsY+26,46,46,Sketch20Style.BlueSoft,Color.Transparent,23);
+                Icon("history",rowX+34,rowsY+38,22,Sketch20Style.Blue);
+                Text("Không có lịch sử quét phù hợp.",rowX+84,rowsY+24,rowW-110,50,12.5f,Sketch20Style.Muted);
+            }
+
+            int footer=rowsY+rowsHeight+Sketch20Style.TableOuterPaddingY;
+            Text("Trang "+(Model.Sample?(rows==0?"0 / 0":"1 / 1"):Model.HistoryPage),26,footer+17,layoutWidth-180,24,10.5f,Sketch20Style.Muted);
+            var prev=Button("history-prev","",layoutWidth-110,footer+12,34,()=>{historyOffset=0;Command("history-prev");},"chevron-left",false,false,32);prev.Enabled=Model.HistoryPrev;
+            var next=Button("history-next","",layoutWidth-62,footer+12,34,()=>{historyOffset=0;Command("history-next");},"chevron-right",false,false,32);next.Enabled=Model.HistoryNext;
             ContentHeight=listY+listH+18;
         }
 
         private void Settings()
         {
-            Tabs(81, new[] { "Chung", "Bảo vệ chủ động", "VirusTotal", "Dữ liệu & công cụ" }, SettingsTab, index => { SettingsTab = index; Render(); });
-            if (SettingsTab == 2) { VirusTotalSettings(); return; }
-            if (SettingsTab == 3) { DataToolsSettings(); return; }
-            int rows = SettingsTab == 0 ? 4 : 5, cardH = 110 + rows * 86 + (SettingsTab == 0 ? 64 : 0) + 60;
-            Card("settings-content", 0, 144, layoutWidth, cardH);
-            Text(SettingsTab == 0 ? "Thiết lập chung" : "Bảo vệ chủ động", 22, 163, layoutWidth - 44, 33, 20, Sketch20Style.Ink, true);
-            Text(SettingsTab == 0 ? "Các tùy chọn giúp ứng dụng hoạt động hiệu quả và phù hợp với nhu cầu của bạn." : "Theo dõi và ngăn chặn các mối đe dọa theo thời gian thực.", 22, 198, layoutWidth - 44, 26, 12, Sketch20Style.Muted);
-            string[] keys = SettingsTab == 0 ? new[] { "autostart", "update", "alerts", "samples" } : FeatureKeys.Skip(1).Take(5).ToArray();
-            string[] names = SettingsTab == 0 ? new[] { "Khởi động cùng Windows", "Tự động cập nhật chữ ký", "Hiển thị thông báo", "Gửi mẫu tệp nghi ngờ" } : FeatureNames.Skip(1).Take(5).ToArray();
-            string[] notes = SettingsTab == 0 ? new[] { "Tự động mở ứng dụng khi bật máy tính để luôn được bảo vệ.", "Kiểm tra các bản cập nhật chữ ký khi khởi động ứng dụng.", "Nhận thông báo về mối đe dọa, kết quả quét và thông tin quan trọng.", "Cho phép gửi mẫu tệp nghi ngờ để hỗ trợ phân tích." } : FeatureNotes.Skip(1).Take(5).ToArray();
-            string[] icons = SettingsTab == 0 ? new[] { "monitor", "refresh", "bell", "globe" } : new[] { "file", "usb", "download", "activity", "folder" };
-            Color[] colors = { Sketch20Style.Blue, Sketch20Style.Green, Sketch20Style.Red, Sketch20Style.Blue, Sketch20Style.Amber };
-            Color[] soft = { Sketch20Style.BlueSoft, Sketch20Style.GreenSoft, Sketch20Style.RedSoft, Sketch20Style.BlueSoft, Sketch20Style.AmberSoft };
-            for (int i = 0; i < rows; i++)
+            SettingsTab = 0;
+            const int top = 81;
+            const int gap = 14;
+            const int generalH = 246;
+
+            Card("settings-general", 0, top, layoutWidth, generalH, Color.White, ColorTranslator.FromHtml("#dce7f5"), 16);
+            Card("settings-general-icon", 20, top + 16, 42, 42, Sketch20Style.BlueSoft, Color.Transparent, 12);
+            Icon("settings", 30, top + 26, 22, Sketch20Style.Blue);
+            Text("Thiết lập chung", 76, top + 9, layoutWidth - 100, 30, 18.5f, Sketch20Style.Ink, true);
+            Text("Các tùy chọn cơ bản của ứng dụng.", 76, top + 39, layoutWidth - 100, 23, 10.8f, Sketch20Style.Muted);
+
+            string[] keys = { "autostart", "update", "alerts", "samples" };
+            string[] names = { "Khởi động cùng Windows", "Tự động cập nhật chữ ký", "Hiển thị thông báo", "Gửi mẫu tệp nghi ngờ" };
+            string[] notes = { "Tự động mở ứng dụng khi bật máy tính.", "Kiểm tra cập nhật chữ ký khi khởi động.", "Nhận cảnh báo về mối đe dọa và kết quả quét.", "Cho phép gửi mẫu tệp nghi ngờ để hỗ trợ phân tích." };
+            string[] icons = { "monitor", "refresh", "bell", "globe" };
+            Color[] colors = { Sketch20Style.Blue, Sketch20Style.Green, Sketch20Style.Red, Sketch20Style.Amber };
+            Color[] soft = { Sketch20Style.BlueSoft, Sketch20Style.GreenSoft, Sketch20Style.RedSoft, Sketch20Style.AmberSoft };
+
+            int gridX = 18, gridY = top + 72, cellGap = 12;
+            int cellW = (layoutWidth - gridX * 2 - cellGap) / 2;
+            const int cellH = 76, cellStepY = 82;
+            for (int i = 0; i < 4; i++)
             {
-                int y = 234 + i * 86;
-                Card("setting-row-" + i, 17, y, layoutWidth - 34, 76);
-                Card("setting-icon-" + i, 32, y + 13, 49, 50, soft[i], Color.Transparent, 12);
-                Icon(icons[i], 44, y + 26, 25, colors[i]);
-                TwoLineText(names[i], notes[i], 99, y + Sketch20Style.RowPaddingY, layoutWidth - 187, 13.5f, 11.5f, Sketch20Style.Ink, Sketch20Style.Muted, true, true);
-                Switch(keys[i], names[i], layoutWidth - 65, y + 25);
+                int col = i % 2, row = i / 2;
+                int x = gridX + col * (cellW + cellGap);
+                int y = gridY + row * cellStepY;
+                Card("setting-row-" + i, x, y, cellW, cellH, ColorTranslator.FromHtml("#fbfdff"), ColorTranslator.FromHtml("#e5edf8"), 12);
+                Card("setting-icon-" + i, x + 12, y + 17, 40, 40, soft[i], Color.Transparent, 10);
+                Icon(icons[i], x + 22, y + 27, 20, colors[i]);
+                int textW = Math.Max(120, cellW - 118);
+                TwoLineText(names[i], notes[i], x + 64, y + 10, textW, 11.8f, 9.5f, Sketch20Style.Ink, Sketch20Style.Muted, true, true);
+                Switch(keys[i], names[i], x + cellW - 48, y + 25);
             }
-            if (SettingsTab == 0) Callout(17, 234 + rows * 86 + 2, layoutWidth - 34, "Các tùy chọn được lưu trên máy và đồng bộ với màn Bảo vệ.", false, 52);
-            int actionY = 144 + cardH - 60;
-            Button("restore-defaults", "Khôi phục mặc định", layoutWidth - 400, actionY, 214, () => Command("defaults"), "undo");
-            Button("save-settings", "Lưu thiết lập", layoutWidth - 174, actionY, 152, () => Command("save-settings"), "save", true);
-            ContentHeight = 144 + cardH + 16;
-        }
-        private void DataToolsSettings()
-        {
-            GradientCard("data-hero", 0, 144, layoutWidth, 164, ColorTranslator.FromHtml("#e9f5ff"), ColorTranslator.FromHtml("#cde8ff"), Sketch20Style.Border);
-            Text("Dữ liệu & công cụ", 31, 173, layoutWidth - 290, 44, 27, Sketch20Style.Ink, true);
-            Text("Quản lý dữ liệu ứng dụng, bộ nhớ đệm, mẫu tệp và các công cụ hỗ trợ khác.", 31, 226, layoutWidth - 310, 55, 12, Sketch20Style.Muted, false, true);
-            Artwork("data-art", layoutWidth - 246, 147, 213, 154, "data");
-            Card("data-info", 0, 326, layoutWidth, 251);
-            Icon("info", 23, 346, 24); Text("Thông tin ứng dụng", 60, 338, layoutWidth - 90, 38, 17, Sketch20Style.Ink, true);
-            InfoRow("Phiên bản ứng dụng", Model.Version, 22, 384, layoutWidth - 44, 205, 43);
-            InfoRow("CSDL chữ ký", Model.Signature, 22, 427, layoutWidth - 44, 205, 43);
-            InfoRow("Đang cách ly", Model.Quarantine.Count + " tệp", 22, 470, layoutWidth - 44, 205, 43);
-            InfoRow("Thư mục dữ liệu", Model.DataFolder, 22, 513, layoutWidth - 88, 205, 43, true);
-            Button("copy-data-folder", "", layoutWidth - 55, 520, 31, () => { if (!string.IsNullOrWhiteSpace(Model.DataFolder)) Clipboard.SetText(Model.DataFolder); }, "files", false, false, 31);
-            Card("tools-card", 0, 594, layoutWidth, 173);
-            Icon("settings", 23, 616, 24); Text("Công cụ & thao tác dữ liệu", 60, 604, layoutWidth - 90, 34, 17, Sketch20Style.Ink, true);
-            Text("Quản lý dữ liệu, giải phóng bộ nhớ đệm và kiểm tra khả năng phát hiện.", 60, 640, layoutWidth - 90, 24, 11.3f, Sketch20Style.Muted);
-            int gap = 12, w = (layoutWidth - 44 - gap * 2) / 3;
-            Button("open-data", "Mở thư mục dữ liệu", 22, 681, w, () => Command("open-data"), "folder-open", false, false, 57);
-            Button("clear-cache", "Xóa cache quét", 22 + w + gap, 681, w, () => Command("clear-cache"), "trash", false, false, 57);
-            Button("create-samples", "Tạo tệp mẫu", 22 + (w + gap) * 2, 681, w, () => Command("samples"), "file-plus", false, false, 57);
-            ContentHeight = 785;
-        }
-        private void VirusTotalSettings()
-        {
-            GradientCard("vt-hero", 0, 144, layoutWidth, 164, ColorTranslator.FromHtml("#e9f5ff"), ColorTranslator.FromHtml("#cde8ff"), Sketch20Style.Border);
-            Text("VirusTotal", 31, 175, layoutWidth - 300, 44, 28, Sketch20Style.Ink, true);
-            Text("Tích hợp VirusTotal giúp kiểm tra tệp và đường dẫn đáng ngờ dựa trên dữ liệu cộng đồng bảo mật toàn cầu.", 31, 226, layoutWidth - 310, 59, 12, Sketch20Style.Muted, false, true);
-            Artwork("vt-art", layoutWidth - 240, 146, 207, 155, "vt");
-            Card("settings-content", 0, 326, layoutWidth, 290);
-            Card("vt-key-icon", 22, 346, 48, 50, Sketch20Style.BlueSoft, Color.Transparent, 12);
-            Icon("key", 35, 359, 23);
-            Text("API key VirusTotal", 89, 344, layoutWidth - 130, 34, 18, Sketch20Style.Ink, true);
-            Text("Nhập API key để tra cứu tệp, URL và thông tin mối đe dọa.", 89, 384, layoutWidth - 122, 29, 12, Sketch20Style.Muted);
-            Button("get-api-key", "Lấy API key từ tài khoản VirusTotal ↗", 85, 415, 327, () => System.Diagnostics.Process.Start("https://www.virustotal.com/gui/my-apikey"), "", false, false, 28, true);
-            PasswordBox(89, 455, layoutWidth - 111);
-            var save = Button("save-api-key", Model.KeyConfigured ? "Lưu API key mới" : "Lưu API key", 89, 511, 200, () => { if (Actions.SaveKey != null) Actions.SaveKey(typedKey); if (Model.Sample) Model.KeyConfigured = !string.IsNullOrWhiteSpace(typedKey); typedKey = ""; RefreshModel(true); Render(); }, "save", true, false, 44);
-            save.Enabled = !string.IsNullOrWhiteSpace(typedKey);
-            var entry = ((Sketch20Password)Canvas.Controls["api-key"]).Entry;
-            entry.TextChanged += delegate { save.Enabled = !string.IsNullOrWhiteSpace(entry.Text); };
-            var clear = Button("clear-api-key", "Gỡ key", 302, 511, 171, () => { typedKey = ""; Command("clear-key"); }, "trash", false, true, 44);
-            clear.Enabled = Model.KeyConfigured;
-            Text(Model.KeyConfigured ? "API key đã được lưu trên máy." : "API key được che khi nhập và lưu trên máy của bạn.", 89, 570, layoutWidth - 122, 25, 11, Sketch20Style.Muted);
-            Card("vt-auto-query", 0, 634, layoutWidth, 159);
-            Card("vt-auto-icon", 22, 653, 48, 50, Sketch20Style.BlueSoft, Color.Transparent, 12); Icon("refresh", 35, 666, 23);
-            Text("Tra cứu tự động", 89, 650, layoutWidth - 178, 32, 17, Sketch20Style.Ink, true);
-            Text("Tự động tra cứu mã băm của tệp nghi ngờ khi quét hoặc phát hiện theo thời gian thực.", 89, 688, layoutWidth - 178, 39, 11.8f, Sketch20Style.Muted, false, true);
-            Switch("vtq", "Tra cứu tự động", layoutWidth - 58, 665);
-            Callout(89, 737, layoutWidth - 111, "Tra cứu bằng mã băm giúp kiểm tra tệp và giữ nội dung tệp trên máy.", false, 41);
-            ContentHeight = 810;
+
+            int lowerY = top + generalH + gap;
+            const int lowerH = 262;
+            int lowerGap = 14;
+            int leftW = (layoutWidth - lowerGap) / 2;
+            int rightX = leftW + lowerGap;
+            int rightW = layoutWidth - rightX;
+
+            Card("data-info", 0, lowerY, leftW, lowerH, Color.White, ColorTranslator.FromHtml("#dce7f5"), 16);
+            Card("data-info-icon", 18, lowerY + 16, 40, 40, Sketch20Style.GreenSoft, Color.Transparent, 11);
+            Icon("hard-drive", 28, lowerY + 26, 20, Sketch20Style.Green);
+            Text("Thông tin ứng dụng", 70, lowerY + 10, leftW - 88, 28, 15.5f, Sketch20Style.Ink, true);
+            Text("Dữ liệu và trạng thái hiện tại.", 70, lowerY + 37, leftW - 88, 22, 10.2f, Sketch20Style.Muted);
+            int infoY = lowerY + 66;
+            InfoRow("Phiên bản", Model.Version, 20, infoY, leftW - 40, 120, 42);
+            InfoRow("CSDL chữ ký", Model.Signature, 20, infoY + 42, leftW - 40, 120, 42);
+            InfoRow("Đang cách ly", Model.Quarantine.Count + " tệp", 20, infoY + 84, leftW - 40, 120, 42);
+            InfoRow("Thư mục dữ liệu", Model.DataFolder, 20, infoY + 126, leftW - 78, 120, 42, true);
+            Button("copy-data-folder", "", leftW - 52, infoY + 132, 28, () => { if (!string.IsNullOrWhiteSpace(Model.DataFolder)) Clipboard.SetText(Model.DataFolder); }, "files", false, false, 28, true);
+
+            Card("quick-tools", rightX, lowerY, rightW, lowerH, Color.White, ColorTranslator.FromHtml("#dce7f5"), 16);
+            Card("quick-tools-icon", rightX + 18, lowerY + 16, 40, 40, Sketch20Style.BlueSoft, Color.Transparent, 11);
+            Icon("bolt", rightX + 28, lowerY + 26, 20, Sketch20Style.Blue);
+            Text("Thao tác nhanh", rightX + 70, lowerY + 10, rightW - 88, 28, 15.5f, Sketch20Style.Ink, true);
+            Text("Công cụ quản lý dữ liệu ứng dụng.", rightX + 70, lowerY + 37, rightW - 88, 22, 10.2f, Sketch20Style.Muted);
+
+            string[] toolTitles = { "Mở thư mục dữ liệu", "Xóa cache quét", "Tạo tệp mẫu" };
+            string[] toolNotes = { "Mở vị trí lưu dữ liệu.", "Xóa dữ liệu tạm của các lần quét.", "Tạo mẫu thử để kiểm tra phát hiện." };
+            string[] toolIcons = { "folder-open", "trash", "file-plus" };
+            string[] toolButtons = { "Mở", "Xóa", "Tạo" };
+            Color[] toolColors = { Sketch20Style.Blue, Sketch20Style.Red, Sketch20Style.Green };
+            Color[] toolSoft = { Sketch20Style.BlueSoft, Sketch20Style.RedSoft, Sketch20Style.GreenSoft };
+            Action[] toolActions = { () => Command("open-data"), () => Command("clear-cache"), () => Command("samples") };
+            int toolY = lowerY + 68;
+            for (int i = 0; i < 3; i++)
+            {
+                int y = toolY + i * 60;
+                Card("data-action-" + i, rightX + 16, y, rightW - 32, 54, ColorTranslator.FromHtml("#fbfdff"), ColorTranslator.FromHtml("#e5edf8"), 11);
+                Card("data-action-icon-" + i, rightX + 28, y + 9, 36, 36, toolSoft[i], Color.Transparent, 9);
+                Icon(toolIcons[i], rightX + 37, y + 18, 18, toolColors[i]);
+                Text(toolTitles[i], rightX + 76, y + 5, Math.Max(90, rightW - 196), 23, 11.2f, Sketch20Style.Ink, true);
+                Text(toolNotes[i], rightX + 76, y + 27, Math.Max(90, rightW - 196), 19, 9.2f, Sketch20Style.Muted);
+                Button("data-action-button-" + i, toolButtons[i], rightX + rightW - 104, y + 11, 76, toolActions[i], toolIcons[i], false, false, 32);
+            }
+
+            int footerY = lowerY + lowerH + 12;
+            Text("Thay đổi chỉ được áp dụng sau khi lưu.", 4, footerY + 13, Math.Max(160, layoutWidth - 380), 36, 10.2f, Sketch20Style.Muted);
+            Button("restore-defaults", "Khôi phục mặc định", layoutWidth - 370, footerY + 7, 190, () => Command("defaults"), "undo", false, false, 40);
+            Button("save-settings", "Lưu thiết lập", layoutWidth - 168, footerY + 7, 168, () => Command("save-settings"), "save", true, false, 40);
+            ContentHeight = footerY + 54;
         }
 
         private void Advanced()
@@ -1009,6 +1389,33 @@ namespace ScanAndRemoveVirus.Control
         {
             return "Ổ đĩa " + string.Join(" · ", ScanEngine.GetFullScanDrives().Select(d => d.Name)) + " · Bao gồm thư mục con";
         }
+        private void ExternalDragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+        }
+        private void ExternalDragDrop(object sender, DragEventArgs e)
+        {
+            if (Model.Sample || e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            var dropped = ((string[])e.Data.GetData(DataFormats.FileDrop) ?? new string[0])
+                .Where(p => File.Exists(p) || Directory.Exists(p)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (dropped.Count == 0) return;
+            var dirs = dropped.Where(Directory.Exists).ToList();
+            var pickedFiles = dropped.Where(File.Exists).ToList();
+            if (dirs.Count > 0 && pickedFiles.Count == 0)
+            {
+                AdvancedMode = 1; folders = dirs;
+            }
+            else if (pickedFiles.Count > 0 && dirs.Count == 0)
+            {
+                AdvancedMode = 2; files = files.Concat(pickedFiles).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            else
+            {
+                AdvancedMode = 3; customFolders = customFolders.Concat(dropped).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            if (Page != "advanced") Go("advanced"); else Render();
+        }
+
         private void ChooseScope(bool folder)
         {
             if (Model.Sample) { if (AdvancedMode == 3) customFolders.Add(@"C:\Users\User\Documents"); else if (folder) folders = new List<string> { @"C:\Users\User\Documents" }; else files = new List<string> { "eicar-test.txt" }; Render(); return; }
@@ -1053,12 +1460,54 @@ namespace ScanAndRemoveVirus.Control
 
         private void OpenDetail(int index, bool quarantine)
         {
+            string sourcePage = Page;
             if (Actions.OpenFile != null) Actions.OpenFile(index, quarantine);
-            DetailReturnPage = quarantine ? "quarantine" : "overview";
+            if (Page != "details") DetailReturnPage = quarantine ? "quarantine" : sourcePage == "threats" ? "threats" : "overview";
             if (Model.Sample) Model.Detail = (quarantine ? Model.Quarantine : Model.Threats).FirstOrDefault(f => f.Index == index) ?? Model.Quarantine.FirstOrDefault();
             else RefreshModel(true);
             DetailTab = 0; Go("details");
         }
+        private void DetailInfoStacked(Sketch20File f)
+        {
+            int mainY = detailBodyY;
+            const int fileH = 458;
+            Card("detail-info", 0, mainY, layoutWidth, fileH);
+            Text("Thông tin tệp", 18, mainY + 12, layoutWidth - 36, 34, 18, Sketch20Style.Ink, true);
+            string[] labels = { "Tên tệp", "Đường dẫn đầy đủ", "Kích thước", "Loại tệp", "Mô tả", "Nhà phát hành", "Phiên bản", "Ngày tạo", "Nguồn phát hiện", "Chữ ký số", "Băm SHA-256" };
+            string[] values = { f == null ? "—" : f.Name, f == null ? "—" : f.Path, f == null ? "—" : f.Size, f == null ? "—" : f.FileType, "Chưa có thông tin", "Chưa xác minh", "Chưa có thông tin", f == null ? "—" : f.Created, f == null ? "—" : f.Source, "Chưa xác minh", f == null ? "—" : f.Sha256 };
+            for (int i = 0; i < labels.Length; i++)
+            {
+                int yy = mainY + 58 + i * 35;
+                InfoRow(labels[i], values[i], 18, yy, layoutWidth - 36, 155, 35, i == labels.Length - 1, i == 10);
+            }
+
+            int riskY = mainY + fileH + 14;
+            const int riskH = 448;
+            Card("detail-risk", 0, riskY, layoutWidth, riskH);
+            Text("Đánh giá rủi ro", 18, riskY + 12, layoutWidth - 170, 34, 18, Sketch20Style.Ink, true);
+            int badgeW = Sketch20Style.PillWidth(f == null ? "Chưa xác định" : f.Severity, 10.8f * ReferenceTextScale, true);
+            Badge(f == null ? "Chưa xác định" : f.Severity, layoutWidth - badgeW - 20, riskY + 17, f == null ? "info" : Kind(f.Severity));
+
+            int bannerY = riskY + 63;
+            Card("risk-card", 16, bannerY, layoutWidth - 32, 108, Sketch20Style.RedSoft, Color.Transparent, 11);
+            Card("risk-icon", 30, bannerY + 20, 42, 43, Color.White, Color.Transparent, 10);
+            Icon("alert", 41, bannerY + 31, 21, Sketch20Style.Red);
+            Text(f == null ? "Chưa có đánh giá" : "Tệp có dấu hiệu đáng ngờ", 84, bannerY + 10, layoutWidth - 116, 32, 13.5f, Sketch20Style.Red, true);
+            Text(f == null ? "Chọn tệp để xem kết quả." : "Đối chiếu các chỉ dấu, nguồn gốc và kết quả phân tích trước khi sử dụng tệp.", 84, bannerY + 47, layoutWidth - 116, 50, 11.5f, Sketch20Style.Muted, false, true);
+
+            int yyRisk = bannerY + 124;
+            InfoRow("Mức độ rủi ro", f == null ? "—" : f.Severity, 18, yyRisk, layoutWidth - 36, 150, 39);
+            InfoRow("Phát hiện bởi", Model.VtEngineCount.HasValue ? Model.VtDetections + "/" + Model.VtEngineCount + " công cụ" : "Chưa tra cứu", 18, yyRisk + 39, layoutWidth - 36, 150, 39);
+            InfoRow("Loại mối đe dọa", f == null ? "—" : f.Reason, 18, yyRisk + 78, layoutWidth - 36, 150, 39);
+            InfoRow("Lần quét gần nhất", f == null ? "—" : f.Date + " " + f.Time, 18, yyRisk + 117, layoutWidth - 36, 150, 39, true);
+
+            int noteY = riskY + riskH - 84;
+            Card("recommendation", 16, noteY, layoutWidth - 32, 68, Sketch20Style.AmberSoft, Color.Transparent, 10);
+            Icon("info", 31, noteY + 15, 19, Sketch20Style.Amber);
+            Text("Khuyến nghị", 63, noteY + 6, layoutWidth - 95, 25, 12.5f, Sketch20Style.Ink, true);
+            Text(f != null && f.Resolved ? "Giữ tệp trong vùng cách ly nếu chưa chắc chắn về nguồn gốc." : "Nên cách ly tệp trước khi tiếp tục sử dụng.", 63, noteY + 31, layoutWidth - 95, 28, 11, Sketch20Style.Muted, false, true);
+        }
+
         private void DetailInfo(Sketch20File f, int height)
         {
             int leftW = (layoutWidth - 14) / 2, rightX = leftW + 14, rightW = layoutWidth - rightX, mainY = detailBodyY;
@@ -1094,7 +1543,7 @@ namespace ScanAndRemoveVirus.Control
         { return Model.Engines.Where(e => engineSearch.Length == 0 || string.Join(" ", e).IndexOf(engineSearch, StringComparison.OrdinalIgnoreCase) >= 0).Take(100).ToList(); }
         private List<string> FilteredStrings()
         { return Model.Strings.Where(v => stringSearch.Length == 0 || v.IndexOf(stringSearch, StringComparison.OrdinalIgnoreCase) >= 0).Take(100).ToList(); }
-        private int VirusTotalHeight() { return 323 + Math.Min(Math.Max(1, FilteredEngines().Count), Math.Max(4, (viewport.Height - detailBodyY - 420) / 33)) * 33 + 60; }
+        private int VirusTotalHeight() { return 323 + Math.Min(Math.Max(1, FilteredEngines().Count), Math.Max(4, (viewport.Height - detailBodyY - 430) / 46)) * 46 + 66; }
         private void DetailVirusTotal(Sketch20File f, int height)
         {
             int mainY = detailBodyY;
@@ -1102,12 +1551,17 @@ namespace ScanAndRemoveVirus.Control
             bool hasCounts = Model.VtDetections.HasValue && Model.VtEngineCount.HasValue, hasReport = hasCounts && Model.VtEngineCount.Value > 0, needsKey = !Model.Sample && !Model.KeyConfigured;
             int bad = hasCounts ? Model.VtDetections.Value : 0, total = hasCounts ? Model.VtEngineCount.Value : 0, clean = Math.Max(0, total - bad);
             Text("Kết quả phân tích trên VirusTotal", 22, mainY + 11, layoutWidth - (layoutWidth >= 850 ? 435 : 224), 34, 18, Sketch20Style.Ink, true);
-            if (layoutWidth >= 850 && hasReport) Text("Cập nhật: " + Model.VtTime, layoutWidth - 394, mainY + 19, 207, 22, 9.5f, Sketch20Style.Muted, false, false, true);
-            var query = Button("query-virustotal", needsKey ? "Cấu hình API key" : hasReport ? "Tra cứu lại" : "Tra cứu VirusTotal", layoutWidth - 176, mainY + 11, 154, () => { if (needsKey) { SettingsTab = 2; Go("settings"); } else Command("vt-query"); }, "refresh", true, false, 37);
-            query.Enabled = needsKey || f != null;
+            if (layoutWidth >= 850 && hasReport)
+            {
+                int updateX = Math.Max(360, layoutWidth - 430);
+                int updateW = Math.Max(120, layoutWidth - 228 - updateX);
+                Text("Cập nhật: " + Model.VtTime, updateX, mainY + 19, updateW, 22, 9.5f, Sketch20Style.Muted, false, false, true);
+            }
+            var query = Button("query-virustotal", needsKey ? "Thiếu API key (.env)" : hasReport ? "Tra cứu lại" : "Tra cứu VirusTotal", layoutWidth - 206, mainY + 11, 184, () => { if (!needsKey) Command("vt-query"); }, "refresh", true, false, 37);
+            query.Enabled = !needsKey && f != null;
             Card("vt-alert", 22, mainY + 62, layoutWidth - 44, 82, hasReport && bad > 0 ? Sketch20Style.RedSoft : Sketch20Style.BlueSoft, Color.Transparent, 10);
             Icon(hasReport && bad > 0 ? "sigma" : "info", 40, mainY + 84, 33, hasReport && bad > 0 ? Sketch20Style.Red : Sketch20Style.Blue);
-            string summary = f == null ? "Chọn một tệp để xem kết quả phân tích." : hasReport ? bad + " trong " + total + " công cụ đánh dấu tệp có dấu hiệu độc hại" : needsKey ? "Thêm API key trong Cài đặt → VirusTotal để bắt đầu tra cứu." : "Chưa có kết quả. Hãy bấm Tra cứu VirusTotal.";
+            string summary = f == null ? "Chọn một tệp để xem kết quả phân tích." : hasReport ? bad + " trong " + total + " công cụ đánh dấu tệp có dấu hiệu độc hại" : needsKey ? "Thêm VIRUSTOTAL_API_KEY vào file .env rồi mở lại ứng dụng." : "Chưa có kết quả. Hãy bấm Tra cứu VirusTotal.";
             Text(summary, 92, mainY + 69, layoutWidth - 136, 33, 13.5f, hasReport && bad > 0 ? Sketch20Style.Red : Sketch20Style.Ink, true);
             Text(hasReport ? "Tệp được phân tích trên nền tảng VirusTotal. Đối chiếu kết quả từ các công cụ bảo mật." : Model.VtSummary, 92, mainY + 107, layoutWidth - 136, 32, 11, Sketch20Style.Muted, false, true);
             string[] labels = { "Phát hiện độc hại", "Không phát hiện", "Nghi ngờ", "Tổng số công cụ" }, vals = { hasCounts ? bad.ToString() : "—", hasCounts ? clean.ToString() : "—", "—", hasCounts ? total.ToString() : "—" }, icons = { "shield-alert", "circle-check", "info", "list-checks" };
@@ -1125,29 +1579,50 @@ namespace ScanAndRemoveVirus.Control
             Text("Kết quả từ các công cụ bảo mật", 22, listY, layoutWidth - 288, 33, 15, Sketch20Style.Ink, true);
             SearchBox("engine-search", engineSearch, layoutWidth - 252, listY + 1, 230, value => { engineSearch = value; engineOffset = 0; });
             int head = listY + 46;
-            Card("engine-header", 22, head, layoutWidth - 44, 31, Sketch20Style.GridHeader, Color.Transparent, 7);
-            int c1 = 34, c2 = (int)(layoutWidth * .26), c3 = (int)(layoutWidth * .52), c4 = (int)(layoutWidth * .81);
-            Text("Công cụ", c1, head, c2 - c1 - 10, 31, 10.5f, Sketch20Style.Muted, true);
-            Text("Kết quả", c2, head, c3 - c2 - 12, 31, 10.5f, Sketch20Style.Muted, true);
-            Text("Loại phát hiện", c3, head, c4 - c3 - 12, 31, 10.5f, Sketch20Style.Muted, true);
-            Text("Cập nhật", c4, head, layoutWidth - c4 - 32, 31, 10.5f, Sketch20Style.Muted, true);
+            int rowX = 22;
+            int engineRowW = layoutWidth - 44;
+            // Loại phát hiện là cột flex vì nội dung engine có độ dài biến thiên.
+            int[] engineCols = ResponsiveTableWidths(engineRowW - 32, 2, 205, 136, 260, 120);
+            int c1 = rowX + 16;
+            int c2 = c1 + engineCols[0];
+            int c3 = c2 + engineCols[1];
+            int c4 = c3 + engineCols[2];
+            Card("engine-header", rowX, head, engineRowW, Sketch20Style.TableHeaderHeight, ColorTranslator.FromHtml("#f7faff"), Color.Transparent, 9);
+            Text("CÔNG CỤ", c1, head, engineCols[0] - 10, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("KẾT QUẢ", c2, head, engineCols[1] - 12, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("LOẠI PHÁT HIỆN", c3, head, engineCols[2] - 12, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("CẬP NHẬT", c4, head, engineCols[3] - 6, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
             var all = FilteredEngines();
-            int page = Math.Max(4, (height - 383) / 33); engineOffset = Math.Max(0, Math.Min(engineOffset, Math.Max(0, all.Count - page)));
+            const int engineRowH = Sketch20Style.TableCompactRowHeight, engineGap = Sketch20Style.TableRowGap;
+            int page = Math.Max(4, (height - 400) / (engineRowH + engineGap));
+            engineOffset = Math.Max(0, Math.Min(engineOffset, Math.Max(0, all.Count - page)));
             var rows = all.Skip(engineOffset).Take(page).ToList();
-            AddTableScroll("engine-scroll", layoutWidth - 37, head + 31, page * 33, all.Count, page, engineOffset, value => engineOffset = value);
+            int rowsY = head + Sketch20Style.TableHeaderHeight + Sketch20Style.TableOuterPaddingY;
+            int rowsHeight = Math.Max(engineRowH, page * (engineRowH + engineGap) - engineGap);
+            AddTableScroll("engine-scroll", layoutWidth - 37, rowsY, rowsHeight, all.Count, page, engineOffset, value => engineOffset = value);
             for (int i = 0; i < rows.Count; i++)
             {
-                var row = rows[i]; int yy = head + 31 + i * 33;
+                var row = rows[i]; int yy = rowsY + i * (engineRowH + engineGap);
                 string result = row.Length > 1 ? row[1] : "Chưa có kết quả";
                 bool good = result.IndexOf("undetected", StringComparison.OrdinalIgnoreCase) >= 0 || result.IndexOf("không phát hiện", StringComparison.OrdinalIgnoreCase) >= 0;
-                Card("vt-engine-row-" + i, 22, yy, layoutWidth - 44, 32, i % 2 == 0 ? Color.White : Sketch20Style.GridAlt, Sketch20Style.Border, 0);
-                Text(row.Length == 0 ? "—" : row[0], c1, yy, c2 - c1 - 10, 32, 11.5f, Sketch20Style.Ink, true);
-                Icon(good ? "circle-check" : "alert", c2, yy + 9, 14, good ? Sketch20Style.Green : Sketch20Style.Red);
-                Text(good ? "Undetected" : "Malicious", c2 + 22, yy, c3 - c2 - 34, 32, 11, good ? Sketch20Style.Green : Sketch20Style.Red);
-                Text(good ? "—" : result, c3, yy, c4 - c3 - 12, 32, 10.5f, Sketch20Style.Ink);
-                Text((Model.VtTime ?? "—").Split(new[] { '·', ',' })[0].Trim(), c4, yy, layoutWidth - c4 - 55, 32, 10, Sketch20Style.Muted);
+                Card("vt-engine-row-" + i, rowX, yy, engineRowW, engineRowH, Color.White, ColorTranslator.FromHtml("#e5edf8"), 10);
+                Text(row.Length == 0 ? "—" : row[0], c1, yy, engineCols[0] - 10, engineRowH, 11.2f, Sketch20Style.Ink, true);
+                string statusText = good ? "Undetected" : "Malicious";
+                Color statusInk = good ? Sketch20Style.Green : Sketch20Style.Red;
+                int statusW = Math.Min(Math.Max(1, engineCols[1] - 16), Sketch20Style.PillWidth(statusText, 10.2f * ReferenceTextScale, true));
+                int statusY = yy + (engineRowH - 24) / 2;
+                Card("vt-engine-status-" + i, c2, statusY, statusW, 24, good ? Sketch20Style.GreenSoft : Sketch20Style.RedSoft, Color.Transparent, 12);
+                Canvas.Drawing.Add(g => { using (var dot = new SolidBrush(statusInk)) g.FillEllipse(dot, c2 + 8, statusY + 6 + bodyOffset, 12, 12); });
+                Icon(good ? "check" : "alert", c2 + 10, statusY + 8, 8, Color.White);
+                Text(statusText, c2 + 26, statusY, Math.Max(1, statusW - 34), 24, 10.2f, statusInk, true);
+                Text(good ? "—" : result, c3, yy, engineCols[2] - 12, engineRowH, 10.2f, Sketch20Style.Ink);
+                Text((Model.VtTime ?? "—").Split(new[] { '·', ',' })[0].Trim(), c4, yy, engineCols[3] - 8, engineRowH, 9.8f, Sketch20Style.Muted);
             }
-            if (rows.Count == 0) Text("Chưa có kết quả phù hợp để hiển thị.", 34, head + 39, layoutWidth - 68, 35, 12, Sketch20Style.Muted);
+            if (rows.Count == 0)
+            {
+                Card("engine-empty", rowX, rowsY, layoutWidth - 44, 76, Sketch20Style.Background, Color.Transparent, 12);
+                Text("Chưa có kết quả phù hợp để hiển thị.", 40, rowsY + 20, layoutWidth - 80, 36, 12, Sketch20Style.Muted);
+            }
             var report = Button("open-virustotal-report", hasReport ? "Xem tất cả " + total + " kết quả →" : "Xem báo cáo trên VirusTotal →", 22, mainY + height - 42, 255,
                 () => System.Diagnostics.Process.Start("https://www.virustotal.com/gui/file/" + f.Sha256), "", false, false, 30, true);
             report.Enabled = hasReport && f != null && !string.IsNullOrEmpty(f.Sha256) && f.Sha256.Length == 64 && f.Sha256.All(Uri.IsHexDigit);
@@ -1179,26 +1654,40 @@ namespace ScanAndRemoveVirus.Control
             Badge(Model.Strings.Count + " chuỗi", layoutWidth - 119, mainY + 17, "info", 97);
             SearchBox("string-search", stringSearch, layoutWidth - 269, mainY + 54, 247, value => { stringSearch = value; stringsOffset = 0; });
             int head = mainY + 88;
-            Card("strings-header", 22, head, layoutWidth - 44, 31, Sketch20Style.GridHeader, Color.Transparent, 7);
-            Text("#", 36, head, 33, 31, 10.5f, Sketch20Style.Muted, true);
-            Text("Chuỗi ký tự", 80, head, layoutWidth - 288, 31, 10.5f, Sketch20Style.Muted, true);
-            Text("Phân loại", layoutWidth - 189, head, 142, 31, 10.5f, Sketch20Style.Muted, true);
+            int rowX = 22;
+            int stringsRowW = layoutWidth - 44;
+            int[] stringCols = ResponsiveTableWidths(stringsRowW - 32, 1, 42, 430, 150);
+            int numberX = rowX + 16;
+            int stringX = numberX + stringCols[0];
+            int classX = stringX + stringCols[1];
+            Card("strings-header", rowX, head, stringsRowW, Sketch20Style.TableHeaderHeight, ColorTranslator.FromHtml("#f7faff"), Color.Transparent, 9);
+            Text("#", numberX, head, stringCols[0] - 8, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("CHUỖI KÝ TỰ", stringX, head, stringCols[1] - 12, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
+            Text("PHÂN LOẠI", classX, head, stringCols[2] - 8, Sketch20Style.TableHeaderHeight, 9.4f, Sketch20Style.Muted, true);
             var all = FilteredStrings();
-            int page = Math.Max(1, (height - 132) / 25); stringsOffset = Math.Max(0, Math.Min(stringsOffset, Math.Max(0, all.Count - page)));
+            const int stringRowH = Sketch20Style.TableCompactRowHeight, stringGap = Sketch20Style.TableRowGap;
+            int page = Math.Max(1, (height - 154) / (stringRowH + stringGap));
+            stringsOffset = Math.Max(0, Math.Min(stringsOffset, Math.Max(0, all.Count - page)));
             var rows = all.Skip(stringsOffset).Take(page).ToList();
-            AddTableScroll("strings-scroll", layoutWidth - 37, head + 31, page * 25, all.Count, page, stringsOffset, value => stringsOffset = value);
+            int rowsY = head + Sketch20Style.TableHeaderHeight + Sketch20Style.TableOuterPaddingY;
+            int rowsHeight = Math.Max(stringRowH, page * (stringRowH + stringGap) - stringGap);
+            AddTableScroll("strings-scroll", layoutWidth - 37, rowsY, rowsHeight, all.Count, page, stringsOffset, value => stringsOffset = value);
             for (int i = 0; i < rows.Count; i++)
             {
-                string value = rows[i]; int yy = head + 31 + i * 25;
-                Text((i + stringsOffset + 1).ToString("00"), 36, yy, 32, 25, 10.5f, Sketch20Style.Muted);
-                Text(value, 80, yy, layoutWidth - 299, 25, 11.5f, Sketch20Style.Ink, false, false, false, true);
+                string value = rows[i]; int yy = rowsY + i * (stringRowH + stringGap);
+                Card("string-row-" + i, rowX, yy, stringsRowW, stringRowH, Color.White, ColorTranslator.FromHtml("#e5edf8"), 10);
+                Text((i + stringsOffset + 1).ToString("00"), numberX, yy, stringCols[0] - 8, stringRowH, 10.3f, Sketch20Style.Muted, true);
+                Text(value, stringX, yy, stringCols[1] - 12, stringRowH, 11.2f, Sketch20Style.Ink, false, false, false, true);
                 bool technical = new[] { "CreateRemoteThread", "VirtualAllocEx", "LoadLibraryA", "CreateProcessW", "WinExec", "WriteProcessMemory" }.Contains(value);
                 bool registry = value.IndexOf(@"CurrentVersion\Run", StringComparison.OrdinalIgnoreCase) >= 0 || value.StartsWith("HKEY_", StringComparison.OrdinalIgnoreCase) || value.StartsWith(@"HKLM\", StringComparison.OrdinalIgnoreCase) || value.StartsWith(@"HKCU\", StringComparison.OrdinalIgnoreCase);
                 string kind = technical ? "technical" : value.IndexOf("http", StringComparison.OrdinalIgnoreCase) >= 0 || value.IndexOf("powershell", StringComparison.OrdinalIgnoreCase) >= 0 ? "risk" : registry ? "warn" : value.IndexOf("dll", StringComparison.OrdinalIgnoreCase) >= 0 || value.IndexOf("Windows", StringComparison.OrdinalIgnoreCase) >= 0 ? "info" : "neutral";
-                Badge(kind == "technical" ? "Kỹ thuật" : kind == "risk" ? "Đáng ngờ" : kind == "warn" ? "Registry" : kind == "info" ? "Hệ thống" : "Tệp nhị phân", layoutWidth - 189, yy, kind, 125);
-                if (i < rows.Count - 1) Line(34, yy + 24, layoutWidth - 68);
+                Badge(kind == "technical" ? "Kỹ thuật" : kind == "risk" ? "Đáng ngờ" : kind == "warn" ? "Registry" : kind == "info" ? "Hệ thống" : "Tệp nhị phân", classX, yy + (stringRowH - 24) / 2, kind);
             }
-            if (rows.Count == 0) Text("Không có chuỗi ký tự phù hợp.", 34, head + 43, layoutWidth - 68, 35, 12, Sketch20Style.Muted);
+            if (rows.Count == 0)
+            {
+                Card("strings-empty", rowX, rowsY, layoutWidth - 44, 76, Sketch20Style.Background, Color.Transparent, 12);
+                Text("Không có chuỗi ký tự phù hợp.", 40, rowsY + 20, layoutWidth - 80, 36, 12, Sketch20Style.Muted);
+            }
         }
         private void DetailExtra(Sketch20File f, int height)
         {
@@ -1236,25 +1725,253 @@ namespace ScanAndRemoveVirus.Control
             var input = new TextBox { Name = name, AccessibleName = name == "engine-search" ? "Tìm kiếm công cụ bảo mật" : "Tìm kiếm chuỗi ký tự", BorderStyle = BorderStyle.None, BackColor = Color.White, ForeColor = Sketch20Style.Ink, Font = Sketch20Style.Font(12), Text = value, Bounds = new Rectangle(x + 35, y + 9, width - 47, 22) };
             input.TextChanged += delegate
             {
-                int caret = input.SelectionStart; string text = input.Text;
-                change(text); Render();
-                var next = Canvas.Controls[name] as TextBox;
-                if (next != null) { next.Focus(); next.SelectionStart = Math.Min(caret, next.TextLength); }
+                pendingSearchCaret = input.SelectionStart; pendingSearchName = name;
+                change(input.Text);
+                searchRenderTimer.Stop(); searchRenderTimer.Start();
             };
             Canvas.Controls.Add(input); Canvas.Nodes[name] = input.Bounds;
             SearchCue(input.Handle, 0x1501, IntPtr.Zero, name == "engine-search" ? "Tìm tên công cụ..." : "Tìm kiếm chuỗi ký tự...");
         }
 
-        private void SelectBox(string name, string[] choices, int selected, int x, int y, int width, Action<int> changed, int height = 43)
+        private sealed class SketchSelectPopup : Form
         {
-            var control = new Sketch20Choice(choices, selected) { Name = name, Bounds = new Rectangle(x, y + bodyOffset, width, height) };
-            control.Chosen += changed; Canvas.Controls.Add(control); Canvas.Nodes[name] = control.Bounds;
+            readonly string[] choices;
+            readonly Action<int> picked;
+            readonly Color accent, accentSoft, border;
+            readonly int rowHeight = 34, pad = 6, visible;
+            int selected, hover = -1, offset;
+
+            internal SketchSelectPopup(string[] values, int current, int popupWidth, int maxHeight, bool risk, Action<int> onPicked)
+            {
+                choices = values ?? new string[0]; picked = onPicked;
+                selected = Math.Max(0, Math.Min(current, Math.Max(0, choices.Length - 1)));
+                accent = risk ? ColorTranslator.FromHtml("#d74d68") : Sketch20Style.Blue;
+                accentSoft = risk ? ColorTranslator.FromHtml("#fff0f4") : ColorTranslator.FromHtml("#edf5ff");
+                border = risk ? ColorTranslator.FromHtml("#eadce1") : ColorTranslator.FromHtml("#d9e7f7");
+                visible = Math.Max(1, Math.Min(choices.Length, Math.Min(8, Math.Max(1, (maxHeight - pad * 2) / rowHeight))));
+                offset = Math.Max(0, Math.Min(selected, Math.Max(0, choices.Length - visible)));
+                FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; StartPosition = FormStartPosition.Manual;
+                BackColor = Color.White; KeyPreview = true; DoubleBuffered = true; AutoScaleMode = AutoScaleMode.Dpi;
+                ClientSize = new Size(Math.Max(120, popupWidth), pad * 2 + visible * rowHeight);
+                Deactivate += delegate { Close(); };
+                KeyDown += delegate(object sender, KeyEventArgs e) { if (e.KeyCode == Keys.Escape) Close(); };
+                Shown += delegate { UpdateShape(); };
+                Resize += delegate { UpdateShape(); };
+            }
+
+            void UpdateShape()
+            {
+                if (Width < 2 || Height < 2) return;
+                int r = 12, d = r * 2;
+                using (var path = new System.Drawing.Drawing2D.GraphicsPath())
+                {
+                    path.AddArc(0, 0, d, d, 180, 90); path.AddArc(Width - d - 1, 0, d, d, 270, 90);
+                    path.AddArc(Width - d - 1, Height - d - 1, d, d, 0, 90); path.AddArc(0, Height - d - 1, d, d, 90, 90);
+                    path.CloseFigure(); Region = new Region(path);
+                }
+            }
+
+            int RowAt(Point p)
+            {
+                if (p.Y < pad || p.Y >= pad + visible * rowHeight) return -1;
+                int row = (p.Y - pad) / rowHeight, index = offset + row;
+                return index >= 0 && index < choices.Length ? index : -1;
+            }
+
+            protected override void OnMouseMove(MouseEventArgs e)
+            {
+                base.OnMouseMove(e); int next = RowAt(e.Location);
+                if (next != hover) { hover = next; Invalidate(); }
+            }
+            protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); hover = -1; Invalidate(); }
+            protected override void OnMouseWheel(MouseEventArgs e)
+            {
+                base.OnMouseWheel(e);
+                if (choices.Length <= visible) return;
+                int next = Math.Max(0, Math.Min(choices.Length - visible, offset + (e.Delta < 0 ? 1 : -1)));
+                if (next != offset) { offset = next; hover = -1; Invalidate(); }
+            }
+            protected override void OnMouseDown(MouseEventArgs e)
+            {
+                base.OnMouseDown(e); int index = RowAt(e.Location); if (index < 0) return;
+                selected = index; Close(); if (picked != null) picked(index);
+            }
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e); e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                Sketch20Style.Round(e.Graphics, new Rectangle(0, 0, Width - 1, Height - 1), 12, Color.White, border);
+                for (int row = 0; row < visible; row++)
+                {
+                    int index = offset + row; if (index >= choices.Length) break;
+                    int y = pad + row * rowHeight; bool active = index == selected, hot = index == hover;
+                    if (active || hot)
+                        Sketch20Style.Round(e.Graphics, new Rectangle(6, y + 2, Width - 12, rowHeight - 4), 8,
+                            active ? accentSoft : ColorTranslator.FromHtml("#f7faff"), Color.Transparent);
+                    Sketch20Style.Text(e.Graphics, choices[index], new Rectangle(16, y, Math.Max(30, Width - 50), rowHeight),
+                        10.6f, active ? accent : Sketch20Style.Ink, active);
+                    if (active) Sketch20Style.Icon(e.Graphics, "check", new Rectangle(Width - 31, y + 9, 16, 16), accent);
+                }
+                if (choices.Length > visible)
+                {
+                    float track = Height - pad * 2f - 8, thumb = Math.Max(18, track * visible / choices.Length);
+                    float maxOffset = Math.Max(1, choices.Length - visible), top = pad + 4 + (track - thumb) * offset / maxOffset;
+                    using (var b = new SolidBrush(ColorTranslator.FromHtml("#cbd8e8"))) e.Graphics.FillRectangle(b, Width - 5, top, 2, thumb);
+                }
+            }
         }
+
+        private void MenuSelectBox(string name, string[] choices, int selected, int x, int y, int width, int height, float pixels, Action<int> changed, string leadingIcon = "filter", bool risk = false)
+        {
+            // Mọi dropdown phải nằm hoàn toàn trong vùng nội dung; luôn chừa mép phải để không có cảm giác tràn app.
+            const int outerMargin = 10;
+            int right = Math.Max(outerMargin + 1, layoutWidth - outerMargin);
+            x = Math.Max(outerMargin, Math.Min(x, right - 1));
+            width = Math.Max(1, Math.Min(width, right - x));
+            selected = Math.Max(0, Math.Min(selected, Math.Max(0, choices.Length - 1)));
+            string value = choices.Length == 0 ? "" : choices[selected];
+            bool hover = false, rich = risk || height >= 38;
+            Color accent = risk ? ColorTranslator.FromHtml("#d74d68") : Sketch20Style.Blue;
+            Color accentSoft = risk ? ColorTranslator.FromHtml("#fff0f4") : Sketch20Style.BlueSoft;
+            Color normalEdge = risk ? ColorTranslator.FromHtml("#eadce1") : ColorTranslator.FromHtml("#c7d5e6");
+            Color hoverEdge = risk ? ColorTranslator.FromHtml("#efb4c1") : ColorTranslator.FromHtml("#8fbcf7");
+            Color hoverFill = risk ? ColorTranslator.FromHtml("#fff9fb") : ColorTranslator.FromHtml("#f7fbff");
+            var button = new Sketch20SelectSurface
+            {
+                Name = name, AccessibleName = value, Bounds = new Rectangle(x, y + bodyOffset, width, height)
+            };
+            button.MouseEnter += delegate { hover = true; button.Invalidate(); };
+            button.MouseLeave += delegate { hover = false; button.Invalidate(); };
+            button.Painter = delegate(PaintEventArgs e)
+            {
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                Color fill = hover ? hoverFill : Color.White;
+                Color edge = hover ? hoverEdge : normalEdge;
+                Sketch20Style.Round(e.Graphics, new Rectangle(0, 0, Math.Max(1, width - 1), Math.Max(1, height - 1)), rich ? 10 : 9, fill, edge);
+                if (rich)
+                {
+                    int tileSize = height <= 34 ? 24 : 28;
+                    int tileY = (height - tileSize) / 2;
+                    int iconSize = tileSize <= 24 ? 12 : 14;
+                    int iconPad = (tileSize - iconSize) / 2;
+                    int textX = 8 + tileSize + 9;
+                    int chevronX = width - tileSize - 8;
+                    Sketch20Style.Round(e.Graphics, new Rectangle(8, tileY, tileSize, tileSize), 7, accentSoft, Color.Transparent);
+                    Sketch20Style.Icon(e.Graphics, leadingIcon, new Rectangle(8 + iconPad, tileY + iconPad, iconSize, iconSize), accent);
+                    Sketch20Style.Text(e.Graphics, value, new Rectangle(textX, 0, Math.Max(1, chevronX - textX - 6), height), pixels, Sketch20Style.Ink, true);
+                    Sketch20Style.Round(e.Graphics, new Rectangle(chevronX, tileY, tileSize, tileSize), 7,
+                        hover ? (risk ? ColorTranslator.FromHtml("#ffe3ea") : ColorTranslator.FromHtml("#deecff"))
+                              : (risk ? ColorTranslator.FromHtml("#fff4f6") : ColorTranslator.FromHtml("#f1f6fd")), Color.Transparent);
+                    Sketch20Style.Icon(e.Graphics, "chevron-down", new Rectangle(chevronX + (tileSize - 12) / 2, tileY + (tileSize - 12) / 2, 12, 12), hover ? accent : Sketch20Style.Muted);
+                }
+                else
+                {
+                    Sketch20Style.Text(e.Graphics, value, new Rectangle(12, 0, Math.Max(1, width - 36), height), pixels, Sketch20Style.Ink);
+                    Sketch20Style.Icon(e.Graphics, "chevron-down", new Rectangle(width - 22, (height - 12) / 2, 12, 12), hover ? Sketch20Style.Blue : Sketch20Style.Muted);
+                }
+            };
+            Rectangle screenWork = Screen.FromControl(button).WorkingArea;
+            Rectangle appWork = viewport.RectangleToScreen(viewport.ClientRectangle);
+            Rectangle work = Rectangle.Intersect(screenWork, appWork);
+            if (work.Width < 80 || work.Height < 80) work = screenWork;
+            int naturalMenuW = Math.Max(150, width);
+            for (int k = 0; k < choices.Length; k++)
+                naturalMenuW = Math.Max(naturalMenuW, Sketch20Style.Measure(choices[k], 10.6f, k == selected) + 48);
+            int popupW = Math.Min(naturalMenuW, Math.Min(320, Math.Max(120, work.Width - 16)));
+            button.Click += delegate
+            {
+                var popup = new SketchSelectPopup(choices, selected, popupW, Math.Max(60, work.Height - 20), risk, index =>
+                {
+                    value = choices[index]; selected = index; button.AccessibleName = value; button.Invalidate();
+                    if (changed != null) changed(index);
+                });
+                Point below = button.PointToScreen(new Point(0, button.Height + 4));
+                int px = Math.Max(work.Left + 4, Math.Min(below.X, work.Right - popup.Width - 4));
+                int py = below.Y;
+                if (py + popup.Height > work.Bottom - 4)
+                    py = Math.Max(work.Top + 4, button.PointToScreen(new Point(0, -popup.Height - 4)).Y);
+                popup.Location = new Point(px, py);
+                Form owner = WindowForm ?? FindForm();
+                if (owner == null) popup.Show(); else popup.Show(owner);
+            };
+            Canvas.Controls.Add(button); Canvas.Nodes[name] = button.Bounds;
+        }
+
+        private void HeaderSelectBox(string name, string[] choices, int selected, int x, int y, int width, int height, float pixels, Action<int> changed)
+        { MenuSelectBox(name, choices, selected, x, y, width, height, pixels, changed); }
+
+        private void SelectBox(string name, string[] choices, int selected, int x, int y, int width, Action<int> changed, int height = 43)
+        { MenuSelectBox(name, choices, selected, x, y, width, height, 11.5f, changed); }
+
+        private void ThreatSelectBox(string name, string[] choices, int selected, int x, int y, int width, Action<int> changed)
+        { MenuSelectBox(name, choices, selected, x, y, width, 32, 10.6f, changed, "alert", true); }
+
         private void DateBox(string name, DateTime date, int x, int y, int width, Action<DateTime> changed)
         {
-            var control = new Sketch20Date(date, Model.Sample) { Name = name, Bounds = new Rectangle(x, y + bodyOffset, width, 43) };
-            control.Chosen += changed; Canvas.Controls.Add(control); Canvas.Nodes[name] = control.Bounds;
+            const int height = 42, outerMargin = 10;
+            int right = Math.Max(outerMargin + 1, layoutWidth - outerMargin);
+            x = Math.Max(outerMargin, Math.Min(x, right - 1));
+            width = Math.Max(1, Math.Min(width, right - x));
+            DateTime value = date.Date;
+            bool hover = false;
+            var button = new Sketch20SelectSurface
+            {
+                Name = name, AccessibleName = value.ToString("dd/MM/yyyy"), Bounds = new Rectangle(x, y + bodyOffset, width, height)
+            };
+            button.MouseEnter += delegate { hover = true; button.Invalidate(); };
+            button.MouseLeave += delegate { hover = false; button.Invalidate(); };
+            button.Painter = delegate(PaintEventArgs e)
+            {
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                Color fill = hover ? ColorTranslator.FromHtml("#f7fbff") : Color.White;
+                Color edge = hover ? ColorTranslator.FromHtml("#8fbcf7") : ColorTranslator.FromHtml("#c7d5e6");
+                Sketch20Style.Round(e.Graphics, new Rectangle(0, 0, Math.Max(1, width - 1), height - 1), 11, fill, edge);
+                int tileY = (height - 28) / 2;
+                Sketch20Style.Round(e.Graphics, new Rectangle(8, tileY, 28, 28), 8, Sketch20Style.BlueSoft, Color.Transparent);
+                Sketch20Style.Icon(e.Graphics, "calendar", new Rectangle(15, tileY + 7, 14, 14), Sketch20Style.Blue);
+                Sketch20Style.Text(e.Graphics, value.ToString("dd/MM/yyyy"), new Rectangle(47, 0, Math.Max(1, width - 91), height), 11.5f, Sketch20Style.Ink, true);
+                int chevronX = width - 37;
+                Sketch20Style.Round(e.Graphics, new Rectangle(chevronX, tileY, 28, 28), 8,
+                    hover ? ColorTranslator.FromHtml("#deecff") : ColorTranslator.FromHtml("#f1f6fd"), Color.Transparent);
+                Sketch20Style.Icon(e.Graphics, "chevron-down", new Rectangle(chevronX + 8, tileY + 8, 12, 12), hover ? Sketch20Style.Blue : Sketch20Style.Muted);
+            };
+            var calendar = new MonthCalendar { MaxSelectionCount = 1, SelectionStart = value, SelectionEnd = value, ShowToday = true };
+            var host = new ToolStripControlHost(calendar) { AutoSize = false, Size = calendar.Size, Margin = Padding.Empty, Padding = Padding.Empty };
+            var menu = new ContextMenuStrip { ShowImageMargin = false, Padding = Padding.Empty };
+            menu.Items.Add(host);
+            calendar.DateSelected += delegate(object sender, DateRangeEventArgs e)
+            {
+                value = e.Start.Date; button.AccessibleName = value.ToString("dd/MM/yyyy"); button.Invalidate();
+                if (changed != null) changed(value); menu.Close();
+            };
+            button.Click += delegate
+            {
+                calendar.SetDate(value);
+                Rectangle screenWork = Screen.FromControl(button).WorkingArea;
+                Rectangle appWork = viewport.RectangleToScreen(viewport.ClientRectangle);
+                Rectangle work = Rectangle.Intersect(screenWork, appWork);
+                if (work.Width < 80 || work.Height < 80) work = screenWork;
+                Size popup = menu.GetPreferredSize(Size.Empty);
+                Point below = button.PointToScreen(new Point(0, button.Height + 4));
+                int px = Math.Max(work.Left + 4, Math.Min(below.X, work.Right - popup.Width - 4));
+                int py = below.Y;
+                if (py + popup.Height > work.Bottom - 4)
+                    py = Math.Max(work.Top + 4, button.PointToScreen(new Point(0, -popup.Height - 4)).Y);
+                menu.Show(new Point(px, py));
+            };
+            button.Disposed += delegate { menu.Dispose(); };
+            button.ContextMenuStrip = menu;
+            Canvas.Controls.Add(button); Canvas.Nodes[name] = button.Bounds;
         }
+        private static string NormalizeHistoryFilter(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "Tất cả";
+            string[] known = { "Tất cả", "Quét nhanh", "Quét thư mục", "Quét tệp", "Quét toàn bộ", "Quét tùy chỉnh" };
+            foreach (string item in known)
+                if (string.Equals(value, item, StringComparison.OrdinalIgnoreCase) ||
+                    value.StartsWith(item, StringComparison.OrdinalIgnoreCase)) return item;
+            return "Tất cả";
+        }
+
         private void PasswordBox(int x, int y, int width)
         {
             var input = new Sketch20Password { Name = "api-key", Bounds = new Rectangle(x, y + bodyOffset, width, 40) };

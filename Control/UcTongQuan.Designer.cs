@@ -1,4 +1,4 @@
-namespace ScanAndRemoveVirus.Control
+﻿namespace ScanAndRemoveVirus.Control
 {
     partial class UcTongQuan
     {
@@ -99,7 +99,6 @@ namespace ScanAndRemoveVirus.Control
             this.colActTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.lblActivitySummary = new System.Windows.Forms.Label();
             this.lnkXemLichSu = new System.Windows.Forms.LinkLabel();
-            this.ctxQuetNangCao = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.pnlPageHead = new System.Windows.Forms.Panel();
             this.pnlContent.SuspendLayout();
             this.tableLayoutPanel11.SuspendLayout();
@@ -1047,11 +1046,6 @@ namespace ScanAndRemoveVirus.Control
             this.lnkXemLichSu.Text = "Mở tab Lịch sử  ›";
             this.lnkXemLichSu.Visible = false;
             // 
-            // ctxQuetNangCao
-            // 
-            this.ctxQuetNangCao.Name = "ctxQuetNangCao";
-            this.ctxQuetNangCao.Size = new System.Drawing.Size(61, 4);
-            // 
             // pnlPageHead
             // 
             this.pnlPageHead.BackColor = System.Drawing.Color.White;
@@ -1117,7 +1111,6 @@ namespace ScanAndRemoveVirus.Control
         private System.Windows.Forms.Label lblLoadingTieuDe;
         private System.Windows.Forms.Label lblLoadingChiTiet;
         private System.Windows.Forms.Button btnHuyQuetLoading;
-        private System.Windows.Forms.ContextMenuStrip ctxQuetNangCao;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel12;
         // ===== HERO (a)/(b) — khiên lớn + tiêu đề + 2 nút, canh giữa =====
         private System.Windows.Forms.Panel pnlHeroHost;

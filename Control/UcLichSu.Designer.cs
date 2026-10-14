@@ -34,7 +34,7 @@
             this.dtpDenNgay = new System.Windows.Forms.DateTimePicker();
             this.tlpLoaiQuet = new System.Windows.Forms.TableLayoutPanel();
             this.lblLoaiQuet = new System.Windows.Forms.Label();
-            this.cboLoaiQuet = new System.Windows.Forms.ComboBox();
+            this.cboLoaiQuet = new ScanAndRemoveVirus.Control.UiSelect();
             this.btnLoc = new System.Windows.Forms.Button();
             this.btnMore = new System.Windows.Forms.Button();
             this.pnlGrid = new System.Windows.Forms.Panel();
@@ -227,9 +227,6 @@
             // cboLoaiQuet
             // 
             this.cboLoaiQuet.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cboLoaiQuet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboLoaiQuet.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.cboLoaiQuet.FormattingEnabled = true;
             this.cboLoaiQuet.Location = new System.Drawing.Point(0, 20);
             this.cboLoaiQuet.Margin = new System.Windows.Forms.Padding(0);
             this.cboLoaiQuet.Name = "cboLoaiQuet";
@@ -462,7 +459,7 @@
             this.tlpFooter.Controls.Add(this.tlpPager, 1, 0);
             this.tlpFooter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlpFooter.Location = new System.Drawing.Point(34, 598);
-            this.tlpFooter.Margin = new System.Windows.Forms.Padding(0, 12, 0, 0);
+            this.tlpFooter.Margin = new System.Windows.Forms.Padding(0, 20, 0, 0);
             this.tlpFooter.Name = "tlpFooter";
             this.tlpFooter.RowCount = 1;
             this.tlpFooter.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -575,7 +572,7 @@
         private System.Windows.Forms.DateTimePicker dtpDenNgay;
         private System.Windows.Forms.TableLayoutPanel tlpLoaiQuet;
         private System.Windows.Forms.Label lblLoaiQuet;
-        private System.Windows.Forms.ComboBox cboLoaiQuet;
+        private ScanAndRemoveVirus.Control.UiSelect cboLoaiQuet;
         private System.Windows.Forms.Button btnLoc;
         private System.Windows.Forms.Button btnMore;
         private System.Windows.Forms.ContextMenuStrip menuLichSu;

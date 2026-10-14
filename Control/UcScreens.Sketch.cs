@@ -28,7 +28,7 @@ namespace ScanAndRemoveVirus.Control
             var update = SketchUi.Button("Làm mới trạng thái", Theme.BtnRole.Neutral, delegate
             {
                 try { SyncProtectionStats(); SyncSketchProtection(); }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Bảo vệ", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+                catch (Exception ex) { AppDialog.Show(ex.Message, "Bảo vệ", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
             });
             page.Canvas.Controls.Add(update);
             var cards = new List<UiCard>();
@@ -236,7 +236,6 @@ namespace ScanAndRemoveVirus.Control
 
     public partial class UcCaiDat
     {
-        private SketchTabs sketchSettingsTabs;
         private SketchPage sketchSettingsPage;
         private readonly List<UiCard> sketchSettingsCards = new List<UiCard>();
 
@@ -244,11 +243,9 @@ namespace ScanAndRemoveVirus.Control
         {
             var page = SketchUi.Page(this, tableLayoutPanel1, "Cài đặt", "Cá nhân hóa ứng dụng và các cơ chế bảo vệ.");
             sketchSettingsPage = page;
-            sketchSettingsTabs = new SketchTabs("Chung", "Bảo vệ chủ động", "VirusTotal", "Dữ liệu & công cụ");
-            page.Canvas.Controls.Add(sketchSettingsTabs);
-            string[] headings = { "Khởi động & đồng bộ", "Bảo vệ chủ động", "Phân tích qua VirusTotal", "Dữ liệu & công cụ" };
-            string[] notes = { "Tùy chỉnh cách Antivirus hoạt động trên máy tính.", "Thiết lập được đồng bộ với màn Bảo vệ.", "Tra cứu kết quả phân tích tệp bằng API key của bạn.", "Thông tin ứng dụng, dữ liệu quét và các công cụ kiểm thử." };
-            for (int i = 0; i < 4; i++)
+            string[] headings = { "Khởi động & đồng bộ", "Dữ liệu & công cụ" };
+            string[] notes = { "Tùy chỉnh cách Antivirus hoạt động trên máy tính.", "Thông tin ứng dụng, dữ liệu quét và các công cụ kiểm thử." };
+            for (int i = 0; i < 2; i++)
             {
                 var card = SketchUi.Card("settingsPanel" + i);
                 var title = SketchUi.Label(headings[i], Theme.CardHeadFont, Theme.TextDark);
@@ -263,46 +260,21 @@ namespace ScanAndRemoveVirus.Control
                 page.Canvas.Controls.Add(card);
                 sketchSettingsCards.Add(card);
             }
-            CheckBox[][] checks = {
-                new[] { chkAutoStart, chkAutoUpdate, chkShowNotification, chkSendSamples },
-                new[] { chkRestoreGuard, chkUsbGuard, chkDownloadGuard, chkBehaviorGuard, chkStartupGuard } };
-            string[][] titles = {
-                new[] { "Khởi động cùng Windows", "Tự động cập nhật chữ ký", "Hiển thị thông báo", "Gửi mẫu tệp nghi ngờ" },
-                new[] { "Bảo vệ tệp", "Bảo vệ USB", "Bảo vệ tải xuống", "Giám sát hành vi", "Bảo vệ thư mục khởi động" } };
-            string[][] hints = {
-                new[] { "Tự mở ứng dụng sau khi đăng nhập.", "Kiểm tra cập nhật khi mở ứng dụng.", "Thông báo khi phát hiện mối đe dọa.", "Cho phép gửi mẫu để hỗ trợ phân tích." },
-                new[] { "Kiểm tra tệp trước khi khôi phục từ cách ly.", "Quét USB khi được kết nối.", "Kiểm tra tệp tải về từ Internet.", "Theo dõi tiến trình đáng ngờ.", "Kiểm tra tệp mới trong thư mục Startup." } };
-            for (int section = 0; section < 2; section++)
+            CheckBox[] checks = { chkAutoStart, chkAutoUpdate, chkShowNotification, chkSendSamples };
+            string[] titles = { "Khởi động cùng Windows", "Tự động cập nhật chữ ký", "Hiển thị thông báo", "Gửi mẫu tệp nghi ngờ" };
+            string[] hints = { "Tự mở ứng dụng sau khi đăng nhập.", "Kiểm tra cập nhật khi mở ứng dụng.", "Thông báo khi phát hiện mối đe dọa.", "Cho phép gửi mẫu để hỗ trợ phân tích." };
+            var general = sketchSettingsCards[0];
+            for (int i = 0; i < checks.Length; i++)
             {
-                var card = sketchSettingsCards[section];
-                for (int i = 0; i < checks[section].Length; i++)
-                {
-                    var row = SketchUi.SettingRow(checks[section][i], titles[section][i], hints[section][i]);
-                    row.Location = new Point(22, 82 + i * 78);
-                    card.Controls.Add(row);
-                    card.Resize += delegate { row.Width = card.Width - 44; };
-                }
+                var row = SketchUi.SettingRow(checks[i], titles[i], hints[i]);
+                row.Location = new Point(22, 82 + i * 78);
+                general.Controls.Add(row);
+                general.Resize += delegate { row.Width = general.Width - 44; };
             }
-            var vt = sketchSettingsCards[2];
-            var vtRow = SketchUi.SettingRow(chkVtAutoQuery, "Tra cứu tự động", "Tra cứu mã băm của các tệp nghi ngờ.");
-            vt.Controls.Add(vtRow);
-            var keyLabel = SketchUi.Label("API key", Theme.BodyFont, Theme.TextDark);
-            vt.Controls.Add(keyLabel);
-            txtVtKey.UseSystemPasswordChar = true;
-            txtVtKey.Visible = btnSaveVtKey.Visible = btnClearVtKey.Visible = true;
-            lblVtHint.Text = "API key được lưu trên máy và che khi nhập.";
-            vt.Resize += delegate
-            {
-                vtRow.SetBounds(22, 80, vt.Width - 44, 78);
-                keyLabel.SetBounds(22, 174, vt.Width - 44, 26);
-                SketchUi.Place(txtVtKey, vt, 22, 205, vt.Width - 44, 34);
-                SketchUi.Place(btnSaveVtKey, vt, 22, 254, 136, 40);
-                SketchUi.Place(btnClearVtKey, vt, 170, 254, 136, 40);
-                SketchUi.Place(lblVtStatus, vt, 22, 309, vt.Width - 44, 34);
-                SketchUi.Place(lblVtHint, vt, 22, 351, vt.Width - 44, 34);
-            };
-            Theme.StyleButton(btnSaveVtKey, Theme.BtnRole.Primary);
-            var data = sketchSettingsCards[3];
+            // API key VirusTotal được cấu hình trực tiếp trong .env, không hiển thị trên UI.
+            txtVtKey.Visible = btnSaveVtKey.Visible = btnClearVtKey.Visible = false;
+            lblVtStatus.Visible = lblVtHint.Visible = chkVtAutoQuery.Visible = false;
+            var data = sketchSettingsCards[1];
             data.Resize += delegate
             {
                 Label[] values = { lblAppVersion, lblDbUpdate, lblQuarantined, lblDataPath };
@@ -315,12 +287,10 @@ namespace ScanAndRemoveVirus.Control
                 SketchUi.Place(btnClearCache, data, 218, 346, 162, 40);
                 SketchUi.Place(btnSamples, data, 392, 346, 164, 40);
             };
-            sketchSettingsTabs.SelectedIndexChanged += delegate { ArrangeSketchSettings(); };
             page.Arrange = delegate(int width)
             {
-                sketchSettingsTabs.SetBounds(0, 88, width, 44);
-                for (int i = 0; i < sketchSettingsCards.Count; i++)
-                    sketchSettingsCards[i].SetBounds(0, 150, width, i == 1 ? 494 : 418);
+                if (sketchSettingsCards.Count > 0) sketchSettingsCards[0].SetBounds(0, 88, width, 418);
+                if (sketchSettingsCards.Count > 1) sketchSettingsCards[1].SetBounds(0, 524, width, 418);
                 ArrangeSketchSettings();
             };
             page.Reflow();
@@ -328,10 +298,10 @@ namespace ScanAndRemoveVirus.Control
 
         private void ArrangeSketchSettings()
         {
-            if (sketchSettingsPage == null) return;
-            int selected = sketchSettingsTabs.SelectedIndex;
-            for (int i = 0; i < sketchSettingsCards.Count; i++) sketchSettingsCards[i].Visible = i == selected;
-            int end = 150 + sketchSettingsCards[selected].Height;
+            if (sketchSettingsPage == null || sketchSettingsCards.Count < 2) return;
+            sketchSettingsCards[0].Visible = true;
+            sketchSettingsCards[1].Visible = true;
+            int end = 524 + sketchSettingsCards[1].Height;
             int width = sketchSettingsPage.Canvas.Width;
             SketchUi.Place(lblSavedAt, sketchSettingsPage.Canvas, 0, end + 20, Math.Max(120, width - 370), 42);
             lblSavedAt.Font = Theme.SmallFont;
@@ -342,8 +312,7 @@ namespace ScanAndRemoveVirus.Control
 
         internal void OpenVirusTotalSettings()
         {
-            sketchSettingsTabs.SelectedIndex = 2;
-            txtVtKey.Focus();
+            ArrangeSketchSettings();
         }
     }
 }

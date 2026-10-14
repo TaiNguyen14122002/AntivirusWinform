@@ -1,4 +1,4 @@
-/*using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -126,7 +126,7 @@ namespace ScanAndRemoveVirus.Services
             try
             {
                 string key = LoadApiKey();
-                if (string.IsNullOrEmpty(key)) { report.Error = "Chưa cấu hình API key VirusTotal"; return report; }
+                if (string.IsNullOrEmpty(key)) { report.Error = "Chưa cấu hình VIRUSTOTAL_API_KEY trong .env"; return report; }
 
                 using (var request = new HttpRequestMessage(HttpMethod.Get, BaseUrl + sha256))
                 {
@@ -166,7 +166,7 @@ namespace ScanAndRemoveVirus.Services
             try
             {
                 string key = LoadApiKey();
-                if (string.IsNullOrEmpty(key)) { report.Error = "Chưa cấu hình API key VirusTotal"; return report; }
+                if (string.IsNullOrEmpty(key)) { report.Error = "Chưa cấu hình VIRUSTOTAL_API_KEY trong .env"; return report; }
                 var fi = new FileInfo(path);
                 if (!fi.Exists || fi.Length == 0) { report.Error = "Không tìm thấy tệp để gửi"; return report; }
                 if (fi.Length > MaxUploadBytes) { report.Error = "Tệp vượt giới hạn upload miễn phí (32MB)"; return report; }
@@ -414,7 +414,7 @@ namespace ScanAndRemoveVirus.Services
     ///      ↓
     /// UploadAndAnalyze()
     ///
-    /// API key vẫn lưu local trong vtapikey.txt.
+    /// API key được đọc từ VIRUSTOTAL_API_KEY trong file .env.
     ///
     /// Class này KHÔNG truy cập SQL Server trực tiếp.
     /// </summary>
@@ -496,135 +496,92 @@ namespace ScanAndRemoveVirus.Services
         // API KEY
         // =========================================================
 
+        private const string ApiKeyVariable = "VIRUSTOTAL_API_KEY";
         private static string cachedApiKeyPath;
 
         /// <summary>
-        /// API key KHÔNG đưa vào SQL Server.
-        ///
-        /// Ưu tiên tìm vtapikey.txt tại gốc project.
-        /// Nếu chạy ngoài project thì dùng DataDir.
+        /// File .env tại gốc project. Khi chạy ngoài project thì dùng DataDir.
         /// </summary>
         public static string ApiKeyPath
         {
             get
             {
-                if (!string.IsNullOrEmpty(
-                    cachedApiKeyPath))
-                {
-                    return cachedApiKeyPath;
-                }
-
+                if (!string.IsNullOrEmpty(cachedApiKeyPath)) return cachedApiKeyPath;
                 try
                 {
-                    DirectoryInfo dir =
-                        new DirectoryInfo(
-                            AppDomain.CurrentDomain.BaseDirectory);
-
-                    for (int hop = 0;
-                         hop < 8 && dir != null;
-                         hop++, dir = dir.Parent)
+                    DirectoryInfo dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+                    for (int hop = 0; hop < 8 && dir != null; hop++, dir = dir.Parent)
                     {
-                        string project =
-                            Path.Combine(
-                                dir.FullName,
-                                "ScanAndRemoveVirus.csproj");
-
-                        if (File.Exists(project))
+                        if (File.Exists(Path.Combine(dir.FullName, "ScanAndRemoveVirus.csproj")))
                         {
-                            cachedApiKeyPath =
-                                Path.Combine(
-                                    dir.FullName,
-                                    "vtapikey.txt");
-
+                            cachedApiKeyPath = Path.Combine(dir.FullName, ".env");
                             return cachedApiKeyPath;
                         }
                     }
                 }
-                catch (Exception)
-                {
-                }
-
-                cachedApiKeyPath =
-                    DataDir.Resolve(
-                        "vtapikey.txt");
-
+                catch (Exception) { }
+                cachedApiKeyPath = DataDir.Resolve(".env");
                 return cachedApiKeyPath;
             }
         }
 
-        /// <summary>
-        /// true nếu đã có API key.
-        /// </summary>
-        public static bool IsConfigured
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(
-                    LoadApiKey());
-            }
-        }
+        public static bool IsConfigured { get { return !string.IsNullOrEmpty(LoadApiKey()); } }
 
-        /// <summary>
-        /// Đọc API key từ file local.
-        /// </summary>
+        /// <summary>Đọc VIRUSTOTAL_API_KEY từ biến môi trường hoặc file .env.</summary>
         public static string LoadApiKey()
         {
             try
             {
-                if (!File.Exists(ApiKeyPath))
+                string processValue = Environment.GetEnvironmentVariable(ApiKeyVariable);
+                if (!string.IsNullOrWhiteSpace(processValue)) return processValue.Trim();
+                if (!File.Exists(ApiKeyPath)) return null;
+
+                foreach (string raw in File.ReadAllLines(ApiKeyPath, Encoding.UTF8))
                 {
-                    return null;
+                    string line = (raw ?? string.Empty).Trim();
+                    if (line.Length == 0 || line.StartsWith("#")) continue;
+                    int equals = line.IndexOf('=');
+                    if (equals <= 0) continue;
+                    string name = line.Substring(0, equals).Trim();
+                    if (!string.Equals(name, ApiKeyVariable, StringComparison.OrdinalIgnoreCase)) continue;
+                    string value = line.Substring(equals + 1).Trim();
+                    if (value.Length >= 2 && ((value[0] == '\"' && value[value.Length - 1] == '\"') || (value[0] == '\'' && value[value.Length - 1] == '\'')))
+                        value = value.Substring(1, value.Length - 2).Trim();
+                    return string.IsNullOrWhiteSpace(value) ? null : value;
                 }
-
-                string key =
-                    File.ReadAllText(
-                        ApiKeyPath);
-
-                if (string.IsNullOrWhiteSpace(key))
-                {
-                    return null;
-                }
-
-                return key.Trim();
             }
-            catch (Exception)
-            {
-                return null;
-            }
+            catch (Exception) { }
+            return null;
         }
 
-        /// <summary>
-        /// Lưu API key local.
-        ///
-        /// Không lưu API key vào dbo.Settings vì schema hiện tại
-        /// không có cột VirusTotalApiKey.
-        /// </summary>
+        /// <summary>Giữ tương thích nội bộ; ghi key vào VIRUSTOTAL_API_KEY trong .env.</summary>
         public static void SaveApiKey(string key)
         {
             try
             {
-                string directory =
-                    Path.GetDirectoryName(
-                        ApiKeyPath);
-
-                if (!string.IsNullOrEmpty(directory))
+                string path = ApiKeyPath;
+                string directory = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+                string[] lines = File.Exists(path) ? File.ReadAllLines(path, Encoding.UTF8) : new string[0];
+                var output = new StringBuilder();
+                bool replaced = false;
+                for (int i = 0; i < lines.Length; i++)
                 {
-                    Directory.CreateDirectory(
-                        directory);
+                    string raw = lines[i] ?? string.Empty;
+                    string trimmed = raw.Trim();
+                    int equals = trimmed.IndexOf('=');
+                    if (equals > 0 && string.Equals(trimmed.Substring(0, equals).Trim(), ApiKeyVariable, StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append(ApiKeyVariable).Append('=').Append((key ?? string.Empty).Trim());
+                        replaced = true;
+                    }
+                    else output.Append(raw);
+                    output.AppendLine();
                 }
-
-                File.WriteAllText(
-                    ApiKeyPath,
-                    (key ?? "").Trim(),
-                    new UTF8Encoding(false));
+                if (!replaced) output.Append(ApiKeyVariable).Append('=').Append((key ?? string.Empty).Trim()).AppendLine();
+                File.WriteAllText(path, output.ToString(), new UTF8Encoding(false));
             }
-            catch (Exception)
-            {
-                /*
-                 * Giữ tương thích với cách hoạt động cũ:
-                 * lỗi lưu key không làm ứng dụng crash.
-                 */
-            }
+            catch (Exception) { }
         }
 
         // =========================================================
@@ -717,7 +674,7 @@ namespace ScanAndRemoveVirus.Services
                 if (string.IsNullOrEmpty(key))
                 {
                     report.Error =
-                        "Chưa cấu hình API key VirusTotal";
+                        "Chưa cấu hình VIRUSTOTAL_API_KEY trong .env";
 
                     return report;
                 }
@@ -819,7 +776,7 @@ namespace ScanAndRemoveVirus.Services
                 if (string.IsNullOrEmpty(key))
                 {
                     report.Error =
-                        "Chưa cấu hình API key VirusTotal";
+                        "Chưa cấu hình VIRUSTOTAL_API_KEY trong .env";
 
                     return report;
                 }

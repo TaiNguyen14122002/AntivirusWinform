@@ -26,7 +26,7 @@ namespace ScanAndRemoveVirus.Control
         const int IconSize = 16;
         static readonly CultureInfo Vi = CultureInfo.GetCultureInfo("vi-VN");
         // 3 gợi ý của ảnh; loại quét khác có thật trong log sẽ được bổ sung khi nạp (§3.2)
-        static readonly string[] LoaiGoiY = { "Quét toàn bộ", "Quét nhanh", "Quét tệp" };
+        static readonly string[] LoaiGoiY = { "Quét toàn bộ", "Quét nhanh", "Quét thư mục", "Quét tệp", "Quét tùy chỉnh" };
 
         // 3 "mục" xem, thay cho 3 tab con đã bỏ khỏi bố cục chính — chuyển bằng menu phụ "…"
         enum KieuXem { PhienQuet, CanhBao, CapNhat }
@@ -198,8 +198,21 @@ namespace ScanAndRemoveVirus.Control
             if (e.Time < dtpTuNgay.Value.Date) return false;
             if (e.Time >= dtpDenNgay.Value.Date.AddDays(1)) return false;
             string loai = cboLoaiQuet.SelectedItem as string;
-            if (!string.IsNullOrEmpty(loai) && loai != TatCa && e.Type != loai) return false;
+            if (!string.IsNullOrEmpty(loai) && loai != TatCa && !HistoryTypeMatches(e.Type, loai)) return false;
             return true;
+        }
+
+        private static bool HistoryTypeMatches(string actual, string requested)
+        {
+            if (string.IsNullOrWhiteSpace(requested) || requested == TatCa) return true;
+            if (string.IsNullOrWhiteSpace(actual)) return false;
+            if (string.Equals(actual, requested, StringComparison.OrdinalIgnoreCase)) return true;
+            if (requested == "Quét thư mục" ) return actual.StartsWith("Quét thư mục", StringComparison.OrdinalIgnoreCase);
+            if (requested == "Quét tệp" ) return actual.StartsWith("Quét tệp", StringComparison.OrdinalIgnoreCase);
+            if (requested == "Quét tùy chỉnh" ) return actual.StartsWith("Quét tùy chỉnh", StringComparison.OrdinalIgnoreCase);
+            if (requested == "Quét nhanh" ) return actual.StartsWith("Quét nhanh", StringComparison.OrdinalIgnoreCase);
+            if (requested == "Quét toàn bộ" ) return actual.StartsWith("Quét toàn bộ", StringComparison.OrdinalIgnoreCase);
+            return false;
         }
 
         // Đơn vị đếm của chân trang đổi theo "mục" đang xem (câu chữ của ảnh: "lần quét")
@@ -440,7 +453,19 @@ namespace ScanAndRemoveVirus.Control
         // ================= MENU PHỤ "…" (và menu chuột phải trên bảng) =================
         private void BtnMore_Click(object sender, EventArgs e)
         {
-            menuLichSu.Show(btnMore, new Point(0, btnMore.Height + 4));
+            bool co = SelectedEntry() != null;
+            var xem = new UiActionEntry("Xem chi tiết dòng đang chọn", delegate { OpenDetail(SelectedEntry()); }, null, UiIcons.Info(16, Theme.Blue)) { Enabled = co };
+            var xoa = new UiActionEntry("Xóa dòng đang chọn…", delegate { MiXoaDong_Click(null, EventArgs.Empty); }, null, UiIcons.Trash(16, Theme.Red)) { Enabled = co, Danger = true };
+            var phien = new UiActionEntry("Chỉ hiện phiên quét", delegate { SetKieuXem(KieuXem.PhienQuet); }) { Checked = kieuXem == KieuXem.PhienQuet };
+            var canhBao = new UiActionEntry("Chỉ hiện cảnh báo thời gian thực", delegate { SetKieuXem(KieuXem.CanhBao); }) { Checked = kieuXem == KieuXem.CanhBao };
+            var capNhat = new UiActionEntry("Nhật ký cập nhật CSDL", delegate { SetKieuXem(KieuXem.CapNhat); }) { Checked = kieuXem == KieuXem.CapNhat };
+            UiActionPopup.ShowFor(btnMore, new[]
+            {
+                xem,
+                new UiActionEntry("Làm mới dữ liệu", delegate { LoadRealData(); }, null, UiIcons.Refresh(16, Theme.Blue)),
+                new UiActionEntry("Xuất CSV toàn bộ lịch sử…", delegate { MiXuatCsv_Click(null, EventArgs.Empty); }),
+                xoa, phien, canhBao, capNhat
+            }, 270);
         }
 
         private void MiOpening(object sender, EventArgs e)
@@ -475,7 +500,7 @@ namespace ScanAndRemoveVirus.Control
             if (dtpTuNgay.Value.Date > dtpDenNgay.Value.Date)
             {
                 // Bộ lọc sai: báo ngắn và KHÔNG áp dụng (giữ nguyên bảng đang xem, §3.2)
-                MessageBox.Show("Từ ngày không được sau Đến ngày. Bộ lọc chưa được áp dụng.",
+                AppDialog.Show("Từ ngày không được sau Đến ngày. Bộ lọc chưa được áp dụng.",
                     "Bộ lọc lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -500,18 +525,18 @@ namespace ScanAndRemoveVirus.Control
             HistoryEntry entry = SelectedEntry();
             if (entry == null)
             {
-                MessageBox.Show("Hãy chọn một dòng lịch sử (bấm vào dòng, hoặc nút Xem ở dòng đó).",
+                AppDialog.Show("Hãy chọn một dòng lịch sử (bấm vào dòng, hoặc nút Xem ở dòng đó).",
                     "Xóa dòng lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            DialogResult traLoi = MessageBox.Show(string.Format(
+            DialogResult traLoi = AppDialog.Show(string.Format(
                 "Xóa dòng lịch sử \"{0}\" lúc {1:dd/MM/yyyy HH:mm}?\r\n\r\nHành động này không thể hoàn tác.",
                 entry.Type, entry.Time),
                 "Xóa dòng lịch sử", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (traLoi != DialogResult.Yes) return;
             if (!ScanHistoryStore.Remove(entry))
             {
-                MessageBox.Show("Không xóa được dòng này (bản ghi đã thay đổi). Hãy chọn Làm mới dữ liệu rồi thử lại.",
+                AppDialog.Show("Không xóa được dòng này (bản ghi đã thay đổi). Hãy chọn Làm mới dữ liệu rồi thử lại.",
                     "Xóa dòng lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -530,12 +555,12 @@ namespace ScanAndRemoveVirus.Control
                 try
                 {
                     ScanHistoryStore.ExportCsv(dlg.FileName);
-                    MessageBox.Show("Đã xuất báo cáo:\r\n" + dlg.FileName, "Xuất báo cáo",
+                    AppDialog.Show("Đã xuất báo cáo:\r\n" + dlg.FileName, "Xuất báo cáo",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Không xuất được báo cáo: " + ex.Message, "Xuất báo cáo",
+                    AppDialog.Show("Không xuất được báo cáo: " + ex.Message, "Xuất báo cáo",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -546,11 +571,11 @@ namespace ScanAndRemoveVirus.Control
         {
             if (entry == null)
             {
-                MessageBox.Show("Hãy chọn một dòng lịch sử (hoặc bấm nút Xem ở dòng cần xem).",
+                AppDialog.Show("Hãy chọn một dòng lịch sử (hoặc bấm nút Xem ở dòng cần xem).",
                     "Chi tiết lịch sử", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            MessageBox.Show(string.Format(Vi,
+            AppDialog.Show(string.Format(Vi,
                 "Thời gian: {0:dd/MM/yyyy HH:mm:ss}\r\nLoại: {1}\r\nPhạm vi: {2}\r\n"
                 + "Số tệp đã quét: {3:N0}\r\nSố mối đe dọa: {4:N0}\r\nKết quả: {5}\r\nThời lượng: {6}\r\n\r\n"
                 + "Chi tiết từng tệp bị phát hiện nằm ở tab Cách ly (mục đã cách ly) và bảng mối đe dọa ở tab Tổng quan.",

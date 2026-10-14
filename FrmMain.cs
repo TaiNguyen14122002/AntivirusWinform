@@ -415,9 +415,8 @@ namespace ScanAndRemoveVirus
 
         public void MoCaiDatVirusTotal()
         {
-            if (exactView != null) { exactView.SettingsTab = 2; exactView.Go("settings"); return; }
+            if (exactView != null) { exactView.SettingsTab = 0; exactView.Go("settings"); return; }
             Navigate(btnCaiDat);
-            ucCaiDat.OpenVirusTotalSettings();
         }
 
         private void SidebarProtectionChanged(bool running)
