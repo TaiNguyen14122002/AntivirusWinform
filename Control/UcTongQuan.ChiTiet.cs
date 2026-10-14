@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -68,15 +68,7 @@ namespace ScanAndRemoveVirus.Control
 
         private void BuildChiTietView()
         {
-            var root = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Name = "tlpChiTiet" };
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 62F));   // header
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 196F));  // bảng chi tiết
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));   // 5 tab
-            root.Controls.Add(DungHeaderChiTiet(), 0, 0);
-            root.Controls.Add(DungBangChiTiet(), 0, 1);
-            root.Controls.Add(DungTabChiTiet(), 0, 2);
-            pnlChiTietKetQua.Controls.Add(root);
+            BuildSketchDetails();
         }
 
         // ---- tiện ích dựng control (giữ đúng Theme: mọi Button đi qua Theme.StyleButton) ----
@@ -91,7 +83,7 @@ namespace ScanAndRemoveVirus.Control
 
         private static Button Nut(string text, Theme.BtnRole role, int width, int height = 32)
         {
-            var b = new Button { Text = text, Width = width, Height = height, Dock = DockStyle.Right, Margin = new Padding(4, 0, 0, 0) };
+            var b = new UiButton { Radius = 8, Text = text, Width = width, Height = height, Dock = DockStyle.Right, Margin = new Padding(4, 0, 0, 0) };
             Theme.StyleButton(b, role);
             return b;
         }
@@ -108,9 +100,9 @@ namespace ScanAndRemoveVirus.Control
         {
             var b = new Button
             {
-                Text = text, Width = 116, Height = 26, Dock = DockStyle.Left,
+                Text = text, Width = 176, Height = 26, Dock = DockStyle.Left,
                 Margin = new Padding(0), FlatStyle = FlatStyle.Flat, UseVisualStyleBackColor = false,
-                BackColor = Theme.PageBg, ForeColor = Theme.Blue, Font = Theme.ButtonFont,
+                BackColor = Theme.DashboardBg, ForeColor = Theme.Blue, Font = Theme.ButtonFont,
                 TextAlign = ContentAlignment.MiddleLeft, Cursor = Cursors.Hand,
                 Image = UiIcons.ArrowLeft(14, Theme.Blue),
                 TextImageRelation = TextImageRelation.ImageBeforeText
@@ -144,7 +136,7 @@ namespace ScanAndRemoveVirus.Control
         {
             var head = new TableLayoutPanel { ColumnCount = 2, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 4) };
             head.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            head.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            head.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 292F));
             head.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             btnQuayLaiChiTiet = NutQuayLai("Quay lại");
@@ -166,6 +158,7 @@ namespace ScanAndRemoveVirus.Control
             lblThoiGianQuet = Nhan("Thời gian quét: —", Theme.SmallFont, Theme.TextMid, ContentAlignment.MiddleRight);
             lblLoaiQuet = Nhan("Loại quét: —", Theme.SmallFont, Theme.TextMid, ContentAlignment.MiddleRight);
             btnXuatBaoCao = Nut("Xuất báo cáo", Theme.BtnRole.Secondary, 138);
+            btnXuatBaoCao.Anchor = AnchorStyles.Right;
             btnXuatBaoCao.Image = UiIcons.External(13, Theme.BlueDark);
             btnXuatBaoCao.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnXuatBaoCao.Click += BtnXuatBaoCao_Click;
@@ -286,7 +279,7 @@ namespace ScanAndRemoveVirus.Control
             host.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 54F));
             host.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 46F));
 
-            var grp = new GroupBox { Text = "Thông tin tệp", Dock = DockStyle.Fill, Margin = new Padding(0, 0, 6, 0) };
+            var grp = new UiGroup { Text = "Thông tin tệp", Dock = DockStyle.Fill, Margin = new Padding(0, 0, 6, 0) };
             Theme.StyleCard(grp);
             var t = new TableLayoutPanel { ColumnCount = 3, Dock = DockStyle.Fill, Padding = new Padding(6, 2, 6, 4) };
             t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 108F));
@@ -326,14 +319,14 @@ namespace ScanAndRemoveVirus.Control
             btnCopySha256 = (Button)t.GetControlFromPosition(2, 8);
             grp.Controls.Add(t);
             host.Controls.Add(grp, 0, 0);
-            host.Controls.Add(DungCardVirusTotal(), 1, 0);
+            host.Controls.Add(DungCardKetLuan(), 1, 0);
             return host;
         }
 
         /// <summary>Card phải của tab 1: donut X/72 + kết luận + link + 3 CTA.</summary>
         private System.Windows.Forms.Control DungCardVirusTotal()
         {
-            var grp = new GroupBox { Text = "VirusTotal", Dock = DockStyle.Fill, Margin = new Padding(6, 0, 0, 0) };
+            var grp = new UiGroup { Text = "VirusTotal", Dock = DockStyle.Fill, Margin = new Padding(6, 0, 0, 0) };
             Theme.StyleCard(grp);
             var t = new TableLayoutPanel { ColumnCount = 1, Dock = DockStyle.Fill, Padding = new Padding(6, 2, 6, 4) };
             t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -398,7 +391,14 @@ namespace ScanAndRemoveVirus.Control
             Theme.StyleGrid(dgvVtVendors);
             t.Controls.Add(lblVtVendorNote, 0, 0);
             t.Controls.Add(dgvVtVendors, 0, 1);
-            return t;
+            var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, BackColor = Color.White, Margin = Padding.Empty };
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 228));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            root.Controls.Add(DungCardVirusTotal(), 0, 0);
+            root.Controls.Add(t, 0, 1);
+            SketchUi.Grid(dgvVtVendors);
+            return root;
         }
 
         /// <summary>Tab 3 — Hành vi: lý do phát hiện + dấu vết đã gắn cho tệp (MOTW, thuộc tính ẩn…).</summary>
@@ -437,6 +437,7 @@ namespace ScanAndRemoveVirus.Control
                 HeaderText = "Chuỗi / marker đáng ngờ", FillWeight = 100F
             });
             Theme.StyleGrid(dgvChuoiKyTu);
+            SketchUi.Grid(dgvChuoiKyTu);
             t.Controls.Add(lblChuoiEmpty, 0, 0);
             t.Controls.Add(dgvChuoiKyTu, 0, 1);
             return t;
@@ -518,7 +519,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (threatRows.Count == 0)
             {
-                MessageBox.Show("Chưa có kết quả quét nào để xem chi tiết. Hãy chạy một phiên quét trước.",
+                AppDialog.Show("Chưa có kết quả quét nào để xem chi tiết. Hãy chạy một phiên quét trước.",
                     "Chi tiết kết quả quét", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -559,6 +560,7 @@ namespace ScanAndRemoveVirus.Control
             CapNhatVtPanel(r);
             if (tabChiTietDong != null && tabChiTietDong.SelectedIndex != 0) tabChiTietDong.SelectedIndex = 0;
             NapTabChiTiet(index, 0);
+            SyncSketchDetail();
         }
 
         /// <summary>Tính MD5/SHA1/SHA256 trên luồng nền (không đọc lại nhiều lần nếu đã có).</summary>
@@ -889,13 +891,13 @@ namespace ScanAndRemoveVirus.Control
                 if (string.IsNullOrEmpty(hash) && File.Exists(r.Path)) hash = ScanEngine.ComputeFileSha256(r.Path);
                 if (string.IsNullOrEmpty(hash))
                 {
-                    MessageBox.Show("Chưa tính được SHA256 (tệp đã bị xóa hoặc không đọc được).",
+                    AppDialog.Show("Chưa tính được SHA256 (tệp đã bị xóa hoặc không đọc được).",
                         "Sao chép hash", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
                 r.HashSha256 = hash;
                 if (SaoChepVaoClipboard(hash))
-                    MessageBox.Show("Đã sao chép SHA256 đầy đủ vào clipboard.", "Sao chép hash",
+                    AppDialog.Show("Đã sao chép SHA256 đầy đủ vào clipboard.", "Sao chép hash",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -908,7 +910,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 if (r.Deleted)
                 {
-                    MessageBox.Show("Tệp này đã bị xóa khỏi máy nên không còn thao tác nào áp dụng được.",
+                    AppDialog.Show("Tệp này đã bị xóa khỏi máy nên không còn thao tác nào áp dụng được.",
                         "Thao tác theo dòng", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
@@ -926,7 +928,7 @@ namespace ScanAndRemoveVirus.Control
 
             if (action == 2)
             {
-                DialogResult answer = MessageBox.Show(
+                DialogResult answer = AppDialog.Show(
                     "Xóa vĩnh viễn tệp này khỏi máy tính?\n" + r.Path + "\nHành động này không thể hoàn tác.",
                     "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (answer != DialogResult.Yes) return;
@@ -937,12 +939,12 @@ namespace ScanAndRemoveVirus.Control
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Không xóa được tệp (có thể đang bị tiến trình khác giữ): " + ex.Message,
+                    AppDialog.Show("Không xóa được tệp (có thể đang bị tiến trình khác giữ): " + ex.Message,
                         "Xóa tệp", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 BoDongTrongBangDeDoa(r.Path);
-                MessageBox.Show("Đã xóa vĩnh viễn tệp khỏi máy tính.", "Xóa tệp",
+                AppDialog.Show("Đã xóa vĩnh viễn tệp khỏi máy tính.", "Xóa tệp",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -951,14 +953,14 @@ namespace ScanAndRemoveVirus.Control
                 {
                     if (!ScanEngine.Quarantine(r.Path, r.ThreatText))
                     {
-                        MessageBox.Show("Không cách ly được tệp (có thể đang bị khoá).", "Cách ly",
+                        AppDialog.Show("Không cách ly được tệp (có thể đang bị khoá).", "Cách ly",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }
                 r.Quarantined = true;   // tệp không còn ở vị trí cũ: coi như đã được xử lý
                 BoDongTrongBangDeDoa(r.Path);
-                MessageBox.Show("Đã cách ly tệp vào khu cách ly của app.", "Cách ly",
+                AppDialog.Show("Đã cách ly tệp vào khu cách ly của app.", "Cách ly",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
@@ -985,7 +987,7 @@ namespace ScanAndRemoveVirus.Control
             string gia = lbl.Text;
             if (string.IsNullOrEmpty(gia) || gia == "—" || gia == "Đang tính…" || gia.StartsWith("Không đọc"))
             {
-                MessageBox.Show("Chưa có giá trị để sao chép.", "Sao chép",
+                AppDialog.Show("Chưa có giá trị để sao chép.", "Sao chép",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -998,7 +1000,7 @@ namespace ScanAndRemoveVirus.Control
             try { Clipboard.SetText(noiDung); return true; }
             catch (Exception)
             {
-                MessageBox.Show("Không sao chép được vào clipboard (clipboard đang bị chiếm).",
+                AppDialog.Show("Không sao chép được vào clipboard (clipboard đang bị chiếm).",
                     "Sao chép", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
@@ -1030,7 +1032,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không mở được trình duyệt: " + ex.Message, "Mở liên kết",
+                AppDialog.Show("Không mở được trình duyệt: " + ex.Message, "Mở liên kết",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -1041,7 +1043,7 @@ namespace ScanAndRemoveVirus.Control
         {
             if (threatRows.Count == 0)
             {
-                MessageBox.Show("Chưa có kết quả quét nào để xuất báo cáo. Hãy chạy một phiên quét trước.",
+                AppDialog.Show("Chưa có kết quả quét nào để xuất báo cáo. Hãy chạy một phiên quét trước.",
                     "Xuất báo cáo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1059,11 +1061,11 @@ namespace ScanAndRemoveVirus.Control
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Không ghi được tệp báo cáo: " + ex.Message, "Xuất báo cáo",
+                    AppDialog.Show("Không ghi được tệp báo cáo: " + ex.Message, "Xuất báo cáo",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-                if (MessageBox.Show("Đã xuất báo cáo:\n" + dlg.FileName + "\n\nMở tệp ngay?",
+                if (AppDialog.Show("Đã xuất báo cáo:\n" + dlg.FileName + "\n\nMở tệp ngay?",
                         "Xuất báo cáo", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                     MoUrl(dlg.FileName);
             }
@@ -1110,8 +1112,6 @@ namespace ScanAndRemoveVirus.Control
         }
     }
 }
-
-
 
 
 

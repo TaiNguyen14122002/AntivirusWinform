@@ -82,6 +82,7 @@ namespace ScanAndRemoveVirus.Control
             dgvQuarantine.CellFormatting += Grid_CellFormatting;
 
             ScanEngine.QuarantineChanged += OnQuarantineChanged;
+            BuildSketchQuarantine();
             RefreshData();
         }
 
@@ -137,14 +138,20 @@ namespace ScanAndRemoveVirus.Control
 
                 lblTotalFilesValue.Text = table.Rows.Count.ToString();
                 SyncButtons();
+                SyncSketchQuarantine();
             }
             catch (Exception ex)
             {
                 dgvQuarantine.Rows.Clear();
                 lblTotalFilesValue.Text = "0";
                 SyncButtons();
-                MessageBox.Show("Không thể tải danh sách tệp cách ly từ SQL Server.\n\n" + ex.Message,
-                    "Cách ly", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SyncSketchQuarantine();
+                if (sketchQuarantineStatus != null)
+                {
+                    sketchQuarantineStatus.Text = "Chưa kết nối được cơ sở dữ liệu. Nhấn Làm mới sau khi kiểm tra kết nối SQL Server.";
+                    sketchQuarantineStatus.ForeColor = Theme.Amber;
+                }
+                System.Diagnostics.Debug.WriteLine(ex);
             }
         }
 
@@ -218,7 +225,7 @@ namespace ScanAndRemoveVirus.Control
             List<QuarantineRow> items = CollectItems(TickedRows());
             if (items.Count == 0)
             {
-                MessageBox.Show("Hãy tích ô Chọn ở dòng cần khôi phục.", "Khôi phục",
+                AppDialog.Show("Hãy tích ô Chọn ở dòng cần khôi phục.", "Khôi phục",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -231,7 +238,7 @@ namespace ScanAndRemoveVirus.Control
             List<QuarantineRow> items = CollectItems(dgvQuarantine.Rows);
             if (items.Count == 0) return;
 
-            DialogResult answer = MessageBox.Show(
+            DialogResult answer = AppDialog.Show(
                 "Khôi phục toàn bộ " + items.Count + " tệp về vị trí cũ?",
                 "Khôi phục tất cả", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (answer != DialogResult.Yes) return;
@@ -271,7 +278,7 @@ namespace ScanAndRemoveVirus.Control
             string details = string.Join("\n\n", warnings.Take(10));
             if (warnings.Count > 10) details += "\n\n... và " + (warnings.Count - 10) + " tệp khác.";
 
-            return MessageBox.Show(
+            return AppDialog.Show(
                 "Cảnh báo — " + warnings.Count + " tệp vẫn được phát hiện là nguy hiểm:\n\n" +
                 details + "\n\nVẫn khôi phục chúng về máy?",
                 "Bảo vệ tệp: tệp cách ly còn nghi vấn",
@@ -283,12 +290,12 @@ namespace ScanAndRemoveVirus.Control
             List<QuarantineRow> items = CollectItems(TickedRows());
             if (items.Count == 0)
             {
-                MessageBox.Show("Hãy tích ô Chọn ở dòng cần xóa vĩnh viễn.", "Xóa",
+                AppDialog.Show("Hãy tích ô Chọn ở dòng cần xóa vĩnh viễn.", "Xóa",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            if (MessageBox.Show(
+            if (AppDialog.Show(
                 "Xóa vĩnh viễn " + items.Count + " tệp đã cách ly?\n\nThao tác này không thể hoàn tác.",
                 "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                 return;
@@ -305,7 +312,7 @@ namespace ScanAndRemoveVirus.Control
 
         private static void ShowOperationResult(string title, int success, int failed)
         {
-            MessageBox.Show(
+            AppDialog.Show(
                 failed == 0 ? "Thành công: " + success + " tệp."
                             : "Thành công: " + success + "\nKhông thể xử lý: " + failed,
                 title, MessageBoxButtons.OK,

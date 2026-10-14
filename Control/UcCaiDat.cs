@@ -1,4 +1,4 @@
-/*using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -117,7 +117,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không lưu được tệp cài đặt: " + ex.Message,
+                AppDialog.Show("Không lưu được tệp cài đặt: " + ex.Message,
                     "Cài đặt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -127,14 +127,14 @@ namespace ScanAndRemoveVirus.Control
                 ? (startupOk ? "\nĐã đăng ký chạy cùng Windows." : "\nKHÔNG đăng ký được chạy cùng Windows (registry từ chối).")
                 : (startupOk ? "\nĐã bỏ đăng ký chạy cùng Windows." : "");
             lblSavedAt.Text = "Đã lưu lúc " + DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy");
-            MessageBox.Show("Cài đặt đã lưu." + note, "Cài đặt",
+            AppDialog.Show("Cài đặt đã lưu." + note, "Cài đặt",
                 MessageBoxButtons.OK,
                 startupOk ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
 
         private void BtnResetDefaults_Click(object sender, EventArgs e)
         {
-            var r = MessageBox.Show(
+            var r = AppDialog.Show(
                 "Khôi phục toàn bộ thiết lập về mặc định?\n\n"
                 + "Bật: thông báo, guard USB/Tải về/Hành vi/Startup/Chặn-restore.\n"
                 + "Tắt: tự cập nhật, gửi mẫu, tra VT tự động.\n"
@@ -165,7 +165,7 @@ namespace ScanAndRemoveVirus.Control
             try
             {
                 List<string> files = TestSamples.Create();
-                MessageBox.Show(
+                AppDialog.Show(
                     "Đã tạo " + files.Count + " tệp mẫu VÔ HẠI tại:\n" + TestSamples.FolderPath
                     + "\n\n• 4 tệp khớp kỹ thuật 1 (chữ ký prefix ×2 gồm cả .js / hash SHA256 / tên 'eicar')"
                     + "\n• 4 tệp khớp kỹ thuật 2 (đuôi kép / PowerShell độc / VBS downloader / exe ẩn mồi câu)"
@@ -175,7 +175,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không tạo được tệp mẫu: " + ex.Message,
+                AppDialog.Show("Không tạo được tệp mẫu: " + ex.Message,
                     "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -190,7 +190,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không mở được thư mục dữ liệu: " + ex.Message,
+                AppDialog.Show("Không mở được thư mục dữ liệu: " + ex.Message,
                     "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -203,18 +203,18 @@ namespace ScanAndRemoveVirus.Control
                 if (File.Exists(ScanEngine.ScanCachePath))
                 {
                     File.Delete(ScanEngine.ScanCachePath);
-                    MessageBox.Show("Đã xóa cache kết quả quét.\nLần quét kế tiếp sẽ đọc lại toàn bộ tệp từ đĩa.",
+                    AppDialog.Show("Đã xóa cache kết quả quét.\nLần quét kế tiếp sẽ đọc lại toàn bộ tệp từ đĩa.",
                         "Xóa cache", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Không có cache nào cần xóa (sẽ tạo lại khi quét).\nCache trong phiên đã được giải phóng.",
+                    AppDialog.Show("Không có cache nào cần xóa (sẽ tạo lại khi quét).\nCache trong phiên đã được giải phóng.",
                         "Xóa cache", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Xóa cache thất bại: " + ex.Message,
+                AppDialog.Show("Xóa cache thất bại: " + ex.Message,
                     "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -232,7 +232,7 @@ namespace ScanAndRemoveVirus.Control
             string key = (txtVtKey.Text ?? "").Trim();
             if (key.Length == 0)
             {
-                MessageBox.Show("Hãy dán API key vào ô trống trước đã.",
+                AppDialog.Show("Hãy dán API key vào ô trống trước đã.",
                     "VirusTotal", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -245,7 +245,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không lưu được API key: " + ex.Message,
+                AppDialog.Show("Không lưu được API key: " + ex.Message,
                     "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -261,7 +261,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không xóa được tệp key: " + ex.Message,
+                AppDialog.Show("Không xóa được tệp key: " + ex.Message,
                     "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -415,6 +415,7 @@ namespace ScanAndRemoveVirus.Control
             // =====================================================
 
             LoadSettingsIntoUi();
+            BuildSketchSettings();
         }
 
         // =========================================================
@@ -588,7 +589,7 @@ namespace ScanAndRemoveVirus.Control
 
                 if (settings == null)
                 {
-                    MessageBox.Show(
+                    AppDialog.Show(
                         "Không đọc được cài đặt hiện tại.",
                         "Cài đặt",
                         MessageBoxButtons.OK,
@@ -628,7 +629,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Không lưu được cài đặt:\n" +
                     ex.Message,
                     "Cài đặt",
@@ -673,7 +674,7 @@ namespace ScanAndRemoveVirus.Control
                 DateTime.Now.ToString(
                     "HH:mm:ss dd/MM/yyyy");
 
-            MessageBox.Show(
+            AppDialog.Show(
                 "Cài đặt đã lưu." + note,
                 "Cài đặt",
                 MessageBoxButtons.OK,
@@ -693,7 +694,7 @@ namespace ScanAndRemoveVirus.Control
             EventArgs e)
         {
             DialogResult result =
-                MessageBox.Show(
+                AppDialog.Show(
                     "Khôi phục toàn bộ thiết lập về mặc định?\n\n" +
                     "Bật: thông báo, guard USB/Tải về/Hành vi/" +
                     "Startup/Chặn-restore.\n" +
@@ -772,7 +773,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Không khôi phục được cài đặt:\n" +
                     ex.Message,
                     "Cài đặt",
@@ -794,7 +795,7 @@ namespace ScanAndRemoveVirus.Control
                 List<string> files =
                     TestSamples.Create();
 
-                MessageBox.Show(
+                AppDialog.Show(
                     "Đã tạo " +
                     files.Count +
                     " tệp mẫu VÔ HẠI tại:\n" +
@@ -814,7 +815,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Không tạo được tệp mẫu:\n" +
                     ex.Message,
                     "Lỗi",
@@ -868,7 +869,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Không mở được thư mục dữ liệu:\n" +
                     ex.Message,
                     "Lỗi",
@@ -902,7 +903,7 @@ namespace ScanAndRemoveVirus.Control
                     File.Delete(
                         ScanEngine.ScanCachePath);
 
-                    MessageBox.Show(
+                    AppDialog.Show(
                         "Đã xóa cache kết quả quét.\n" +
                         "Lần quét kế tiếp sẽ đọc lại toàn bộ " +
                         "tệp từ đĩa.",
@@ -912,7 +913,7 @@ namespace ScanAndRemoveVirus.Control
                 }
                 else
                 {
-                    MessageBox.Show(
+                    AppDialog.Show(
                         "Không có cache nào cần xóa.\n" +
                         "Cache trong phiên đã được giải phóng.",
                         "Xóa cache",
@@ -922,7 +923,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Xóa cache thất bại:\n" +
                     ex.Message,
                     "Lỗi",
@@ -971,7 +972,7 @@ namespace ScanAndRemoveVirus.Control
 
             if (key.Length == 0)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Hãy nhập API key trước.",
                     "VirusTotal",
                     MessageBoxButtons.OK,
@@ -996,7 +997,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Không lưu được API key:\n" +
                     ex.Message,
                     "Lỗi",
@@ -1025,7 +1026,7 @@ namespace ScanAndRemoveVirus.Control
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                AppDialog.Show(
                     "Không xóa được tệp key:\n" +
                     ex.Message,
                     "Lỗi",

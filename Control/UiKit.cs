@@ -168,7 +168,7 @@ namespace ScanAndRemoveVirus.Control
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            UiKit.Fill(e.Graphics, new Rectangle(0, 0, Width, Height), Radius, FillColor, BorderColor, ShowBorder ? 1f : 0f);
+            UiKit.Fill(e.Graphics, new Rectangle(0, 0, Width, Height), Radius, FillColor, BorderColor, ShowBorder ? 1.25f : 0f);
         }
     }
 
@@ -239,7 +239,7 @@ namespace ScanAndRemoveVirus.Control
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             UiKit.Fill(e.Graphics, new Rectangle(0, 0, Width, Height), Radius, FillColor, BorderColor,
-                ShowBorder ? 1f : 0f);
+                ShowBorder ? 1.25f : 0f);
             if (string.IsNullOrEmpty(Text)) return;
             // Tiêu đề nằm BÊN TRONG thẻ (không đè lên viền) — cùng vị trí/cỡ chữ với UiCard.
             TextRenderer.DrawText(e.Graphics, Text, HeadFont,
@@ -277,8 +277,9 @@ namespace ScanAndRemoveVirus.Control
 
         public override Size GetPreferredSize(Size proposed)
         {
-            Size t = TextRenderer.MeasureText(text, Font);
-            return new Size(t.Width + 18, Math.Max(22, t.Height + 6));
+            var flags = TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine;
+            Size t = TextRenderer.MeasureText(text ?? "", Font, Size.Empty, flags);
+            return new Size(Math.Max(32, t.Width + 16), Math.Max(24, t.Height + 6));
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -512,7 +513,7 @@ namespace ScanAndRemoveVirus.Control
                         g.FillPath(brush, path);
 
                 if (border.A > 0)
-                    using (Pen pen = new Pen(border, 1f))
+                    using (Pen pen = new Pen(border, 1.2f))
                     {
                         pen.Alignment = PenAlignment.Inset;
                         g.DrawPath(pen, path);
@@ -522,15 +523,16 @@ namespace ScanAndRemoveVirus.Control
             string caption = Text ?? string.Empty;
             Size textSize = TextRenderer.MeasureText(
                 caption, Font, Size.Empty, TextFormatFlags.NoPadding);
-            int iconWidth = Icon == null ? 0 : Icon.Width;
-            int gap = iconWidth == 0 ? 0 : IconGap;
+            Image displayIcon = Icon ?? Image;
+            int iconWidth = displayIcon == null ? 0 : displayIcon.Width;
+            int gap = iconWidth == 0 || string.IsNullOrEmpty(caption) ? 0 : IconGap;
             int totalWidth = iconWidth + gap + textSize.Width;
             int x = Math.Max(8, (Width - totalWidth) / 2);
 
-            if (Icon != null)
+            if (displayIcon != null)
             {
-                int y = (Height - Icon.Height) / 2;
-                g.DrawImage(Icon, x, y, Icon.Width, Icon.Height);
+                int y = (Height - displayIcon.Height) / 2;
+                g.DrawImage(displayIcon, x, y, displayIcon.Width, displayIcon.Height);
                 x += iconWidth + gap;
             }
 
@@ -861,7 +863,7 @@ namespace ScanAndRemoveVirus.Control
             {
                 using (var brush = new SolidBrush(fill))
                     g.FillPath(brush, path);
-                using (var pen = new Pen(border, Checked ? 1.6f : 1f))
+                using (var pen = new Pen(border, Checked ? 1.7f : 1.25f))
                 {
                     pen.Alignment = PenAlignment.Inset;
                     g.DrawPath(pen, path);

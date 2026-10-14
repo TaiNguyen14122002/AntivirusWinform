@@ -75,7 +75,7 @@ namespace ScanAndRemoveVirus.Control
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Không bật được bảo vệ thời gian thực: " + ex.Message,
+                        AppDialog.Show("Không bật được bảo vệ thời gian thực: " + ex.Message,
                             "Bảo vệ thời gian thực", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     FeatureFlags.RealTimeOn = RealTimeProtection.IsRunning;
@@ -112,6 +112,7 @@ namespace ScanAndRemoveVirus.Control
             RealTimeProtection.ThreatDetected += OnThreatDetected;
             GuardService.ThreatDetected += OnThreatDetected;
             FeatureFlags.Changed += OnFlagsChanged;
+            BuildSketchProtection();
             SyncRealFeaturesUi();
             SyncProtectionStats();
         }
@@ -163,6 +164,7 @@ namespace ScanAndRemoveVirus.Control
 
             lblScannedFilesValue.Text = ScanHistoryStore.TotalFilesScanned().ToString("N0");
             lblBlockedThreaetsValue.Text = ScanHistoryStore.TotalThreatsDetected().ToString("N0");
+            SyncSketchProtection();
         }
 
         // Mở lại tab -> refresh (số liệu có thể đổi do quét/RT ở tab khác)
@@ -205,6 +207,7 @@ namespace ScanAndRemoveVirus.Control
                 if (string.IsNullOrEmpty(key)) continue;
                 SetFeatureState(row, IsOn(key));
             }
+            SyncSketchProtection();
         }
 
         private void SetFeatureState(DataGridViewRow row, bool on)
@@ -233,20 +236,20 @@ namespace ScanAndRemoveVirus.Control
                     if (!FeatureFlags.ThreatAlerts) return; // chế độ im lặng — lịch sử vẫn ghi ở tầng service
                     if (RealTimeProtection.AutoQuarantine)
                     {
-                        MessageBox.Show(
+                        AppDialog.Show(
                             "Bảo vệ thời gian thực đã cách ly:\n" + threat.FilePath
                             + "\n\nPhát hiện [" + threat.Kind + "]: " + threat.Reason,
                             "Mối đe dọa bị chặn",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-                    var answer = MessageBox.Show(
+                    var answer = AppDialog.Show(
                         threat.FilePath + "\n\nPhát hiện [" + threat.Kind + "]: " + threat.Reason
                         + "\n\nCách ly tệp này ngay?",
                         "Bảo vệ thời gian thực: mối đe dọa mới",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (answer == DialogResult.Yes && ScanEngine.Quarantine(threat.FilePath))
-                        MessageBox.Show("Đã chuyển tệp vào khu cách ly.", "Cách ly",
+                        AppDialog.Show("Đã chuyển tệp vào khu cách ly.", "Cách ly",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }));
             }

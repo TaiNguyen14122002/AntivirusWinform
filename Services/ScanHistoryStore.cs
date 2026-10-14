@@ -284,23 +284,24 @@ namespace ScanAndRemoveVirus.Services
         // ADD
         // =========================================================
 
-        public static void Add(
+        public static long Add(
             string type,
             string scope,
             int files,
             int threats,
             double seconds)
         {
-            AddEntry(
-                new HistoryEntry
-                {
-                    Time = DateTime.Now,
-                    Type = type ?? "",
-                    Scope = scope ?? "",
-                    Files = files,
-                    Threats = threats,
-                    Seconds = seconds
-                });
+            var entry = new HistoryEntry
+            {
+                Time = DateTime.Now,
+                Type = type ?? "",
+                Scope = scope ?? "",
+                Files = files,
+                Threats = threats,
+                Seconds = seconds
+            };
+            AddEntry(entry);
+            return entry.ScanID;
         }
 
         /// <summary>
@@ -476,52 +477,69 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT);";
                     using (var conn = DbConnection.Create())
                     using (var cmd = conn.CreateCommand())
                     {
-                        if (entry.ScanID > 0)
-                        {
-                            cmd.CommandText = @"
-DELETE FROM dbo.ScanHistory
-WHERE ScanID = @ScanID;";
+                        cmd.CommandText = @"
+SET XACT_ABORT ON;
 
-                            cmd.Parameters.Add(
-                                "@ScanID",
-                                SqlDbType.BigInt).Value =
-                                entry.ScanID;
-                        }
-                        else
-                        {
-                            cmd.CommandText = @"
-DELETE FROM dbo.ScanHistory
-WHERE ScanID =
-(
-    SELECT TOP (1) ScanID
+DECLARE @TargetScanID BIGINT = @ScanID;
+
+IF ISNULL(@TargetScanID, 0) <= 0
+BEGIN
+    SELECT TOP (1) @TargetScanID = ScanID
     FROM dbo.ScanHistory
     WHERE StartedAt = @StartedAt
       AND ISNULL(ActivityTitle, '') = @ActivityTitle
       AND ISNULL(ScanLocation, '') = @ScanLocation
-    ORDER BY ScanID ASC
-);";
+    ORDER BY ScanID ASC;
+END;
 
-                            cmd.Parameters.Add(
-                                "@StartedAt",
-                                SqlDbType.DateTime2).Value =
-                                entry.Time;
+IF ISNULL(@TargetScanID, 0) <= 0
+BEGIN
+    SELECT CAST(0 AS INT);
+    RETURN;
+END;
 
-                            cmd.Parameters.Add(
-                                "@ActivityTitle",
-                                SqlDbType.NVarChar,
-                                200).Value =
-                                Clean(entry.Type);
+BEGIN TRANSACTION;
 
-                            cmd.Parameters.Add(
-                                "@ScanLocation",
-                                SqlDbType.NVarChar,
-                                1000).Value =
-                                Clean(entry.Scope);
-                        }
+-- ThreatDetections.ScanID có FK tới ScanHistory. Giữ nguyên dữ liệu phát hiện/cách ly,
+-- chỉ gỡ liên kết với phiên lịch sử trước khi xóa bản ghi cha.
+UPDATE dbo.ThreatDetections
+SET ScanID = NULL
+WHERE ScanID = @TargetScanID;
+
+DELETE FROM dbo.ScanHistory
+WHERE ScanID = @TargetScanID;
+
+DECLARE @Deleted INT = @@ROWCOUNT;
+COMMIT TRANSACTION;
+
+SELECT @Deleted;";
+
+                        cmd.Parameters.Add(
+                            "@ScanID",
+                            SqlDbType.BigInt).Value =
+                            entry.ScanID;
+
+                        cmd.Parameters.Add(
+                            "@StartedAt",
+                            SqlDbType.DateTime2).Value =
+                            entry.Time;
+
+                        cmd.Parameters.Add(
+                            "@ActivityTitle",
+                            SqlDbType.NVarChar,
+                            200).Value =
+                            Clean(entry.Type);
+
+                        cmd.Parameters.Add(
+                            "@ScanLocation",
+                            SqlDbType.NVarChar,
+                            1000).Value =
+                            Clean(entry.Scope);
 
                         conn.Open();
 
-                        return cmd.ExecuteNonQuery() > 0;
+                        object deleted = cmd.ExecuteScalar();
+                        return deleted != null && deleted != DBNull.Value && Convert.ToInt32(deleted) > 0;
                     }
                 }
                 catch (Exception)

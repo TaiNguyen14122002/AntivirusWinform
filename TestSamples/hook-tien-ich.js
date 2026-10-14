@@ -1,1 +1,0 @@
-XVIRUS-TEST-SIGNATURE::javascript-sig-mock

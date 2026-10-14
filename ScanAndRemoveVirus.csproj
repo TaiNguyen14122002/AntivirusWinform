@@ -9,6 +9,7 @@
     <RootNamespace>ScanAndRemoveVirus</RootNamespace>
     <AssemblyName>ScanAndRemoveVirus</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>7.3</LangVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <PreferNativeArm64>true</PreferNativeArm64>
@@ -77,8 +78,22 @@
       <DependentUpon>UcLichSu.cs</DependentUpon>
     </Compile>
     <Compile Include="Control\Theme.cs" />
+    <Compile Include="Control\AppDialog.cs" />
+    <Compile Include="FrmMain.Sketch20.cs" />
+    <Compile Include="Control\Sketch20Backend.cs" />
+    <Compile Include="Control\Sketch20Kit.cs" />
+    <Compile Include="Control\Sketch20Artwork.cs" />
+    <Compile Include="Control\Sketch20ReferenceAssets.cs" />
+    <Compile Include="Control\Sketch20ReferencePages.cs" />
+    <Compile Include="Control\Sketch20Chrome.cs" />
+    <Compile Include="Control\Sketch20Inputs.cs" />
+    <Compile Include="Control\Sketch20Samples.cs" />
+    <Compile Include="Control\Sketch20View.cs" />
+    <Compile Include="Control\SketchUi.cs" />
+    <Compile Include="Control\UcScreens.Sketch.cs" />
     <Compile Include="Control\UiIcons.cs" />
     <Compile Include="Control\UiKit.cs" />
+    <Compile Include="Control\UiSelect.cs" />
     <Compile Include="Control\LoadingSpinner.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -96,12 +111,10 @@
              Control\UcTongQuan.cs + Control\UcTongQuan.Designer.cs + UcTongQuan.resx
              (giong 4 UserControl/UcBaoVe, UcCachLy, UcLichSu, UcCaiDat dang chay tot).
          Designer cua trang chi mo tu Control\UcTongQuan.cs. -->
-    <Compile Include="Control\UcTongQuan.ChiTiet.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Control\UcTongQuan.QuetNangCao.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Control\UcTongQuan.Dashboard.cs" />
+    <Compile Include="Control\UcTongQuan.SketchDetails.cs" />
+    <Compile Include="Control\UcTongQuan.ChiTiet.cs" />
+    <Compile Include="Control\UcTongQuan.QuetNangCao.cs" />
     <Compile Include="Control\UcTongQuan.Designer.cs">
       <DependentUpon>UcTongQuan.cs</DependentUpon>
     </Compile>
@@ -170,6 +183,5 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

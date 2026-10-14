@@ -17,6 +17,16 @@ namespace ScanAndRemoveVirus
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            int sketchAt = args == null ? -1 : Array.IndexOf(args, "--phac-thao");
+            if (sketchAt >= 0)
+            {
+                int screen = 1;
+                if (sketchAt + 1 < args.Length) int.TryParse(args[sketchAt + 1], out screen);
+                if (screen < 1 || screen > 20) screen = 1;
+                Application.Run(new Control.Sketch20PreviewForm(screen));
+                return;
+            }
+
             // --shot <file.png>: render giao diện ra ảnh bằng DrawToBitmap rồi thoát.
             // Dùng khi cần ảnh "thật" của app: mọi cách chụp màn hình (CopyFromScreen,
             // PrintWindow, BitBlt từ DC cửa sổ) đều trả ảnh chồng hình trên cửa sổ

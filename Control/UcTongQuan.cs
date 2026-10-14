@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ScanAndRemoveVirus.Services;
+using ScanAndRemoveVirus.Database;
 
 namespace ScanAndRemoveVirus.Control
 {
@@ -73,11 +74,11 @@ namespace ScanAndRemoveVirus.Control
         private int lastScannedFiles;
         private int detailRowIndex = -1;    // dòng đang chọn ở trang (c)
         private const int MaxActivityRows = 100;   // trần số dòng nạp vào bảng "Hoạt động gần đây"
-        private const float HeroHeight = 320F;     // hàng hero (a)/(b) của tableLayoutPanel12: panel 316 + 2 lề 2px
-        private const float ThongKeHeight = 104F;  // hàng 3 thẻ số liệu của tableLayoutPanel12: panel 100 + 2 lề 2px (chỉ ở (a)/(b))
+        private const float HeroHeight = 252F;     // hàng hero (a)/(b) của tableLayoutPanel12: panel 316 + 2 lề 2px
+        private const float ThongKeHeight = 152F;  // hàng 3 thẻ số liệu của tableLayoutPanel12: panel 100 + 2 lề 2px (chỉ ở (a)/(b))
         private const float LoadingHeight = 46F;   // hàng 0 của tableLayoutPanel11 — dải loading quét (lần 9): panel 46px khi quét, 0px khi rảnh
-        private const int RongToiThieu = 980;      // (Theme.ScrollablePage) bề rộng tối thiểu vùng Tổng quan ở (a)/(b)/(c)
-        private const int CaoToiThieu = 640;       // chiều cao tối thiểu vùng Tổng quan (mọi màn hình): nhỏ hơn -> cuộn dọc
+        private const int RongToiThieu = 700;      // (Theme.ScrollablePage) bề rộng tối thiểu vùng Tổng quan ở (a)/(b)/(c)
+        private const int CaoToiThieu = 560;       // chiều cao tối thiểu vùng Tổng quan (mọi màn hình): nhỏ hơn -> cuộn dọc
 
         /// <summary>Một dòng đe dọa hiển thị ở (b)/(c) — gộp dữ liệu ScanEngine + VirusTotal.</summary>
         internal sealed class ThreatRow
@@ -127,10 +128,11 @@ namespace ScanAndRemoveVirus.Control
             // Responsive: cửa sổ nhỏ -> cuộn thay vì cắt nội dung (ngưỡng 980x640; trạng thái (a) cần tối
             // thiểu hero 320 + hàng 3 thẻ số liệu 104 = 424px + lề, phần còn lại là thẻ "Hoạt động gần đây").
             // Riêng trang (d) tự xếp lại theo bề rộng nên HienThi() hạ bề rộng tối thiểu (lần 7).
-            Theme.ScrollablePage(this, tableLayoutPanel11, RongToiThieu, CaoToiThieu);
+            // Dashboard tự tính vùng cuộn từ màn hình đang mở, bỏ qua các trang ẩn.
             ApplyTheme();
             BuildChiTietView();       // ruột trang (c) — UcTongQuan.ChiTiet.cs
             BuildQuetNangCaoView();   // ruột trang (d) — UcTongQuan.QuetNangCao.cs
+            BuildDashboard();
             WireEvents();
             HienThi(TongQuanView.AnToan, false);
             LoadProtectionStatus();
@@ -252,7 +254,7 @@ namespace ScanAndRemoveVirus.Control
         {
             // Hàng 3 thẻ số liệu là 3 Panel trơn (không phải GroupBox) — vạch chia do handler này vẽ,
             // nhờ vậy không phải thêm cột/khung vào pnlThongKe (Tests §3e đòi ColumnCount == 3).
-            pnlThongKe.Paint += PnlThongKe_Paint;
+            // Ba thẻ dashboard có viền riêng; không vẽ dải phân cách cũ.
             btnScanNow.Click += BtnScanNow_Click;
             btnQuetNangCao.Click += BtnQuetNangCao_Click;
             btnXemChiTiet.Click += delegate { MoChiTietKetQua(); };
@@ -293,6 +295,7 @@ namespace ScanAndRemoveVirus.Control
                 if (e.RowIndex >= 0) MoChiTietKetQua(e.RowIndex);
             };
             RealTimeProtection.StatusChanged += OnRealTimeStatus;
+            Disposed += delegate { RealTimeProtection.StatusChanged -= OnRealTimeStatus; };
         }
 
         // ================= ĐIỀU HƯỚNG GIỮA 4 MÀN HÌNH (a/b/c/d) =================
@@ -351,6 +354,7 @@ namespace ScanAndRemoveVirus.Control
             pnlQuetNangCao.Visible = view == TongQuanView.QuetNangCao;
             if (view == TongQuanView.QuetNangCao) OnMoTrangQuetNangCao();
 
+            UpdateDashboardExtent();
             if (!refresh) return;
             ApplyLastScanFromHistory();
             LoadActivity();
@@ -490,24 +494,43 @@ namespace ScanAndRemoveVirus.Control
             cts = new CancellationTokenSource();
             CancellationToken token = cts.Token;
             bool completed = false;
+            var progressGate = new object();
+            bool progressQueued = false;
+            int latestCount = 0;
+            string latestPath = null;
+            var progressClock = System.Diagnostics.Stopwatch.StartNew();
+            long lastProgressTime = -150;
             Action<int, string> progress = (count, current) =>
             {
+                lock (progressGate)
+                {
+                    latestCount = Math.Max(latestCount, count);
+                    if (current != null) latestPath = current;
+                    if (progressQueued || progressClock.ElapsedMilliseconds - lastProgressTime < 150) return;
+                    progressQueued = true;
+                }
                 try
                 {
                     BeginInvoke((MethodInvoker)(() =>
                     {
-                        lblScannedCount.Text = count.ToString("N0");
-                        if (current != null)
+                        int shownCount; string shownPath;
+                        lock (progressGate)
                         {
-                            lblScanProgress.Text = string.Format("Đang quét: {0}  ({1:N0} tệp)",
-                                current, count);
-                            // (lần 9) dải loading ở đầu trang bám đúng tiến trình của nhãn trạng thái quét
+                            shownCount = latestCount; shownPath = latestPath;
+                            lastProgressTime = progressClock.ElapsedMilliseconds;
+                            progressQueued = false;
+                        }
+                        if (!isScanning || token.IsCancellationRequested) return;
+                        lblScannedCount.Text = shownCount.ToString("N0");
+                        if (shownPath != null)
+                        {
+                            lblScanProgress.Text = string.Format("Đang quét: {0}  ({1:N0} tệp)", shownPath, shownCount);
                             CapNhatDongChiTietLoading(lblScanProgress.Text);
                         }
                     }));
                 }
-                catch (ObjectDisposedException) { } // form đã đóng giữa chừng
-                catch (InvalidOperationException) { }
+                catch (ObjectDisposedException) { lock (progressGate) progressQueued = false; }
+                catch (InvalidOperationException) { lock (progressGate) progressQueued = false; }
             };
 
             try
@@ -516,7 +539,7 @@ namespace ScanAndRemoveVirus.Control
                     ? new List<string>(job.Targets)
                     : null;
 
-                ScanResult result = await Task.Run(() =>
+                var worker = Task.Run(() =>
                 {
                     if (targets == null)
                         return ScanEngine.Scan(job.Type, job.CustomPath, token, progress);
@@ -525,14 +548,19 @@ namespace ScanAndRemoveVirus.Control
                     foreach (string target in targets)
                     {
                         token.ThrowIfCancellationRequested();
-                        ScanResult part = ScanEngine.Scan(ScanType.Custom, target, token, progress);
+                        int completedFiles = merged.FilesScanned;
+                        ScanResult part = ScanEngine.Scan(ScanType.Custom, target, token, (n, path) => progress(completedFiles + n, path));
                         merged.FilesScanned += part.FilesScanned;
                         merged.Duration += part.Duration;
                         foreach (ThreatFound t in part.Threats) merged.Threats.Add(t);
                     }
                     return merged;
-                });
+                }, token);
+                ScanResult result = await WaitForScan(worker, token);
 
+                // A cancel click can arrive after the worker finishes but before
+                // its continuation reaches the UI thread. Honor that request too.
+                token.ThrowIfCancellationRequested();
                 completed = true;
                 ApDungKetQuaQuet(result, job);
             }
@@ -541,7 +569,7 @@ namespace ScanAndRemoveVirus.Control
                 lblScanProgress.ForeColor = Theme.Amber;
                 lblScanProgress.Text = "Đã hủy phiên quét.";
                 CapNhatDongChiTietLoading("Đã hủy phiên quét.");
-                MessageBox.Show("Đã hủy phiên quét.", job.DisplayName,
+                AppDialog.Show("Đã hủy phiên quét.", job.DisplayName,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -549,7 +577,7 @@ namespace ScanAndRemoveVirus.Control
                 lblScanProgress.ForeColor = Theme.Red;
                 lblScanProgress.Text = "Quét dừng vì lỗi.";
                 CapNhatDongChiTietLoading("Quét dừng vì lỗi.");
-                MessageBox.Show("Quét dừng vì lỗi: " + ex.Message, job.DisplayName,
+                AppDialog.Show("Quét dừng vì lỗi: " + ex.Message, job.DisplayName,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -558,6 +586,27 @@ namespace ScanAndRemoveVirus.Control
                 if (cts != null) { cts.Dispose(); cts = null; }
             }
             return completed;
+        }
+
+        private static async Task<ScanResult> WaitForScan(Task<ScanResult> worker, CancellationToken token)
+        {
+            // Cancellation must release the UI even while the thread pool has not
+            // started this worker. The worker keeps its cancelled token and cannot
+            // apply results to a later scan session.
+            var cancelled = new TaskCompletionSource<bool>();
+            using (token.Register(() => cancelled.TrySetResult(true)))
+            {
+                if (await Task.WhenAny(worker, cancelled.Task) != worker)
+                {
+                    _ = worker.ContinueWith(t => { var observed = t.Exception; },
+                        CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default);
+                    // Leave the Cancel() callback before disposing its registration.
+                    await Task.Yield();
+                    token.ThrowIfCancellationRequested();
+                }
+                return await worker;
+            }
         }
 
         /// <summary>Hiển thị kết quả phiên quét: bảng đe dọa, 5 tab chi tiết, thống kê, lịch sử, thông báo.</summary>
@@ -571,27 +620,46 @@ namespace ScanAndRemoveVirus.Control
                 result.FilesScanned, result.Duration.TotalSeconds);
             lblScanProgress.ForeColor = result.HasThreats ? Theme.Amber : Theme.Green;
 
-            lblLastScanDate.Text = lastScanTime.ToString("dd/MM/yyyy  HH:mm");
-            lblLastScanType.Text = job.DisplayName;
+            lblLastScanDate.Text = lastScanTime.ToString("dd/MM/yyyy");
+            lblLastScanType.Text = lastScanTime.ToString("HH:mm") + " · " + job.DisplayName;
 
             LoadDetectedThreats(result);   // đổ vào dgvActions + threatRows (có lọc nếu quét từ (d))
             // Quét xong -> luôn rẽ nhánh về trạng thái (a) hoặc (b) (SPEC §6.1/§6.2)
             HienThi(dgvActions.Rows.Count > 0 ? TongQuanView.PhatHienDeDoa : TongQuanView.AnToan, false);
-            ScanHistoryStore.Add(job.DisplayName, job.ScopeText,
+            long scanId = ScanHistoryStore.Add(job.DisplayName, job.ScopeText,
                 result.FilesScanned, result.Threats.Count, result.Duration.TotalSeconds);
+            PersistScanThreats(scanId, result);
 
             if (job.AutoQuarantine) TuCachLyTheoPhien();
             AutoQueryHeuristicRows(result);      // hàng "Bảo vệ web" nếu đang bật
             LoadActivity();
             ApplyLastScanFromHistory();
 
-            MessageBox.Show(
+            AppDialog.Show(
                 result.HasThreats
                     ? string.Format("Phát hiện {0} mối đe dọa trong {1:N0} tệp. Hãy xử lý trong khu vực \"Mối đe dọa được phát hiện\" bên dưới.",
                         result.Threats.Count, result.FilesScanned)
                     : string.Format("Đã quét {0:N0} tệp, không phát hiện mối đe dọa.", result.FilesScanned),
                 job.DisplayName + " hoàn tất", MessageBoxButtons.OK,
                 result.HasThreats ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+        }
+
+        private static void PersistScanThreats(long scanId, ScanResult result)
+        {
+            if (scanId <= 0 || result == null || result.Threats.Count == 0) return;
+            var repository = new ThreatDetectionRepository();
+            foreach (ThreatFound threat in result.Threats)
+            {
+                try
+                {
+                    string path = threat.FilePath ?? "";
+                    var info = File.Exists(path) ? new FileInfo(path) : null;
+                    repository.Add(scanId, null, info == null ? Path.GetFileName(path) : info.Name, path,
+                        string.IsNullOrWhiteSpace(threat.Kind) ? threat.Reason : threat.Kind + ": " + threat.Reason,
+                        info == null ? (long?)null : info.Length, null, null, ScanEngine.ComputeFileSha256(path));
+                }
+                catch { /* lịch sử chi tiết là best-effort, không làm hỏng kết quả quét */ }
+            }
         }
 
         /// <summary>"Tự động cách ly khi phát hiện mối đe dọa" (tuỳ chọn của trang Quét nâng cao).</summary>
@@ -633,13 +701,14 @@ namespace ScanAndRemoveVirus.Control
             // ẩn ("Sẵn sàng quét" làm bẩn hero canh giữa của mockup); có phiên quét là hiện, và ở lại
             // cùng kết quả ("Hoàn tất…"/"Đã hủy…") sau khi phiên kết thúc.
             lblScanProgress.Visible = true;
-            lblScanProgress.ForeColor = Theme.Blue;
+            if (scanning) lblScanProgress.ForeColor = Theme.Blue;
             if (scanning)
                 lblScanProgress.Text = "Đang quét...";
             // (25/09/2026, lần 9) Dải loading quét: hiện NGAY khi phiên bắt đầu, ẩn khi phiên kết thúc
             // (xong / hủy / lỗi — `SetScanning(false)` nằm trong `finally` của ChayPhienQuet).
             HienThiDaiLoading(scanning);
             OnSetScanningAdvanced(scanning);
+            UpdateDashboardExtent();
         }
 
         // ================= DẢI LOADING QUÉT (25/09/2026, lần 9) =================
@@ -873,7 +942,7 @@ namespace ScanAndRemoveVirus.Control
             }
             UpdateThreatUi();
             RefreshDetailGrid();
-            MessageBox.Show(string.Format("Đã cách ly {0}/{1} tệp.", done, rows.Count),
+            AppDialog.Show(string.Format("Đã cách ly {0}/{1} tệp.", done, rows.Count),
                 "Cách ly", MessageBoxButtons.OK,
                 done == rows.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
@@ -886,7 +955,7 @@ namespace ScanAndRemoveVirus.Control
         private void DeleteRows(List<DataGridViewRow> rows)
         {
             if (rows == null || rows.Count == 0) return;
-            DialogResult answer = MessageBox.Show(
+            DialogResult answer = AppDialog.Show(
                 string.Format("Xóa vĩnh viễn {0} tệp khỏi máy tính? Hành động này không thể hoàn tác.", rows.Count),
                 "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (answer != DialogResult.Yes) return;
@@ -908,7 +977,7 @@ namespace ScanAndRemoveVirus.Control
             }
             UpdateThreatUi();
             RefreshDetailGrid();
-            MessageBox.Show(string.Format("Đã xóa {0}/{1} tệp.", done, rows.Count),
+            AppDialog.Show(string.Format("Đã xóa {0}/{1} tệp.", done, rows.Count),
                 "Xóa tệp", MessageBoxButtons.OK,
                 done == rows.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
@@ -934,7 +1003,7 @@ namespace ScanAndRemoveVirus.Control
             if (string.IsNullOrEmpty(path)) return;
             if (!File.Exists(path))
             {
-                MessageBox.Show("Tệp không còn ở vị trí cũ nên không tính được hash.",
+                AppDialog.Show("Tệp không còn ở vị trí cũ nên không tính được hash.",
                     "VirusTotal", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -945,7 +1014,7 @@ namespace ScanAndRemoveVirus.Control
                 if (key == null) return; // người dùng hủy
                 if (key.Length == 0)
                 {
-                    MessageBox.Show("Lấy API key miễn phí tại virustotal.com (Hồ sơ → API key), "
+                    AppDialog.Show("Lấy API key miễn phí tại virustotal.com (Hồ sơ → API key), "
                         + "hoặc tự tạo tệp:\n" + VirusTotalClient.ApiKeyPath,
                         "VirusTotal cần API key", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
@@ -996,7 +1065,7 @@ namespace ScanAndRemoveVirus.Control
                         && threatRows[detailRowIndex].Path == path)
                         NapPanelChiTiet(detailRowIndex);
                 }
-                MessageBox.Show(report.Summary(), "VirusTotal: " + verdict,
+                AppDialog.Show(report.Summary(), "VirusTotal: " + verdict,
                     MessageBoxButtons.OK,
                     report.IsMalicious ? MessageBoxIcon.Error : MessageBoxIcon.Information);
             }
@@ -1008,32 +1077,10 @@ namespace ScanAndRemoveVirus.Control
 
         private string NhapApiKeyDialog()
         {
-            using (var f = new Form())
-            {
-                f.Text = "API key VirusTotal";
-                f.FormBorderStyle = FormBorderStyle.FixedDialog;
-                f.StartPosition = FormStartPosition.CenterParent;
-                f.MinimizeBox = false;
-                f.MaximizeBox = false;
-                f.ClientSize = new Size(460, 150);
-                f.BackColor = Theme.PageBg;
-                var lbl = new Label
-                {
-                    Text = "Dán API key miễn phí (virustotal.com → Profile → API key).\n"
-                        + "App chỉ gửi hash SHA256 ra ngoài — KHÔNG upload nội dung tệp của bạn.",
-                    Left = 12, Top = 10, Width = 436, Height = 46, ForeColor = Theme.TextMid
-                };
-                var txt = new TextBox { Left = 12, Top = 62, Width = 436 };
-                var ok = new Button { Text = "Lưu", DialogResult = DialogResult.OK, Left = 272, Top = 100, Width = 85, Height = 32 };
-                var cancel = new Button { Text = "Hủy", DialogResult = DialogResult.Cancel, Left = 363, Top = 100, Width = 85, Height = 32 };
-                Theme.StyleButton(ok, Theme.BtnRole.Primary);
-                Theme.StyleButton(cancel, Theme.BtnRole.Neutral);
-                f.Controls.AddRange(new System.Windows.Forms.Control[] { lbl, txt, ok, cancel });
-                f.AcceptButton = ok;
-                f.CancelButton = cancel;
-                if (f.ShowDialog(FindForm()) != DialogResult.OK) return null;
-                return txt.Text.Trim();
-            }
+            return AppDialog.Prompt(FindForm(), "API key VirusTotal",
+                "Dán API key miễn phí (virustotal.com → Profile → API key).\n"
+                + "App chỉ gửi hash SHA256 ra ngoài — KHÔNG upload nội dung tệp của bạn.",
+                "", true);
         }
 
         /// <summary>
@@ -1101,13 +1148,15 @@ namespace ScanAndRemoveVirus.Control
             HistoryEntry e = ScanHistoryStore.LatestOfType("Quét");
             if (e == null)
             {
-                lblLastScanDate.Text = "Chưa có phiên quét nào";
-                lblLastScanType.Text = "—";
+                // Giữ kết quả phiên hiện tại khi SQL chưa lưu được lịch sử.
+                if (lastScanTime != DateTime.MinValue) return;
+                lblLastScanDate.Text = "Chưa quét";
+                lblLastScanType.Text = "Bắt đầu một phiên quét mới";
             }
             else
             {
-                lblLastScanDate.Text = e.Time.ToString("dd/MM/yyyy  HH:mm");
-                lblLastScanType.Text = e.Type;
+                lblLastScanDate.Text = e.Time.ToString("dd/MM/yyyy");
+                lblLastScanType.Text = e.Time.ToString("HH:mm") + " · " + e.Type;
                 // "Tệp đã quét" cũng khôi phục theo phiên gần nhất (0 lúc mới mở app là dữ liệu mẫu)
                 lblScannedCount.Text = e.Files.ToString("N0");
                 lastScannedFiles = e.Files;
@@ -1118,6 +1167,13 @@ namespace ScanAndRemoveVirus.Control
         private void LoadActivity()
         {
             List<HistoryEntry> all = ScanHistoryStore.Entries();
+            if (all.Count == 0 && lastResult != null && lastScanTime != DateTime.MinValue)
+                all.Add(new HistoryEntry
+                {
+                    Time = lastScanTime, Type = lastJob == null ? "Quét" : lastJob.DisplayName,
+                    Scope = lastJob == null ? "" : lastJob.ScopeText, Files = lastScannedFiles,
+                    Threats = lastResult.Threats.Count, Seconds = lastResult.Duration.TotalSeconds
+                });
             dgvActivity.Rows.Clear();
             int shown = 0;
             foreach (HistoryEntry h in all)
@@ -1132,6 +1188,7 @@ namespace ScanAndRemoveVirus.Control
                 ? "Chưa có hoạt động nào được ghi trong scanhistory.log."
                 : string.Format("{0} hoạt động gần nhất — mới nhất ở trên.", shown);
             lnkXemLichSu.Visible = shown > 0;
+            SyncDashboardActivity(shown);
         }
 
         /// <summary>
@@ -1181,8 +1238,7 @@ namespace ScanAndRemoveVirus.Control
             lblAnToanSub.Text = running
                 ? "Không phát hiện mối đe dọa."
                 : "Không phát hiện mối đe dọa, nhưng bảo vệ thời gian thực đang tắt — hãy bật lại ở tab Bảo vệ.";
-            if (currentView == TongQuanView.AnToan)
-                picShield.Image = UiIcons.HeroBadge(140, running);
+            SyncDashboardProtection(running);
         }
 
         /// <summary>
@@ -1254,83 +1310,21 @@ namespace ScanAndRemoveVirus.Control
             return File.Exists(customPath) ? "Tệp: " + customPath : "Thư mục: " + customPath;
         }
 
-        // ================= NÚT "QUÉT NÂNG CAO ▾" — DROPDOWN 4 CHẾ ĐỘ =================
+        // ================= NÚT "QUÉT NÂNG CAO ▾" — POPUP CUSTOM 4 CHẾ ĐỘ =================
 
         private void BtnQuetNangCao_Click(object sender, EventArgs e)
         {
-            ctxQuetNangCao.Items.Clear();
-            ctxQuetNangCao.ShowImageMargin = false;
-            ThemMucQuetNangCao("Quét toàn bộ hệ thống", "Kiểm tra tất cả ổ đĩa và tệp", CheDoQuetNangCao.FullSystem);
-            ThemMucQuetNangCao("Quét thư mục", "Chọn thư mục để quét", CheDoQuetNangCao.Folder);
-            ThemMucQuetNangCao("Quét tệp", "Chọn một hoặc nhiều tệp để quét", CheDoQuetNangCao.Files);
-            ThemMucQuetNangCao("Quét tùy chỉnh", "Cấu hình vị trí và loại tệp quét", CheDoQuetNangCao.Custom);
-            ctxQuetNangCao.Show(btnQuetNangCao, new Point(0, btnQuetNangCao.Height + 2));
-        }
-
-        /// <summary>
-        /// Mỗi mục menu là 1 host 2 dòng: icon chấm màu + tiêu đề đậm + mô tả xám
-        /// (SPEC §3.1 mục 6) — dựng bằng control thật nên không phụ thuộc font biểu tượng.
-        /// </summary>
-        private void ThemMucQuetNangCao(string title, string subtitle, CheDoQuetNangCao mode)
-        {
-            var host = new TableLayoutPanel
+            UiActionPopup.ShowFor(btnQuetNangCao, new[]
             {
-                ColumnCount = 2,
-                RowCount = 2,
-                BackColor = Theme.PageBg,
-                Padding = new Padding(10, 6, 14, 6),
-                Margin = Padding.Empty,
-                Size = new Size(320, 50)
-            };
-            host.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32F));
-            host.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            host.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            host.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            var pic = new PictureBox
-            {
-                Image = UiIcons.Dot(14, mode == CheDoQuetNangCao.FullSystem ? Theme.Red : Theme.Blue),
-                SizeMode = PictureBoxSizeMode.CenterImage,
-                Dock = DockStyle.Fill,
-                Margin = Padding.Empty
-            };
-            var lbl = new Label
-            {
-                Text = title, Font = Theme.BoldFont, ForeColor = Theme.TextDark,
-                Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Margin = Padding.Empty
-            };
-            var sub = new Label
-            {
-                Text = subtitle, Font = Theme.SmallFont, ForeColor = Theme.TextGray,
-                Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Margin = Padding.Empty
-            };
-            host.Controls.Add(pic, 0, 0);
-            host.SetRowSpan(pic, 2);
-            host.Controls.Add(lbl, 1, 0);
-            host.Controls.Add(sub, 1, 1);
-
-            EventHandler hover = delegate { host.BackColor = Theme.BlueTint; };
-            EventHandler leave = delegate { host.BackColor = Theme.PageBg; };
-            EventHandler click = delegate
-            {
-                ctxQuetNangCao.Close();
-                MoQuetNangCao(mode);
-            };
-            foreach (System.Windows.Forms.Control c in new System.Windows.Forms.Control[] { host, pic, lbl, sub })
-            {
-                c.Cursor = Cursors.Hand;
-                c.Click += click;
-                c.MouseEnter += hover;
-                c.MouseLeave += leave;
-            }
-            var item = new ToolStripControlHost(host)
-            {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false,
-                Size = host.Size
-            };
-            ctxQuetNangCao.Items.Add(item);
+                new UiActionEntry("Quét toàn bộ hệ thống", delegate { MoQuetNangCao(CheDoQuetNangCao.FullSystem); },
+                    "Kiểm tra tất cả ổ đĩa và tệp", UiIcons.Dot(14, Theme.Red)),
+                new UiActionEntry("Quét thư mục", delegate { MoQuetNangCao(CheDoQuetNangCao.Folder); },
+                    "Chọn thư mục để quét", UiIcons.Folder(16, Theme.Blue)),
+                new UiActionEntry("Quét tệp", delegate { MoQuetNangCao(CheDoQuetNangCao.Files); },
+                    "Chọn một hoặc nhiều tệp để quét", UiIcons.FileIcon(16, ".exe")),
+                new UiActionEntry("Quét tùy chỉnh", delegate { MoQuetNangCao(CheDoQuetNangCao.Custom); },
+                    "Cấu hình vị trí và loại tệp quét", UiIcons.Gear(16, Theme.Blue))
+            }, 320);
         }
 
         private void pnlPageHead_Paint(object sender, PaintEventArgs e)
@@ -1354,9 +1348,6 @@ namespace ScanAndRemoveVirus.Control
         }
     }
 }
-
-
-
 
 
 

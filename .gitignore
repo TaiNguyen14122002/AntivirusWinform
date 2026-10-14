@@ -4,5 +4,7 @@ obj/
 *.user
 AppData/
 
-# VirusTotal API key duoc commit CO Y thich cho team dung chung quota
-# (free-tier key, ruoi ro thap - xem README). Ne track cac secret khac!
+
+# Local secrets
+.env
+!.env.example
